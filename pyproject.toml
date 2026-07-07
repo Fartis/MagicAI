@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "magicai"
+version = "0.1.0"
+description = "Magic: The Gathering AI Assistant"
+requires-python = ">=3.12"
+
+[tool.setuptools]
+packages = ["magicai"]

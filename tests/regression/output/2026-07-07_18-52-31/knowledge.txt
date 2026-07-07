@@ -1,0 +1,7 @@
+================================================================================
+MagicAI Knowledge Log
+================================================================================
+
+Esta versión todavía no registra el conocimiento enviado al LLM.
+
+Se implementará cuando KnowledgeBuilder exponga el contexto generado.

@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Entorno virtual
+.venv/
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Packaging
+*.egg-info/
+build/
+dist/
+
+# Packaging
+*.egg-info/
+build/
+dist/
+
+# Git (si haces zips)
+.git/
+
+__pycache__/
+*.pyc
+
+.venv/
+
+magicai.egg-info/
+
+database/magic.db
+
+Resultado.txt
+
+sources/scryfall/*.json
