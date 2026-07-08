@@ -15,15 +15,31 @@ def _load():
     cards = load_cards()
 
     #
-    # Obtenemos todos los nombres únicos y los ordenamos
-    # del más largo al más corto.
+    # Preparamos todos los patrones una única vez.
     #
 
-    _cards = sorted(
+    _cards = []
+
+    names = sorted(
         {card["name"] for card in cards},
         key=len,
-        reverse=True
+        reverse=True,
     )
+
+    for name in names:
+
+        lower = name.lower()
+
+        pattern = re.compile(
+            r"\b" + re.escape(lower) + r"\b"
+        )
+
+        _cards.append(
+            (
+                name,
+                pattern,
+            )
+        )
 
 
 def extract_cards(question: str):
@@ -34,26 +50,17 @@ def extract_cards(question: str):
 
     found = []
 
-    for name in _cards:
+    for name, pattern in _cards:
 
-        lower_name = name.lower()
-
-        #
-        # Coincidencia únicamente por palabra completa
-        #
-
-        pattern = r"\b" + re.escape(lower_name) + r"\b"
-
-        if re.search(pattern, question):
+        if pattern.search(question):
 
             found.append(name)
 
             #
-            # Eliminamos únicamente esa coincidencia
+            # Eliminamos únicamente esa coincidencia.
             #
 
-            question = re.sub(
-                pattern,
+            question = pattern.sub(
                 " ",
                 question,
             )
