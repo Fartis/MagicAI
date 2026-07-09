@@ -7,7 +7,9 @@ from magicai.extractors.rules import extract_rules
 from magicai.llm.intent_parser import parse_intent
 
 from magicai.reasoning import build_reasoning
-from magicai.reasoning import extract_action_rule_refs
+from magicai.reasoning import extract_action_search_terms
+
+from magicai.retrieval import build_rule_queries
 
 
 def build_context(conversation, question: str):
@@ -16,10 +18,9 @@ def build_context(conversation, question: str):
 
     language = "es"
 
-    rules = _merge_unique(
-        extract_rules(question),
-        extract_action_rule_refs(question),
-    )
+    keywords = extract_keywords(question)
+
+    action_terms = extract_action_search_terms(question)
 
     context = AssistantContext(
 
@@ -31,9 +32,15 @@ def build_context(conversation, question: str):
 
         cards=extract_cards(question),
 
-        keywords=extract_keywords(question),
+        keywords=keywords,
 
-        rules=rules,
+        rules=extract_rules(question),
+
+        rule_queries=build_rule_queries(
+            question=question,
+            keywords=keywords,
+            action_terms=action_terms,
+        ),
 
         facts=build_reasoning(
             question,
@@ -42,34 +49,11 @@ def build_context(conversation, question: str):
 
     )
 
-    #
-    # Si no se ha encontrado ninguna carta,
-    # reutilizamos la última de la conversación.
-    #
-
     if not context.cards and conversation.active_cards:
 
         context.cards = [
-
             card.name
-
             for card in conversation.active_cards
-
         ]
 
     return context
-
-
-def _merge_unique(*lists):
-
-    result = []
-
-    for items in lists:
-
-        for item in items:
-
-            if item not in result:
-
-                result.append(item)
-
-    return result

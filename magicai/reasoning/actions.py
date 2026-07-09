@@ -14,9 +14,10 @@ ACTIONS = [
             "sacrificed",
             "sacrificing",
         ],
-        "rule_refs": [
-            "701.21",
-            "700.4",
+        "search_terms": [
+            "sacrifice",
+            "permanent",
+            "graveyard",
         ],
     },
 
@@ -34,8 +35,10 @@ ACTIONS = [
             "die",
             "died",
         ],
-        "rule_refs": [
-            "700.4",
+        "search_terms": [
+            "dies",
+            "graveyard",
+            "battlefield",
         ],
     },
 
@@ -53,8 +56,9 @@ ACTIONS = [
             "exiled",
             "exiling",
         ],
-        "rule_refs": [
-            "701.13",
+        "search_terms": [
+            "exile",
+            "exile zone",
         ],
     },
 
@@ -71,7 +75,10 @@ ACTIONS = [
             "enter the battlefield",
             "re-enters",
         ],
-        "rule_refs": [],
+        "search_terms": [
+            "enters the battlefield",
+            "battlefield",
+        ],
     },
 
     {
@@ -88,7 +95,11 @@ ACTIONS = [
             "cast",
             "casting",
         ],
-        "rule_refs": [],
+        "search_terms": [
+            "cast",
+            "spell",
+            "priority",
+        ],
     },
 
 ]

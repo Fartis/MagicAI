@@ -25,21 +25,21 @@ def build_reasoning(question: str, language: str = "es") -> list[str]:
     return hints
 
 
-def extract_action_rule_refs(question: str) -> list[str]:
+def extract_action_search_terms(question: str) -> list[str]:
 
     detected_actions = detect_actions(question)
 
-    refs = []
+    terms = []
 
     for action in detected_actions:
 
-        for rule_ref in action["rule_refs"]:
+        for term in action.get("search_terms", []):
 
-            if rule_ref not in refs:
+            if term not in terms:
 
-                refs.append(rule_ref)
+                terms.append(term)
 
-    return refs
+    return terms
 
 
 def detect_actions(question: str) -> list[dict]:

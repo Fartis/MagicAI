@@ -28,6 +28,27 @@ def build_knowledge(context):
 
             parts.append("")
 
+    if context.symbols:
+
+        parts.append("=" * 60)
+        parts.append("SYMBOLS")
+        parts.append("")
+
+        for symbol in context.symbols:
+
+            code = symbol.get("symbol", "")
+            english = symbol.get("english", "")
+
+            if code:
+
+                parts.append(code)
+
+            if english:
+
+                parts.append(english)
+
+            parts.append("")
+
     if context.rules:
 
         parts.append("=" * 60)

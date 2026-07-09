@@ -3,6 +3,9 @@ import re
 
 import requests
 
+from magicai.validation import build_fallback_answer
+from magicai.validation import validate_answer
+
 
 OLLAMA_URL = os.getenv(
     "OLLAMA_URL",
@@ -26,21 +29,47 @@ def generate(system: str, prompt: str):
 
     answer = _clean_answer(answer)
 
-    if _needs_retry(answer, prompt):
+    violations = validate_answer(
+        answer=answer,
+        knowledge=prompt,
+    )
 
-        retry_prompt = _build_retry_prompt(
-            prompt=prompt,
-            previous_answer=answer,
-        )
+    if not violations:
 
-        answer = _chat(
-            system=system,
-            prompt=retry_prompt,
-        )
+        return answer
 
-        answer = _clean_answer(answer)
+    retry_prompt = _build_retry_prompt(
+        prompt=prompt,
+        previous_answer=answer,
+        violations=violations,
+    )
 
-    return answer
+    retry_answer = _chat(
+        system=system,
+        prompt=retry_prompt,
+    )
+
+    retry_answer = _clean_answer(retry_answer)
+
+    retry_violations = validate_answer(
+        answer=retry_answer,
+        knowledge=prompt,
+    )
+
+    if not retry_violations:
+
+        return retry_answer
+
+    fallback_answer = build_fallback_answer(
+        knowledge=prompt,
+        violations=retry_violations,
+    )
+
+    if fallback_answer:
+
+        return fallback_answer
+
+    return retry_answer
 
 
 def _chat(system: str, prompt: str) -> str:
@@ -64,7 +93,7 @@ def _chat(system: str, prompt: str) -> str:
             "options": {
                 "temperature": 0,
                 "top_p": 0.8,
-                "num_predict": 384,
+                "num_predict": 512,
             },
         },
         timeout=300,
@@ -94,7 +123,11 @@ def _prepare_prompt(prompt: str) -> str:
     )
 
 
-def _build_retry_prompt(prompt: str, previous_answer: str) -> str:
+def _build_retry_prompt(
+    prompt: str,
+    previous_answer: str,
+    violations: list[str],
+) -> str:
 
     return (
         "/no_think\n\n"
@@ -102,8 +135,10 @@ def _build_retry_prompt(prompt: str, previous_answer: str) -> str:
         + "\n\n"
         + _build_dynamic_guardrails(prompt)
         + "\n\n"
-        + "The previous answer was empty, incomplete, in the wrong language, "
-        + "or contradicted the provided rules.\n\n"
+        + "The previous answer failed validation.\n\n"
+        + "Validation problems:\n"
+        + _format_violations(violations)
+        + "\n\n"
         + "Previous answer:\n"
         + previous_answer
         + "\n\n"
@@ -114,47 +149,110 @@ def _build_retry_prompt(prompt: str, previous_answer: str) -> str:
     )
 
 
-def _build_dynamic_guardrails(prompt: str) -> str:
-
-    guardrails = []
-
-    if "Exile" in prompt and "701.13a" in prompt:
-
-        guardrails.append(
-            "The provided Exile rule says that exiling an object moves it "
-            "to the exile zone. Never say that exiling moves the object "
-            "to the graveyard or cementerio."
-        )
-
-    if "Sacrifice" in prompt and "701.21a" in prompt:
-
-        guardrails.append(
-            "The provided Sacrifice rule says that sacrificing a permanent "
-            "moves it from the battlefield to its owner's graveyard. "
-            "If the sacrificed permanent is a creature, the creature dies. "
-            "Do not say that the player dies."
-        )
-
-    if "700.4" in prompt:
-
-        guardrails.append(
-            "The provided dies rule says that dies means being put into "
-            "a graveyard from the battlefield."
-        )
-
-    if not guardrails:
-
-        return ""
+def _format_violations(violations: list[str]) -> str:
 
     return "\n".join(
-        [
-            "Additional answer guardrails:",
-            *[
-                f"- {guardrail}"
-                for guardrail in guardrails
-            ],
-        ]
+        f"- {violation}"
+        for violation in violations
     )
+
+
+def _build_dynamic_guardrails(prompt: str) -> str:
+
+    source = prompt.lower()
+
+    rules = [
+        "Additional answer contract:",
+        "- Use only the recovered CARD and RULE sources.",
+        "- Do not use memorized card text, rulings, prices, legality, or strategy unless it appears in the recovered sources.",
+        "- If CARDS are present, explain the visible Oracle text literally.",
+        "- If the recovered Oracle text directly answers the question, prefer a short literal explanation instead of fallback.",
+        "- Do not cite a rule number unless that rule appears in RULES and directly supports the sentence.",
+        "- Do not invent named examples when no card example appears in the recovered sources.",
+        "- Explain the recovered sources; do not add new rules or interactions.",
+        "- If a symbol such as {T}, {C}, {W}, {U}, {B}, {R}, {G}, {X}, or +1/+1 is not explained by recovered sources, preserve the exact symbol instead of inventing a meaning.",
+        "- Do not fail only because a symbol is not explained; describe the printed ability exactly.",
+        "- In Spanish answers, translate 'costs' as 'cuesta', never as 'costa'.",
+        "- In Spanish MTG explanations, say 'cuesta {X}' for mana cost.",
+        "- In Spanish answers, translate 'draw a card' as 'roba una carta'.",
+        "- In Spanish answers, translate 'tap this permanent' as 'girar este permanente' or 'girarlo'.",
+        "- Translate generic mana as 'maná genérico' and colorless mana as 'maná incoloro'. Do not call generic mana 'maná general'.",
+    ]
+
+    if "any target" in source:
+
+        rules.extend(
+            [
+                "- If Oracle text says 'any target', say 'cualquier objetivo válido'.",
+                "- If Oracle text says 'any target', do not say it requires no target.",
+                "- If Oracle text says 'any target', do not expand it into categories such as object, other object, card, permanent, creature, player, planeswalker, or battle unless those categories appear in recovered sources.",
+            ]
+        )
+
+    if "deals" in source and "damage" in source:
+
+        rules.extend(
+            [
+                "- Translate 'deals damage' as 'hace daño' or 'causa daño'.",
+                "- Do not translate 'deals damage' as 'attacks', 'ataca', or 'puede atacar'.",
+            ]
+        )
+
+    if "{t}: add" in source:
+
+        rules.extend(
+            [
+                "- A card line with the pattern 'cost: effect' normally describes an activated ability, not a triggered ability.",
+                "- Do not confuse a card's mana cost with the activation cost of an ability.",
+                "- If Oracle text is '{T}: Add {C}{C}.', the activation cost is tapping the permanent, not paying its mana cost again.",
+            ]
+        )
+
+    if "triggered ability" in source or "when " in source or "whenever " in source or " at " in source:
+
+        rules.extend(
+            [
+                "- Translate 'triggered ability' as 'habilidad disparada' or 'habilidad desencadenada'.",
+                "- Do not translate 'triggered ability' as 'habilidad activada'.",
+                "- Do not call an ability 'habilidad disparada' unless the recovered sources contain 'triggered ability' or Oracle text with 'When', 'Whenever', or 'At'.",
+            ]
+        )
+
+    if "activated ability" in source or ":" in source:
+
+        rules.extend(
+            [
+                "- Translate 'activated ability' as 'habilidad activada'.",
+            ]
+        )
+
+    if "dies" in source or "graveyard from the battlefield" in source:
+
+        rules.extend(
+            [
+                "- Do not say a creature 'dies in the graveyard'. A creature dies when it is put into a graveyard from the battlefield.",
+            ]
+        )
+
+    if "117." in source or "priority" in source or "prioridad" in source:
+
+        rules.extend(
+            [
+                "- Do not say a player responds during the resolution of the original spell. Responses happen before it resolves, while players have priority and the spell or ability is on the stack.",
+                "- A spell or ability resolves only after all players pass priority in succession.",
+                "- After a player casts a spell, that player receives priority again; the opponent can respond once priority is passed before the spell resolves.",
+            ]
+        )
+
+    if "whenever you sacrifice a permanent" in source:
+
+        rules.extend(
+            [
+                "- If Oracle text says 'Whenever you sacrifice a permanent', you may explain that sacrificing a permanent causes that printed ability to apply, as long as you do not add extra effects.",
+            ]
+        )
+
+    return "\n".join(rules)
 
 
 def _clean_answer(answer: str) -> str:
@@ -171,183 +269,3 @@ def _clean_answer(answer: str) -> str:
     )
 
     return answer.strip()
-
-
-def _needs_retry(answer: str, prompt: str) -> bool:
-
-    if not answer:
-
-        return True
-
-    if len(answer.split()) < 6:
-
-        return True
-
-    if _looks_incomplete(answer):
-
-        return True
-
-    if _is_spanish_question(prompt) and _looks_like_wrong_language(answer):
-
-        return True
-
-    if _is_spanish_question(prompt) and _contains_bad_spanish_terms(answer):
-
-        return True
-
-    if _is_exile_context(prompt) and _contradicts_exile_rule(answer):
-
-        return True
-
-    return False
-
-
-def _looks_incomplete(answer: str) -> bool:
-
-    text = answer.strip()
-
-    if not text:
-
-        return True
-
-    unfinished_endings = (
-        " con",
-        " de",
-        " que",
-        " si",
-        " porque",
-        " cuando",
-        " with",
-        " of",
-        " that",
-        " because",
-        " when",
-    )
-
-    lower = text.lower()
-
-    if lower.endswith(unfinished_endings):
-
-        return True
-
-    if text[-1] not in ".!?…":
-
-        return True
-
-    return False
-
-
-def _is_spanish_question(prompt: str) -> bool:
-
-    question = _extract_question(prompt)
-
-    lower = question.lower()
-
-    spanish_markers = [
-        "¿",
-        "qué",
-        "que ",
-        "si ",
-        "sacrifico",
-        "muere",
-        "exilio",
-        "lanzar",
-        "campo de batalla",
-    ]
-
-    return any(
-        marker in lower
-        for marker in spanish_markers
-    )
-
-
-def _extract_question(prompt: str) -> str:
-
-    match = re.search(
-        r"QUESTION\s+(.*?)(?:={10,}|$)",
-        prompt,
-        flags=re.DOTALL,
-    )
-
-    if not match:
-
-        return ""
-
-    return match.group(1).strip()
-
-
-def _looks_like_wrong_language(answer: str) -> bool:
-
-    lower = answer.strip().lower()
-
-    english_starts = (
-        "if ",
-        "when ",
-        "exiling ",
-        "sacrificing ",
-        "young wolf is ",
-        "you ",
-    )
-
-    if lower.startswith(english_starts):
-
-        return True
-
-    english_phrases = (
-        "does not trigger",
-        "if you exile",
-        "when it dies",
-    )
-
-    return any(
-        phrase in lower
-        for phrase in english_phrases
-    )
-
-
-def _contains_bad_spanish_terms(answer: str) -> bool:
-
-    lower = answer.lower()
-
-    bad_terms = [
-        "tumba",
-        "gravedad",
-        "tumba de batalla",
-    ]
-
-    return any(
-        term in lower
-        for term in bad_terms
-    )
-
-
-def _is_exile_context(prompt: str) -> bool:
-
-    return (
-        "Exile" in prompt
-        and "701.13a" in prompt
-    )
-
-
-def _contradicts_exile_rule(answer: str) -> bool:
-
-    lower = answer.lower()
-
-    bad_patterns = [
-        "exiliarlo al cementerio",
-        "exiliarlo a cementerio",
-        "exiliar a young wolf lo movería al cementerio",
-        "exiliar a young wolf lo mueve al cementerio",
-        "exilias a young wolf lo movería al cementerio",
-        "exilias a young wolf lo mueve al cementerio",
-        "lo movería al cementerio",
-        "lo mueve al cementerio",
-        "lo coloca en el cementerio",
-        "es colocada en el cementerio",
-        "es colocado en el cementerio",
-    ]
-
-    return any(
-        pattern in lower
-        for pattern in bad_patterns
-    )
