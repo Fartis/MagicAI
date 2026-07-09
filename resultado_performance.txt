@@ -1,0 +1,163 @@
+================================================================================
+¿Qué hace Young Wolf?
+================================================================================
+[MagicAI] Indexed 37740 cards.
+Context Builder : 3.902s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué hace Young Wolf?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+================================================================================
+LLM              : 10.857s
+TOTAL            : 14.759s
+
+
+
+================================================================================
+¿Y si muere?
+================================================================================
+Context Builder : 0.011s
+Context Enricher: 0.007s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si muere?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+============================================================
+RULES
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Morir.
+
+================================================================================
+LLM              : 8.309s
+TOTAL            : 8.326s
+
+Si el **Young Wolf** muere (es puesto en la tumba de batalla desde el campo de batalla), su habilidad **Undying** activará el siguiente efecto:  
+- Si el joven lobo no tenía **+1/+1 counters** cuando murió, regresará al campo de batalla bajo el control de su dueño con **un +1/+1 counter**.  
+- Si ya tenía al menos un **+1/+1 counter** cuando murió, no regresará.  
+
+Esta regla se basa en la definición oficial de "dies" (sección 700.4) y en el texto de la carta.
+
+================================================================================
+¿Y si lo sacrifico?
+================================================================================
+Context Builder : 0.012s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si lo sacrifico?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+============================================================
+RULES
+
+Sacrifice
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner’s graveyard. A player can’t sacrifice something that isn’t a permanent, or something that’s a permanent they don’t control. Sacrificing a permanent doesn’t destroy it, so regeneration or other effects that replace destruction can’t affect this action.
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Sacrificar.
+
+================================================================================
+LLM              : 10.614s
+TOTAL            : 10.626s
+
+Si sacrificas a **Young Wolf**, este será movido directamente a tu tumba desde el campo de batalla (regla 701.21a). Al hacerlo, **mueres** (regla 700.4), lo que activa su efecto de **Undying**: si no tenía contadores +1/+1 cuando murió, regresa al campo de batalla con un contador +1/+1. 
+
+En resumen:  
+- **Sacrificar** a Young Wolf lo mueve a la tumba.  
+- Como murió, activa su efecto
+
+================================================================================
+¿Y si lo exilio?
+================================================================================
+Context Builder : 0.010s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si lo exilio?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+============================================================
+RULES
+
+Exile
+
+701.13a
+To exile an object, move it to the exile zone from wherever it is. See rule 406, “Exile.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Exiliar.
+
+================================================================================
+LLM              : 9.221s
+TOTAL            : 9.231s
+
+Si exilias a **Young Wolf**, no activarás su efecto de **Undying**. El efecto de Undying solo se activa cuando la criatura muere y es colocada en la tumba (gravedad), no cuando es exiliada. Al exiliarla, la criatura permanece en el exilio y no regresa al campo de batalla. 
+
+**Resumen:** Exilar a Young Wolf no activa su habilidad de Undying, ya que el exilio no equivale a "morir" según las reglas oficiales.
+

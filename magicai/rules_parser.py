@@ -5,7 +5,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 RULES_FILE = PROJECT_ROOT / "sources" / "rules" / "MagicCompRules.txt"
 
-
 HEADER_RE = re.compile(r"^(\d+\.\d+)\.\s+(.+)$")
 RULE_RE = re.compile(r"^(\d+\.\d+[a-z])\s+(.*)$")
 
@@ -32,8 +31,9 @@ def parse_rules():
                 current = header.group(1)
 
                 data[current] = {
+                    "number": current,
                     "title": header.group(2),
-                    "rules": []
+                    "rules": [],
                 }
 
                 continue
@@ -45,7 +45,7 @@ def parse_rules():
                 data[current]["rules"].append(
                     (
                         rule.group(1),
-                        rule.group(2)
+                        rule.group(2),
                     )
                 )
 

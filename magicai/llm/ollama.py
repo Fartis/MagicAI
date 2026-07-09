@@ -1,9 +1,17 @@
+import os
+
 import requests
 
 
-OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
+OLLAMA_URL = os.getenv(
+    "OLLAMA_URL",
+    "http://127.0.0.1:11434/api/chat",
+)
 
-MODEL = "qwen3:8b"
+MODEL = os.getenv(
+    "MAGICAI_MODEL",
+    "qwen3:8b",
+)
 
 
 def generate(system: str, prompt: str):
@@ -13,14 +21,7 @@ def generate(system: str, prompt: str):
         json={
             "model": MODEL,
             "stream": False,
-
             "keep_alive": "30m",
-
-            "options": {
-                "temperature": 0.2,
-                "num_predict": 256,
-            },
-
             "messages": [
                 {
                     "role": "system",
@@ -31,6 +32,11 @@ def generate(system: str, prompt: str):
                     "content": prompt,
                 },
             ],
+            "options": {
+                "temperature": 0.1,
+                "top_p": 0.9,
+                "num_predict": 512,
+            },
         },
         timeout=300,
     )
@@ -39,4 +45,4 @@ def generate(system: str, prompt: str):
 
     payload = response.json()
 
-    return payload["message"]["content"]
+    return payload["message"]["content"].strip()
