@@ -2,11 +2,13 @@ from fastapi import APIRouter
 
 from magicai.assistant import MagicAI
 from magicai.api.schemas import AskRequest, AskResponse
+from magicai.conversation.manager import ConversationManager
 
 
 router = APIRouter()
 
 assistant = MagicAI()
+conversation_manager = ConversationManager()
 
 
 @router.get("/")
@@ -22,6 +24,16 @@ def root():
 @router.post("/ask", response_model=AskResponse)
 def ask(request: AskRequest):
 
-    answer = assistant.ask(request.question)
+    session_id, conversation = conversation_manager.get_or_create(
+        request.session_id
+    )
 
-    return AskResponse(answer=answer)
+    answer = assistant.ask(
+        conversation,
+        request.question,
+    )
+
+    return AskResponse(
+        answer=answer,
+        session_id=session_id,
+    )

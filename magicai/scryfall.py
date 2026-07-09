@@ -10,43 +10,57 @@ SCRYFALL_FILE = (
     "oracle-cards.json"
 )
 
-
 _cards = None
+_card_index = None
 
 
 def load_cards():
-    """Carga las cartas una única vez."""
+    """Carga Oracle una única vez."""
 
     global _cards
+    global _card_index
 
-    if _cards is None:
-        with open(SCRYFALL_FILE, encoding="utf-8") as f:
-            _cards = json.load(f)
+    if _cards is not None:
+        return _cards
+
+    with open(SCRYFALL_FILE, encoding="utf-8") as f:
+        _cards = json.load(f)
+
+    #
+    # Creamos un índice por nombre.
+    #
+
+    _card_index = {
+        card["name"].lower(): card
+        for card in _cards
+    }
+
+    print(f"[MagicAI] Indexed {len(_card_index)} cards.")
 
     return _cards
 
 
 def search_exact_card(name: str):
 
-    name = name.lower()
+    load_cards()
 
-    for card in load_cards():
-
-        if card["name"].lower() == name:
-            return card
-
-    return None
+    return _card_index.get(
+        name.lower()
+    )
 
 
 def search_cards_by_name(text: str):
 
+    load_cards()
+
     text = text.lower()
 
-    results = []
+    return [
 
-    for card in load_cards():
+        card
 
-        if text in card["name"].lower():
-            results.append(card)
+        for name, card in _card_index.items()
 
-    return results
+        if text in name
+
+    ]
