@@ -1,5 +1,7 @@
 import re
 
+from magicai.validation.oracle_renderer import render_oracle_fallback
+
 
 def build_fallback_answer(knowledge: str, violations: list[str]) -> str:
     """
@@ -10,6 +12,14 @@ def build_fallback_answer(knowledge: str, violations: list[str]) -> str:
     honesta basada en las fuentes recuperadas y pedimos más contexto si hace
     falta.
     """
+    rendered_oracle_answer = render_oracle_fallback(
+        knowledge
+    )
+
+    if rendered_oracle_answer:
+
+        return rendered_oracle_answer
+
     literal_oracle_answer = _build_literal_oracle_fallback(
         knowledge
     )
