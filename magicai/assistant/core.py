@@ -4,6 +4,7 @@ from magicai.context_builder import build_context
 from magicai.context_enricher import enrich
 from magicai.knowledge_builder import build_knowledge
 from magicai.answer_generator import generate_answer
+from magicai.conversation.disambiguation import handle_card_disambiguation
 
 
 class MagicAI:
@@ -11,6 +12,22 @@ class MagicAI:
     def ask(self, conversation, question: str) -> str:
 
         total = time.perf_counter()
+
+        disambiguation_answer, resolved_question = handle_card_disambiguation(
+            conversation,
+            question,
+        )
+
+        if disambiguation_answer:
+
+            conversation.add_user_message(question)
+            conversation.add_assistant_message(disambiguation_answer)
+
+            return disambiguation_answer
+
+        if resolved_question:
+
+            question = resolved_question
 
         #
         # Guardar pregunta

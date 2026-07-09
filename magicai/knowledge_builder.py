@@ -28,6 +28,27 @@ def build_knowledge(context):
 
             parts.append("")
 
+    if context.symbols:
+
+        parts.append("=" * 60)
+        parts.append("SYMBOLS")
+        parts.append("")
+
+        for symbol in context.symbols:
+
+            code = symbol.get("symbol", "")
+            english = symbol.get("english", "")
+
+            if code:
+
+                parts.append(code)
+
+            if english:
+
+                parts.append(english)
+
+            parts.append("")
+
     if context.rules:
 
         parts.append("=" * 60)
@@ -36,13 +57,76 @@ def build_knowledge(context):
 
         for rule in context.rules:
 
-            parts.append(rule["title"])
-            parts.append("")
+            _append_rule(parts, rule)
 
-            for number, text in rule["rules"]:
+    if context.facts:
 
-                parts.append(number)
-                parts.append(text)
-                parts.append("")
+        parts.append("=" * 60)
+        parts.append("REASONING HINTS")
+        parts.append("")
+
+        for fact in context.facts:
+
+            parts.append(f"- {fact}")
+
+        parts.append("")
 
     return "\n".join(parts)
+
+
+def _append_rule(parts, rule):
+
+    number = rule.get("number")
+    title = rule.get("title")
+    subrules = rule.get("rules", [])
+
+    #
+    # Caso 1:
+    # Regla con subreglas.
+    #
+    # Ejemplo:
+    #
+    # 701.21. Sacrifice
+    # 701.21a To sacrifice...
+    #
+    # Aquí mantenemos el comportamiento actual:
+    #
+    # Sacrifice
+    # 701.21a
+    # To sacrifice...
+    #
+
+    if subrules:
+
+        parts.append(title)
+        parts.append("")
+
+        for rule_number, text in subrules:
+
+            parts.append(rule_number)
+            parts.append(text)
+            parts.append("")
+
+        return
+
+    #
+    # Caso 2:
+    # Regla directa sin subreglas.
+    #
+    # Ejemplo:
+    #
+    # 700.4. The term dies means...
+    #
+    # Antes se imprimía solo el texto.
+    # Ahora imprimimos también el número.
+    #
+
+    if number:
+
+        parts.append(number)
+
+    if title:
+
+        parts.append(title)
+
+    parts.append("")

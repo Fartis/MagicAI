@@ -18,6 +18,12 @@ class Conversation:
 
     active_rules: list = field(default_factory=list)
 
+    pending_card_question: str | None = None
+
+    pending_card_alias: str | None = None
+    
+    pending_card_candidates: list[str] = field(default_factory=list)
+
     last_intent: str = ""
 
     language: str = "es"
