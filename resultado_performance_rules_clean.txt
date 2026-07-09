@@ -1,0 +1,906 @@
+
+################################################################################
+Card basics
+################################################################################
+
+================================================================================
+¿Qué hace Young Wolf?
+================================================================================
+[MagicAI] Indexed 37740 cards.
+Context Builder : 3.752s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué hace Young Wolf?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+================================================================================
+LLM              : 4.585s
+TOTAL            : 8.338s
+
+Young Wolf es una criatura de tipo Lobo que cuesta {G} de mana. Tiene la habilidad Undying: cuando muere, si no tenía contadores +1/+1, vuelve al campo de batalla con un contador +1/+1. Si ya tenía contadores, no ocurre nada.
+
+================================================================================
+¿Y si muere?
+================================================================================
+Context Builder : 0.011s
+Context Enricher: 0.012s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si muere?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+============================================================
+RULES
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Morir.
+
+================================================================================
+LLM              : 5.910s
+TOTAL            : 5.933s
+
+Si Young Wolf muere (se coloca en el cementerio desde el campo de batalla), y no tenía +1/+1 contadores, retorna al campo de batalla con un +1/+1 contador. Esto ocurre porque su habilidad Undying activa al morir.
+
+================================================================================
+¿Y si lo sacrifico?
+================================================================================
+Context Builder : 0.031s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si lo sacrifico?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+============================================================
+RULES
+
+Sacrifice
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner’s graveyard. A player can’t sacrifice something that isn’t a permanent, or something that’s a permanent they don’t control. Sacrificing a permanent doesn’t destroy it, so regeneration or other effects that replace destruction can’t affect this action.
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Sacrificar.
+
+================================================================================
+LLM              : 5.536s
+TOTAL            : 5.568s
+
+Si sacrificas a Young Wolf, se moverá de la batalla al cementerio de su dueño (701.21a). Al ser una criatura, muere (700.4). Como tiene Undying, al morir sin contadores +1/+1, regresa al campo con un contador +1/+1. No se destruye ni se reemplaza por efectos de regeneración.
+
+================================================================================
+¿Y si lo exilio?
+================================================================================
+Context Builder : 0.010s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si lo exilio?
+
+============================================================
+CARDS
+
+Young Wolf
+Mana Cost: {G}
+Creature — Wolf
+
+Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)
+
+============================================================
+RULES
+
+Exile
+
+701.13a
+To exile an object, move it to the exile zone from wherever it is. See rule 406, “Exile.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Exiliar.
+
+================================================================================
+LLM              : 6.035s
+TOTAL            : 6.045s
+
+Si exilias a Young Wolf, no se activa su habilidad Undying, ya que exiliar no equivale a que la criatura "muera". La carta será movida al exilio, no al cementerio. La habilidad Undying solo se activa cuando la criatura muere y cumple sus condiciones.
+
+
+################################################################################
+Rule lookup - Undying
+################################################################################
+
+================================================================================
+¿Qué dice la regla 702.93?
+================================================================================
+Context Builder : 0.015s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué dice la regla 702.93?
+
+============================================================
+RULES
+
+Undying
+
+702.93a
+Undying is a triggered ability. “Undying” means “When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield under its owner’s control with a +1/+1 counter on it.”
+
+================================================================================
+LLM              : 4.392s
+TOTAL            : 4.406s
+
+La regla 702.93 establece que "Undying" es una habilidad desencadenada. Cuando un permanente es puesto en el cementerio desde el campo de batalla, si no tenía contadores +1/+1, se devuelve al campo de batalla bajo control de su dueño con un contador +1/+1.
+
+================================================================================
+Explícame Undying con un ejemplo sencillo.
+================================================================================
+Context Builder : 0.018s
+Context Enricher: 0.002s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+Explícame Undying con un ejemplo sencillo.
+
+============================================================
+RULES
+
+Undying
+
+702.93a
+Undying is a triggered ability. “Undying” means “When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield under its owner’s control with a +1/+1 counter on it.”
+
+================================================================================
+LLM              : 6.056s
+TOTAL            : 6.076s
+
+Undying es una habilidad que activa cuando un permanente entra al cementerio desde el campo de batalla. Si no tenía contadores +1/+1 al morir, vuelve al campo bajo control de su dueño con un contador +1/+1. Ejemplo: Si un monstruo con Undying muere sin contadores, resurge con uno.
+
+
+################################################################################
+Layers
+################################################################################
+
+================================================================================
+¿Qué dice la regla 613 sobre las capas de Magic?
+================================================================================
+Context Builder : 0.021s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué dice la regla 613 sobre las capas de Magic?
+
+============================================================
+RULES
+
+Interaction of Continuous Effects
+
+613.1
+The values of an object’s characteristics are determined by starting with the actual object. For a card, that means the values of the characteristics printed on that card. For a token or a copy of a spell or card, that means the values of the characteristics defined by the effect that created it. Then all applicable continuous effects are applied in a series of layers in the following order:
+
+613.1a
+Layer 1: Rules and effects that modify copiable values are applied.
+
+613.1b
+Layer 2: Control-changing effects are applied.
+
+613.1c
+Layer 3: Text-changing effects are applied. See rule 612, “Text-Changing Effects.”
+
+613.1d
+Layer 4: Type-changing effects are applied. These include effects that change an object’s card type, subtype, and/or supertype.
+
+613.1e
+Layer 5: Color-changing effects are applied.
+
+613.1f
+Layer 6: Ability-adding effects, keyword counters, ability-removing effects, and effects that say an object can’t have an ability are applied.
+
+613.1g
+Layer 7: Power- and/or toughness-changing effects are applied.
+
+613.2
+Within layer 1, apply effects in a series of sublayers in the order described below. Within each sublayer, apply effects in timestamp order (see rule 613.7). Note that dependency may alter the order in which effects are applied within a sublayer. (See rule 613.8.)
+
+613.2a
+Layer 1a: Copiable effects are applied. This includes copy effects (see rule 707, “Copying Objects”) and changes to an object’s characteristics determined by merging an object with a permanent (see rule 730, “Merging with Permanents”). “As . . . enters” and “as . . . is turned face up” abilities generate copiable effects if they set power and toughness, even if they also define other characteristics.
+
+613.2b
+Layer 1b: Face-down spells and permanents have their characteristics modified as defined in rule 708.2.
+
+613.2c
+After all rules and effects in layer 1 have been applied, the object’s characteristics are its copiable values. (See rule 707.2.)
+
+613.3
+Within layers 2–6, apply effects from characteristic-defining abilities first (see rule 604.3), then all other effects in timestamp order (see rule 613.7). Note that dependency may alter the order in which effects are applied within a layer. (See rule 613.8.)
+
+613.4
+Within layer 7, apply effects in a series of sublayers in the order described below. Within each sublayer, apply effects in timestamp order. (See rule 613.7.) Note that dependency may alter the order in which effects are applied within a sublayer. (See rule 613.8.)
+
+613.4a
+Layer 7a: Effects from characteristic-defining abilities that define power and/or toughness are applied. See rule 604.3.
+
+613.4b
+Layer 7b: Effects that set power and/or toughness to a specific number or value are applied. Effects that refer to the base power and/or toughness of a creature apply in this layer.
+
+613.4c
+Layer 7c: Effects and counters that modify power and/or toughness (but don’t set power and/or toughness to a specific number or value) are applied.
+
+613.4d
+Layer 7d: Effects that switch a creature’s power and toughness are applied. Such effects take the value of power and apply it to the creature’s toughness, and take the value of toughness and apply it to the creature’s power.
+
+613.5
+The application of continuous effects as described by the layer system is continually and automatically performed by the game. All resulting changes to an object’s characteristics are instantaneous.
+
+613.6
+If an effect should be applied in different layers and/or sublayers, the parts of the effect each apply in their appropriate ones. If an effect starts to apply in one layer and/or sublayer, it will continue to be applied to the same set of objects in each other applicable layer and/or sublayer, even if the ability generating the effect is removed during this process.
+
+613.7
+Within a layer or sublayer, determining which order effects are applied in is usually done using a timestamp system. An effect with an earlier timestamp is applied before an effect with a later timestamp.
+
+613.7a
+A continuous effect generated by a static ability has the same timestamp as the object the static ability is on, or the timestamp of the effect that created the ability, whichever is later. If the effect that created the ability has the later timestamp and the object the ability is on receives a new timestamp, each continuous effect generated by static abilities of that object receives a new timestamp as well, but the relative order of those timestamps remains the same.
+
+613.7b
+A continuous effect generated by the resolution of a spell or ability receives a timestamp at the time it’s created.
+
+613.7c
+Each counter receives a timestamp as it’s put on an object or player. If that object or player already has a counter of that kind on it, each counter of that kind receives a new timestamp identical to that of the new counter.
+
+613.7d
+An object receives a timestamp at the time it enters a zone.
+
+613.7e
+An Aura, Equipment, or Fortification receives a new timestamp each time it becomes attached to an object or player.
+
+613.7f
+A permanent receives a new timestamp each time it turns face up or face down.
+
+613.7g
+A double-faced permanent receives a new timestamp each time it transforms or converts.
+
+613.7h
+A face-up plane card, phenomenon card, or scheme card receives a timestamp at the time it’s turned face up.
+
+613.7i
+A face-up vanguard card receives a timestamp at the beginning of the game.
+
+613.7j
+A conspiracy card receives a timestamp at the beginning of the game. If it’s face down, it receives a new timestamp at the time it turns face up.
+
+613.7k
+A sticker receives a new timestamp each time it’s put on an object. If the object a sticker is on receives a new timestamp, the sticker receives a new timestamp immediately after that one. If the object a sticker is on becomes part of a merged permanent on the battlefield, the sticker receives a new timestamp at that time. If an object has more than one sticker on it as it enters a zone or becomes part of a merged permanent, the relative timestamp order of those stickers remains unchanged.
+
+613.7m
+If two or more objects would receive a timestamp simultaneously, such as by entering a zone simultaneously or becoming attached simultaneously, their relative timestamps are determined in APNAP order (see rule 101.4). Objects controlled by the active player (or owned by the active player, if they have no controller) have an earlier relative timestamp in the order of that player’s choice, followed by each other player in turn order.
+
+613.7n
+If a continuous effect generated by a static ability of an object and a continuous effect generated by a resolving spell or ability that applies to that object would receive a timestamp simultaneously, such as due to an effect that puts that object onto the battlefield and sets its characteristics (see rule 611.2e), the continuous effect from the object’s own static ability receives an earlier relative timestamp.
+
+613.8
+Within a layer or sublayer, determining which order effects are applied in is sometimes done using a dependency system. If a dependency exists, it will override the timestamp system.
+
+613.8a
+An effect is said to “depend on” another if (a) it’s applied in the same layer (and, if applicable, sublayer) as the other effect; (b) applying the other would change the text or the existence of the first effect, what it applies to, or what it does to any of the things it applies to; and (c) neither effect is from a characteristic-defining ability or both effects are from characteristic-defining abilities. Otherwise, the effect is considered to be independent of the other effect.
+
+613.8b
+An effect dependent on one or more other effects waits to apply until just after all of those effects have been applied. If multiple dependent effects would apply simultaneously in this way, they’re applied in timestamp order relative to each other. If several dependent effects form a dependency loop, then this rule is ignored and the effects in the dependency loop are applied in timestamp order.
+
+613.8c
+After each effect is applied, the order of remaining effects is reevaluated and may change if an effect that has not yet been applied becomes dependent on or independent of one or more other effects that have not yet been applied.
+
+613.9
+One continuous effect can override another. Sometimes the results of one effect determine whether another effect applies or what another effect does.
+
+613.10
+Some continuous effects affect players rather than objects. For example, an effect might give a player protection from red. All such effects are applied in timestamp order after the determination of objects’ characteristics. See also the rules for timestamp order and dependency (rules 613.7 and 613.8).
+
+613.11
+Some continuous effects affect game rules rather than objects. For example, effects may modify a player’s maximum hand size, or say that a creature must attack this turn if able. These effects are applied after all other continuous effects have been applied. Continuous effects that affect the costs of spells or abilities are applied according to the order specified in rule 601.2f. All other such effects are applied in timestamp order. See also the rules for timestamp order and dependency (rules 613.7 and 613.8).
+
+================================================================================
+LLM              : 7.465s
+TOTAL            : 7.487s
+
+La regla 613 describe cómo se aplican los efectos continuos en capas. Hay siete capas que determinan el orden de modificación de características de objetos. En cada capa, los efectos se aplican en orden de marca de tiempo (salvo dependencias). Las capas incluyen: 1 (copiables), 2 (control), 3 (texto), 4 (tipo), 5 (color), 6 (habilidades), 7 (poder/resistencia). Las dependencias pueden alterar el orden dentro de una capa.
+
+================================================================================
+Explícame de forma sencilla cómo funcionan las capas.
+================================================================================
+Context Builder : 0.025s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+Explícame de forma sencilla cómo funcionan las capas.
+
+============================================================
+RULES
+
+The values of an object’s characteristics are determined by starting with the actual object. For a card, that means the values of the characteristics printed on that card. For a token or a copy of a spell or card, that means the values of the characteristics defined by the effect that created it. Then all applicable continuous effects are applied in a series of layers in the following order:
+
+613.1a
+Layer 1: Rules and effects that modify copiable values are applied.
+
+613.1b
+Layer 2: Control-changing effects are applied.
+
+613.1c
+Layer 3: Text-changing effects are applied. See rule 612, “Text-Changing Effects.”
+
+613.1d
+Layer 4: Type-changing effects are applied. These include effects that change an object’s card type, subtype, and/or supertype.
+
+613.1e
+Layer 5: Color-changing effects are applied.
+
+613.1f
+Layer 6: Ability-adding effects, keyword counters, ability-removing effects, and effects that say an object can’t have an ability are applied.
+
+613.1g
+Layer 7: Power- and/or toughness-changing effects are applied.
+
+Within layer 1, apply effects in a series of sublayers in the order described below. Within each sublayer, apply effects in timestamp order (see rule 613.7). Note that dependency may alter the order in which effects are applied within a sublayer. (See rule 613.8.)
+
+613.2a
+Layer 1a: Copiable effects are applied. This includes copy effects (see rule 707, “Copying Objects”) and changes to an object’s characteristics determined by merging an object with a permanent (see rule 730, “Merging with Permanents”). “As . . . enters” and “as . . . is turned face up” abilities generate copiable effects if they set power and toughness, even if they also define other characteristics.
+
+613.2b
+Layer 1b: Face-down spells and permanents have their characteristics modified as defined in rule 708.2.
+
+613.2c
+After all rules and effects in layer 1 have been applied, the object’s characteristics are its copiable values. (See rule 707.2.)
+
+613.3
+Within layers 2–6, apply effects from characteristic-defining abilities first (see rule 604.3), then all other effects in timestamp order (see rule 613.7). Note that dependency may alter the order in which effects are applied within a layer. (See rule 613.8.)
+
+Within layer 7, apply effects in a series of sublayers in the order described below. Within each sublayer, apply effects in timestamp order. (See rule 613.7.) Note that dependency may alter the order in which effects are applied within a sublayer. (See rule 613.8.)
+
+613.4a
+Layer 7a: Effects from characteristic-defining abilities that define power and/or toughness are applied. See rule 604.3.
+
+613.4b
+Layer 7b: Effects that set power and/or toughness to a specific number or value are applied. Effects that refer to the base power and/or toughness of a creature apply in this layer.
+
+613.4c
+Layer 7c: Effects and counters that modify power and/or toughness (but don’t set power and/or toughness to a specific number or value) are applied.
+
+613.4d
+Layer 7d: Effects that switch a creature’s power and toughness are applied. Such effects take the value of power and apply it to the creature’s toughness, and take the value of toughness and apply it to the creature’s power.
+
+613.5
+The application of continuous effects as described by the layer system is continually and automatically performed by the game. All resulting changes to an object’s characteristics are instantaneous.
+
+================================================================================
+LLM              : 7.072s
+TOTAL            : 7.097s
+
+Las capas son un sistema para resolver efectos continuos en orden. Hay 7 capas: 1 (copiables), 2 (control), 3 (texto), 4 (tipo), 5 (color), 6 (habilidades), 7 (poder/resistencia). En cada capa, los efectos se aplican en orden de tiempo (excepto dependencias). Los efectos en la misma capa se resuelven según su momento de entrada. El juego aplica automáticamente estas capas, ajustando características de objetos en tiempo real.
+
+================================================================================
+Si una criatura tiene un efecto que fija su fuerza y resistencia y otro que le da +1/+1, ¿qué se aplica antes?
+================================================================================
+Context Builder : 0.043s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+Si una criatura tiene un efecto que fija su fuerza y resistencia y otro que le da +1/+1, ¿qué se aplica antes?
+
+============================================================
+RULES
+
+Within layer 7, apply effects in a series of sublayers in the order described below. Within each sublayer, apply effects in timestamp order. (See rule 613.7.) Note that dependency may alter the order in which effects are applied within a sublayer. (See rule 613.8.)
+
+613.4a
+Layer 7a: Effects from characteristic-defining abilities that define power and/or toughness are applied. See rule 604.3.
+
+613.4b
+Layer 7b: Effects that set power and/or toughness to a specific number or value are applied. Effects that refer to the base power and/or toughness of a creature apply in this layer.
+
+613.4c
+Layer 7c: Effects and counters that modify power and/or toughness (but don’t set power and/or toughness to a specific number or value) are applied.
+
+613.4d
+Layer 7d: Effects that switch a creature’s power and toughness are applied. Such effects take the value of power and apply it to the creature’s toughness, and take the value of toughness and apply it to the creature’s power.
+
+================================================================================
+LLM              : 16.747s
+TOTAL            : 16.791s
+
+
+
+
+################################################################################
+Priority
+################################################################################
+
+================================================================================
+¿Qué dice la regla 117 sobre prioridad?
+================================================================================
+Context Builder : 0.044s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué dice la regla 117 sobre prioridad?
+
+============================================================
+RULES
+
+Timing and Priority
+
+117.1
+Unless a spell or ability is instructing a player to take an action, which player can take actions at any given time is determined by a system of priority. The player with priority may cast spells, activate abilities, and take special actions.
+
+117.1a
+A player may cast an instant spell any time they have priority. A player may cast a noninstant spell during their main phase any time they have priority and the stack is empty.
+
+117.1b
+A player may activate an activated ability any time they have priority.
+
+117.1c
+A player may take some special actions any time they have priority. A player may take other special actions during their main phase any time they have priority and the stack is empty. See rule 116, “Special Actions.”
+
+117.1d
+A player may activate a mana ability whenever they have priority, whenever they are casting a spell or activating an ability that requires a mana payment, or whenever a rule or effect asks for a mana payment (even in the middle of casting or resolving a spell or activating or resolving an ability).
+
+117.2
+Other kinds of abilities and actions are automatically generated or performed by the game rules, or are performed by players without receiving priority.
+
+117.2a
+Triggered abilities can trigger at any time, including while a spell is being cast, an ability is being activated, or a spell or ability is resolving. (See rule 603, “Handling Triggered Abilities.”) However, nothing actually happens at the time an ability triggers. Each time a player would receive priority, each ability that has triggered but hasn’t yet been put on the stack is put on the stack. See rule 117.5.
+
+117.2b
+Static abilities continuously affect the game. Priority doesn’t apply to them. (See rule 604, “Handling Static Abilities,” and rule 611, “Continuous Effects.”)
+
+117.2c
+Turn-based actions happen automatically when certain steps or phases begin. They’re dealt with before a player would receive priority. See rule 117.3a. Turn-based actions also happen automatically when each step and phase ends; no player receives priority afterward. See rule 703, “Turn-Based Actions.”
+
+117.2d
+State-based actions happen automatically when certain conditions are met. See rule 704. They’re dealt with before a player would receive priority. See rule 117.5.
+
+117.2e
+Resolving spells and abilities may instruct players to make choices or take actions, or may allow players to activate mana abilities. Even if a player is doing so, no player has priority while a spell or ability is resolving. See rule 608, “Resolving Spells and Abilities.”
+
+117.3
+Which player has priority is determined by the following rules:
+
+117.3a
+The active player receives priority at the beginning of most steps and phases, after any turn-based actions (such as drawing a card during the draw step; see rule 703) have been dealt with and abilities that trigger at the beginning of that phase or step have been put on the stack. No player receives priority during the untap step. Players usually don’t get priority during the cleanup step (see rule 514.3).
+
+117.3b
+The active player receives priority after a spell or ability (other than a mana ability) resolves.
+
+117.3c
+If a player has priority when they cast a spell, activate an ability, or take a special action, that player receives priority afterward.
+
+117.3d
+If a player has priority and chooses not to take any actions, that player passes. If any mana is in that player’s mana pool, they announce what mana is there. Then the next player in turn order receives priority.
+
+117.4
+If all players pass in succession (that is, if all players pass without taking any actions in between passing), the spell or ability on top of the stack resolves or, if the stack is empty, the phase or step ends.
+
+117.5
+Each time a player would get priority, the game first performs all applicable state-based actions as a single event (see rule 704, “State-Based Actions”), then repeats this process until no state-based actions are performed. Then triggered abilities are put on the stack (see rule 603, “Handling Triggered Abilities”). These steps repeat in order until no further state-based actions are performed and no abilities trigger. Then the player who would have received priority does so.
+
+117.6
+In a multiplayer game using the shared team turns option, teams rather than individual players have priority. See rule 805, “Shared Team Turns Option.”
+
+117.7
+If a player with priority casts a spell or activates an activated ability while another spell or ability is already on the stack, the new spell or ability has been cast or activated “in response to” the earlier spell or ability. The new spell or ability will resolve first. See rule 608, “Resolving Spells and Abilities.”
+
+================================================================================
+LLM              : 7.193s
+TOTAL            : 7.237s
+
+La regla 117 establece que el jugador con prioridad puede lanzar hechizos, activar habilidades o tomar acciones especiales. El activo recibe prioridad al inicio de fases, después de acciones turn-based, y tras resolver un hechizo/abilidad. Si todos pasan, la parte superior de la pila resuelve o termina la fase. Antes de recibir prioridad, se resuelven acciones basadas en estado y habilidades desencadenadas. La prioridad se pasa si un jugador no actúa.
+
+================================================================================
+Explícame cómo funciona la prioridad en Magic.
+================================================================================
+Context Builder : 0.020s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+Explícame cómo funciona la prioridad en Magic.
+
+============================================================
+RULES
+
+Timing and Priority
+
+117.1
+Unless a spell or ability is instructing a player to take an action, which player can take actions at any given time is determined by a system of priority. The player with priority may cast spells, activate abilities, and take special actions.
+
+117.1a
+A player may cast an instant spell any time they have priority. A player may cast a noninstant spell during their main phase any time they have priority and the stack is empty.
+
+117.1b
+A player may activate an activated ability any time they have priority.
+
+117.1c
+A player may take some special actions any time they have priority. A player may take other special actions during their main phase any time they have priority and the stack is empty. See rule 116, “Special Actions.”
+
+117.1d
+A player may activate a mana ability whenever they have priority, whenever they are casting a spell or activating an ability that requires a mana payment, or whenever a rule or effect asks for a mana payment (even in the middle of casting or resolving a spell or activating or resolving an ability).
+
+117.2
+Other kinds of abilities and actions are automatically generated or performed by the game rules, or are performed by players without receiving priority.
+
+117.2a
+Triggered abilities can trigger at any time, including while a spell is being cast, an ability is being activated, or a spell or ability is resolving. (See rule 603, “Handling Triggered Abilities.”) However, nothing actually happens at the time an ability triggers. Each time a player would receive priority, each ability that has triggered but hasn’t yet been put on the stack is put on the stack. See rule 117.5.
+
+117.2b
+Static abilities continuously affect the game. Priority doesn’t apply to them. (See rule 604, “Handling Static Abilities,” and rule 611, “Continuous Effects.”)
+
+117.2c
+Turn-based actions happen automatically when certain steps or phases begin. They’re dealt with before a player would receive priority. See rule 117.3a. Turn-based actions also happen automatically when each step and phase ends; no player receives priority afterward. See rule 703, “Turn-Based Actions.”
+
+117.2d
+State-based actions happen automatically when certain conditions are met. See rule 704. They’re dealt with before a player would receive priority. See rule 117.5.
+
+117.2e
+Resolving spells and abilities may instruct players to make choices or take actions, or may allow players to activate mana abilities. Even if a player is doing so, no player has priority while a spell or ability is resolving. See rule 608, “Resolving Spells and Abilities.”
+
+117.3
+Which player has priority is determined by the following rules:
+
+117.3a
+The active player receives priority at the beginning of most steps and phases, after any turn-based actions (such as drawing a card during the draw step; see rule 703) have been dealt with and abilities that trigger at the beginning of that phase or step have been put on the stack. No player receives priority during the untap step. Players usually don’t get priority during the cleanup step (see rule 514.3).
+
+117.3b
+The active player receives priority after a spell or ability (other than a mana ability) resolves.
+
+117.3c
+If a player has priority when they cast a spell, activate an ability, or take a special action, that player receives priority afterward.
+
+117.3d
+If a player has priority and chooses not to take any actions, that player passes. If any mana is in that player’s mana pool, they announce what mana is there. Then the next player in turn order receives priority.
+
+117.4
+If all players pass in succession (that is, if all players pass without taking any actions in between passing), the spell or ability on top of the stack resolves or, if the stack is empty, the phase or step ends.
+
+117.5
+Each time a player would get priority, the game first performs all applicable state-based actions as a single event (see rule 704, “State-Based Actions”), then repeats this process until no state-based actions are performed. Then triggered abilities are put on the stack (see rule 603, “Handling Triggered Abilities”). These steps repeat in order until no further state-based actions are performed and no abilities trigger. Then the player who would have received priority does so.
+
+117.6
+In a multiplayer game using the shared team turns option, teams rather than individual players have priority. See rule 805, “Shared Team Turns Option.”
+
+117.7
+If a player with priority casts a spell or activates an activated ability while another spell or ability is already on the stack, the new spell or ability has been cast or activated “in response to” the earlier spell or ability. The new spell or ability will resolve first. See rule 608, “Resolving Spells and Abilities.”
+
+================================================================================
+LLM              : 5.498s
+TOTAL            : 5.517s
+
+La prioridad en Magic determina quién puede realizar acciones. El jugador activo recibe prioridad al inicio de fases (excepto el untap) y después de que un hechizo o habilidad resuelva. Pueden lanzar hechizos, activar habilidades o tomar acciones especiales. Si pasan, el siguiente jugador recibe prioridad. Si todos pasan, la parte superior del stack resuelve o la fase termina. Las acciones basadas en estado y habilidades desencadenadas se resuelven antes de la prioridad.
+
+================================================================================
+Si lanzo un hechizo, ¿mi oponente puede responder antes de que se resuelva?
+================================================================================
+Context Builder : 0.029s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+Si lanzo un hechizo, ¿mi oponente puede responder antes de que se resuelva?
+
+============================================================
+RULES
+
+117.3c
+If a player has priority when they cast a spell, activate an ability, or take a special action, that player receives priority afterward.
+
+117.4
+If all players pass in succession (that is, if all players pass without taking any actions in between passing), the spell or ability on top of the stack resolves or, if the stack is empty, the phase or step ends.
+
+117.7
+If a player with priority casts a spell or activates an activated ability while another spell or ability is already on the stack, the new spell or ability has been cast or activated “in response to” the earlier spell or ability. The new spell or ability will resolve first. See rule 608, “Resolving Spells and Abilities.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Lanzar.
+
+================================================================================
+LLM              : 15.985s
+TOTAL            : 16.014s
+
+Sí, tu oponente puede responder antes de que el hechizo se resuelva. Cuando lanzas un hechizo, tienes prioridad para actuar, pero tu oponente puede castear un hechizo o activar una habilidad en respuesta. Ese nuevo efecto se coloca en la pila y resuelve antes que el tuyo.
+
+
+################################################################################
+Commander interaction
+################################################################################
+
+================================================================================
+¿Qué hace Korvold, Fae-Cursed King?
+================================================================================
+Context Builder : 0.026s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué hace Korvold, Fae-Cursed King?
+
+============================================================
+CARDS
+
+Korvold, Fae-Cursed King
+Mana Cost: {2}{B}{R}{G}
+Legendary Creature — Dragon Noble
+
+Flying
+Whenever Korvold enters or attacks, sacrifice another permanent.
+Whenever you sacrifice a permanent, put a +1/+1 counter on Korvold and draw a card.
+
+================================================================================
+LLM              : 4.594s
+TOTAL            : 4.620s
+
+Korvold, Fae-Cursed King es una criatura drágón noble con vuelo. Cuando entra al cementerio o ataca, debes sacrificar otro permanente. Cada vez que sacrifiques un permanente, pones un contador +1/+1 en Korvold y dibujas una carta.
+
+================================================================================
+¿Qué ocurre si sacrifico un permanente con Korvold en mesa?
+================================================================================
+Context Builder : 0.024s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué ocurre si sacrifico un permanente con Korvold en mesa?
+
+============================================================
+CARDS
+
+Korvold, Fae-Cursed King
+Mana Cost: {2}{B}{R}{G}
+Legendary Creature — Dragon Noble
+
+Flying
+Whenever Korvold enters or attacks, sacrifice another permanent.
+Whenever you sacrifice a permanent, put a +1/+1 counter on Korvold and draw a card.
+
+============================================================
+RULES
+
+Sacrifice
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner’s graveyard. A player can’t sacrifice something that isn’t a permanent, or something that’s a permanent they don’t control. Sacrificing a permanent doesn’t destroy it, so regeneration or other effects that replace destruction can’t affect this action.
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Sacrificar.
+
+================================================================================
+LLM              : 7.160s
+TOTAL            : 7.184s
+
+Al sacrificar un permanente mientras Korvold está en el campo de batalla, se ponen un +1/+1 en Korvold y se dibuja una carta. El permanente sacrificado muere y es enviado al cementerio. Si el sacrificio ocurre porque Korvold entró o atacó, se activa su efecto adicional de sacrificar otro permanente.
+
+================================================================================
+¿Y si sacrifico una criatura?
+================================================================================
+Context Builder : 0.016s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Y si sacrifico una criatura?
+
+============================================================
+CARDS
+
+Korvold, Fae-Cursed King
+Mana Cost: {2}{B}{R}{G}
+Legendary Creature — Dragon Noble
+
+Flying
+Whenever Korvold enters or attacks, sacrifice another permanent.
+Whenever you sacrifice a permanent, put a +1/+1 counter on Korvold and draw a card.
+
+============================================================
+RULES
+
+Sacrifice
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner’s graveyard. A player can’t sacrifice something that isn’t a permanent, or something that’s a permanent they don’t control. Sacrificing a permanent doesn’t destroy it, so regeneration or other effects that replace destruction can’t affect this action.
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+============================================================
+REASONING HINTS
+
+- Acción detectada: Sacrificar.
+
+================================================================================
+LLM              : 6.621s
+TOTAL            : 6.637s
+
+Si sacrificas una criatura, ésta muere y es movida directamente al cementerio. Además, Korvold, Fae-Cursed King recibiría un +1/+1 y te harías dibujar una carta. La acción de sacrificar activa sus efectos.
+
+
+################################################################################
+Topic switch
+################################################################################
+
+================================================================================
+¿Qué hace Sol Ring?
+================================================================================
+Context Builder : 0.012s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Qué hace Sol Ring?
+
+============================================================
+CARDS
+
+Sol Ring
+Mana Cost: {1}
+Artifact
+
+{T}: Add {C}{C}.
+
+================================================================================
+LLM              : 4.469s
+TOTAL            : 4.481s
+
+Sol Ring es un artefacto que cuesta {1} de mana. Al activar su habilidad {T}, añade dos manas de color blanco. Es útil para generar mana rápidamente al inicio del juego.
+
+================================================================================
+¿Merece la pena jugarlo en Commander?
+================================================================================
+Context Builder : 0.020s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+¿Merece la pena jugarlo en Commander?
+
+============================================================
+CARDS
+
+Sol Ring
+Mana Cost: {1}
+Artifact
+
+{T}: Add {C}{C}.
+
+================================================================================
+LLM              : 4.238s
+TOTAL            : 4.257s
+
+Sol Ring es una buena opción en Commander por su eficiencia para generar dos manas con un solo tap. Es versátil y ayuda a acelerar la producción de manas, lo que es clave en el formato. Su simplicidad y potencia lo hacen valioso para la mayoría de las estrategias.
+
+================================================================================
+Ahora explícame qué hace Lightning Bolt.
+================================================================================
+Context Builder : 0.015s
+Context Enricher: 0.000s
+Knowledge Builder: 0.000s
+================================================================================
+KNOWLEDGE SENT TO LLM
+================================================================================
+QUESTION
+
+Ahora explícame qué hace Lightning Bolt.
+
+============================================================
+CARDS
+
+Lightning Bolt
+Mana Cost: {R}
+Instant
+
+Lightning Bolt deals 3 damage to any target.
+
+================================================================================
+LLM              : 3.528s
+TOTAL            : 3.543s
+
+Lightning Bolt es un hechizo de {R} que causa 3 puntos de daño a cualquier objetivo, ya sea una criatura, jugador o otro objeto. No requiere sacrificio ni activación adicional. Su efecto es directo y inmediato al resolverse.
+
