@@ -6,10 +6,20 @@ from magicai.extractors.rules import extract_rules
 
 from magicai.llm.intent_parser import parse_intent
 
+from magicai.reasoning import build_reasoning
+from magicai.reasoning import extract_action_rule_refs
+
 
 def build_context(conversation, question: str):
 
     intent = parse_intent(question)
+
+    language = "es"
+
+    rules = _merge_unique(
+        extract_rules(question),
+        extract_action_rule_refs(question),
+    )
 
     context = AssistantContext(
 
@@ -17,11 +27,18 @@ def build_context(conversation, question: str):
 
         intent=intent["intent"],
 
+        language=language,
+
         cards=extract_cards(question),
 
         keywords=extract_keywords(question),
 
-        rules=extract_rules(question)
+        rules=rules,
+
+        facts=build_reasoning(
+            question,
+            language=language,
+        ),
 
     )
 
@@ -41,3 +58,18 @@ def build_context(conversation, question: str):
         ]
 
     return context
+
+
+def _merge_unique(*lists):
+
+    result = []
+
+    for items in lists:
+
+        for item in items:
+
+            if item not in result:
+
+                result.append(item)
+
+    return result

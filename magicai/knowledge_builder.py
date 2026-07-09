@@ -45,4 +45,16 @@ def build_knowledge(context):
                 parts.append(text)
                 parts.append("")
 
+    if context.facts:
+
+        parts.append("=" * 60)
+        parts.append("REASONING HINTS")
+        parts.append("")
+
+        for fact in context.facts:
+
+            parts.append(f"- {fact}")
+
+        parts.append("")
+
     return "\n".join(parts)

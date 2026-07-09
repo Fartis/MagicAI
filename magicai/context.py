@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+
 @dataclass(slots=True)
 class AssistantContext:
 
@@ -14,3 +15,5 @@ class AssistantContext:
     keywords: list[str] = field(default_factory=list)
 
     rules: list[str] = field(default_factory=list)
+
+    facts: list[str] = field(default_factory=list)
