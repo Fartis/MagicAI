@@ -142,12 +142,71 @@ def test_exile_queries_are_specific():
     )
 
 
+def test_resolution_queries_include_no_priority_during_resolution():
+
+    queries = build_rule_queries(
+        question="Si una habilidad está resolviéndose, ¿puedo activar otra habilidad?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "no player has priority",
+            "resolving",
+        ],
+        "resolution priority queries",
+    )
+
+
+def test_end_step_queries_include_apnap_stack():
+
+    queries = build_rule_queries(
+        question="Si dos jugadores tienen habilidades al comienzo del paso final, ¿en qué orden van a la pila?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "end step",
+            "APNAP",
+            "stack",
+        ],
+        "end step APNAP queries",
+    )
+
+
+def test_mana_ability_queries_include_stack_exception():
+
+    queries = build_rule_queries(
+        question="¿Puedo responder a la habilidad de Sol Ring?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "mana abilities",
+            "do not use the stack",
+            "resolve immediately",
+        ],
+        "mana ability queries",
+    )
+
+
 def main():
 
     tests = [
         test_sacrifice_queries_are_specific,
         test_dies_queries_are_specific,
         test_exile_queries_are_specific,
+        test_resolution_queries_include_no_priority_during_resolution,
+        test_end_step_queries_include_apnap_stack,
+        test_mana_ability_queries_include_stack_exception,
     ]
 
     errors = []

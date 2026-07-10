@@ -184,6 +184,10 @@ def _needs_oracle_rule_queries(context) -> bool:
     q = context.question.lower()
 
     markers = [
+        "habilidad",
+        "habilidades",
+        "ability",
+        "abilities",
         "habilidad activada",
         "habilidades activadas",
         "habilidad disparada",
@@ -194,6 +198,8 @@ def _needs_oracle_rule_queries(context) -> bool:
         "se dispara",
         "disparada",
         "desencadenada",
+        "responder",
+        "respuesta",
         "activated ability",
         "activated abilities",
         "triggered ability",

@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 
+from magicai.retrieval.rule_intent import is_common_language_card_alias
 from magicai.scryfall import load_cards
 
 
@@ -77,6 +78,22 @@ _REFERENCE_ALIAS_BLOCKLIST = {
     "escape",
     "convoke",
     "delve",
+
+    # Palabras comunes en preguntas de reglas en español.
+    # Si se permitieran como aliases ambiguos, preguntas como
+    # "una carta en mesa" o "paso final" terminarían pidiendo
+    # desambiguar cartas Mesa/Final en vez de contestar reglas.
+    "mesa",
+    "final",
+    "paso",
+    "inicio",
+    "principio",
+    "limpieza",
+    "enderezar",
+    "resolución",
+    "resolucion",
+    "respuesta",
+    "orden",
 }
 
 @dataclass(frozen=True)
@@ -287,6 +304,13 @@ def find_ambiguous_card_references(
     for alias, candidates, pattern in _ambiguous_aliases:
 
         if alias.lower() in _REFERENCE_ALIAS_BLOCKLIST:
+
+            continue
+
+        if is_common_language_card_alias(
+            alias,
+            question,
+        ):
 
             continue
 
