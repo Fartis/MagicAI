@@ -17,6 +17,7 @@ ACTIONS = [
         "search_terms": [
             "sacrifice",
             "permanent",
+            "battlefield",
             "graveyard",
         ],
     },

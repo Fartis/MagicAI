@@ -10,6 +10,7 @@ from magicai.reasoning import build_reasoning
 from magicai.reasoning import extract_action_search_terms
 
 from magicai.retrieval import build_rule_queries
+from magicai.retrieval.rule_intent import looks_like_general_rule_question
 
 
 def build_context(conversation, question: str):
@@ -49,7 +50,11 @@ def build_context(conversation, question: str):
 
     )
 
-    if not context.cards and conversation.active_cards:
+    if (
+        not context.cards
+        and conversation.active_cards
+        and not looks_like_general_rule_question(question)
+    ):
 
         context.cards = [
             card.name
