@@ -1,6 +1,7 @@
 from magicai.llm.ollama import generate
 from magicai.prompts.answer import SYSTEM_PROMPT
 from magicai.validation import build_fallback_answer, validate_answer
+from magicai.validation.rule_renderer import render_rule_answer
 
 
 MAX_ATTEMPTS = 2
@@ -22,6 +23,12 @@ def generate_answer(knowledge: str) -> str:
     print("=" * 80)
     print(knowledge)
     print("=" * 80)
+
+    rendered_rule_answer = render_rule_answer(knowledge)
+
+    if rendered_rule_answer:
+
+        return rendered_rule_answer
 
     last_answer = ""
     last_violations = []

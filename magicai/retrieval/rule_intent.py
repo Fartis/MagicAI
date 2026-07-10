@@ -48,6 +48,19 @@ COMMON_LANGUAGE_CARD_ALIASES = {
     "resolución",
     "respuesta",
     "orden",
+
+    # Palabras funcionales que pueden coincidir con el primer término de
+    # nombres de cartas, pero no deben abrir una desambiguación por sí solas.
+    "como",
+    "con",
+    "del",
+    "las",
+    "los",
+    "para",
+    "por",
+    "que",
+    "sin",
+    "una",
 }
 
 

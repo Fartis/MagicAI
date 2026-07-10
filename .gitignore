@@ -42,4 +42,14 @@ database/magic.db
 
 Resultado.txt
 
-sources/scryfall/*.jsonresultado_reddit_gauntlet*.html
+# Datos locales pesados / generados
+sources/scryfall/*.json
+
+# Informes de calidad generados
+resultado_reddit_gauntlet*.txt
+resultado_reddit_gauntlet*.xml
+resultado_reddit_gauntlet*.html
+resultado_generalization_probe*.txt
+resultado_generalization_probe*.xml
+resultado_generalization_probe*.html
+audit_gauntlet_*_failures.txt

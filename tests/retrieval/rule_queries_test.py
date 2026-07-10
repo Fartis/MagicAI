@@ -179,10 +179,10 @@ def test_end_step_queries_include_apnap_stack():
     )
 
 
-def test_mana_ability_queries_include_stack_exception():
+def test_generic_mana_ability_queries_include_stack_exception():
 
     queries = build_rule_queries(
-        question="¿Puedo responder a la habilidad de Sol Ring?",
+        question="¿Puedo responder a una habilidad de maná?",
         keywords=[],
         action_terms=[],
     )
@@ -198,6 +198,212 @@ def test_mana_ability_queries_include_stack_exception():
     )
 
 
+
+def test_mana_production_queries_include_rule_605_without_card_name():
+
+    queries = build_rule_queries(
+        question="Cuando giro una criatura para añadir maná, ¿se puede responder?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "605",
+            "mana abilities",
+            "do not use the stack",
+        ],
+        "generic mana production queries",
+    )
+
+
+def test_removed_source_queries_include_independent_ability_rule():
+
+    queries = build_rule_queries(
+        question="Si activo una habilidad y después destruyen esa criatura, ¿desaparece de la pila?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "113",
+            "activated ability on the stack exists independently of its source",
+        ],
+        "source independence queries",
+    )
+
+
+def test_response_before_resolution_queries_include_priority_and_stack():
+
+    queries = build_rule_queries(
+        question="Si lanzo un hechizo, ¿mi oponente puede responder antes de que se resuelva?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "117",
+            "405",
+            "priority",
+            "stack",
+        ],
+        "response before resolution queries",
+    )
+
+
+
+def test_cleanup_queries_include_normal_no_priority_exception():
+    queries = build_rule_queries(
+        question="Si descarto por tamaño máximo de mano en el paso de limpieza, ¿hay prioridad?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "514",
+            "cleanup step normally no player receives priority",
+            "triggered abilities",
+        ],
+        "cleanup priority queries",
+    )
+
+
+def test_sacrifice_destroy_queries_include_both_keyword_actions():
+    queries = build_rule_queries(
+        question="¿Sacrificar una criatura cuenta como destruirla?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "701.8",
+            "701.21",
+            "sacrificing a permanent doesn't destroy it",
+        ],
+        "sacrifice destroy queries",
+    )
+
+
+def test_commander_death_queries_include_state_based_move():
+    queries = build_rule_queries(
+        question="Si mi comandante muere, ¿puedo moverlo a la zona de mando y disparar cuando muera?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "903.9a",
+            "700.4",
+            "state-based action",
+            "dies graveyard from battlefield",
+        ],
+        "commander death queries",
+    )
+
+
+def test_commander_hand_library_queries_include_replacement_effect():
+    queries = build_rule_queries(
+        question="Si mi comandante fuera a mi mano o biblioteca, ¿puedo ponerlo en la zona de mando?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "903.9b",
+            "hand library",
+            "replacement effect",
+        ],
+        "commander hand library queries",
+    )
+
+
+def test_commander_copy_queries_include_designation_rule():
+    queries = build_rule_queries(
+        question="Si una copia de mi comandante muere, ¿puede ir a la zona de mando?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "903.3",
+            "copying a commander is not a commander",
+            "designation",
+        ],
+        "commander copy queries",
+    )
+
+
+def test_counter_replacement_queries_include_exact_interaction_rules():
+    queries = build_rule_queries(
+        question="Si un permanente entra con contadores y varios efectos los modifican, ¿se suman o se reemplazan?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        ["614.1c", "616.1", "616.1f", "122.6"],
+        "counter replacement exact rules",
+    )
+
+
+def test_persist_zero_zero_queries_include_keyword_and_state_based_rules():
+    queries = build_rule_queries(
+        question="Si una criatura 0/0 entra con un contador +1/+1 y tiene Persist, ¿qué pasa cuando muere?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        ["702.79", "704.5f", "704.5q", "122.3"],
+        "persist zero zero rules",
+    )
+
+
+def test_undying_exile_queries_include_exile_and_dies_rules():
+    queries = build_rule_queries(
+        question="Si una criatura con Undying es exiliada, ¿vuelve?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        ["701.11", "702.93", "700.4"],
+        "undying exile rules",
+    )
+
+
+def test_persist_undying_queries_include_both_keywords_and_stack():
+    queries = build_rule_queries(
+        question="Si una criatura tiene Persist y Undying y muere sin contadores, ¿qué ocurre?",
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        ["702.79", "702.93", "603", "405"],
+        "persist undying rules",
+    )
+
+
 def main():
 
     tests = [
@@ -206,7 +412,19 @@ def main():
         test_exile_queries_are_specific,
         test_resolution_queries_include_no_priority_during_resolution,
         test_end_step_queries_include_apnap_stack,
-        test_mana_ability_queries_include_stack_exception,
+        test_generic_mana_ability_queries_include_stack_exception,
+        test_mana_production_queries_include_rule_605_without_card_name,
+        test_response_before_resolution_queries_include_priority_and_stack,
+        test_removed_source_queries_include_independent_ability_rule,
+        test_cleanup_queries_include_normal_no_priority_exception,
+        test_sacrifice_destroy_queries_include_both_keyword_actions,
+        test_commander_death_queries_include_state_based_move,
+        test_commander_hand_library_queries_include_replacement_effect,
+        test_commander_copy_queries_include_designation_rule,
+        test_counter_replacement_queries_include_exact_interaction_rules,
+        test_persist_zero_zero_queries_include_keyword_and_state_based_rules,
+        test_undying_exile_queries_include_exile_and_dies_rules,
+        test_persist_undying_queries_include_both_keywords_and_stack,
     ]
 
     errors = []

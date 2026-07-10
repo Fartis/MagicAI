@@ -23,7 +23,26 @@ _STOP_ALIASES = {
     "the",
     "to",
     "with",
+
+    # Palabras funcionales frecuentes en español. Nunca son una referencia
+    # de carta suficientemente informativa por sí solas.
+    "como",
+    "con",
+    "del",
+    "las",
+    "los",
+    "para",
+    "por",
+    "que",
+    "sin",
+    "una",
 }
+
+_MECHANIC_CARD_NAMES = {
+    "persist",
+    "undying",
+}
+
 
 _REFERENCE_ALIAS_BLOCKLIST = {
     "magic",
@@ -252,11 +271,18 @@ def extract_cards(question: str):
 
     _load()
 
-    question = question.lower()
+    original_question = question.lower()
+    question = original_question
 
     found = []
 
     for name, pattern in _exact_cards:
+
+        if _is_mechanic_reference(
+            card_name=name,
+            question=original_question,
+        ):
+            continue
 
         if pattern.search(question):
 
@@ -285,6 +311,64 @@ def extract_cards(question: str):
             )
 
     return found
+
+
+def _is_mechanic_reference(
+    card_name: str,
+    question: str,
+) -> bool:
+    """
+    Avoid treating a keyword that is also a card name as a card reference.
+
+    This is intentionally conservative: direct card questions such as
+    "¿Qué hace Persist?" still resolve the card, while phrases such as
+    "tiene Persist" or "Persist y Undying" are routed as rules concepts.
+    """
+
+    name = card_name.lower().strip()
+
+    if name not in _MECHANIC_CARD_NAMES:
+        return False
+
+    direct_card_markers = [
+        f"que hace {name}",
+        f"qué hace {name}",
+        f"explicame {name}",
+        f"explícame {name}",
+        f"carta {name}",
+        f"card {name}",
+        f"oracle de {name}",
+    ]
+
+    if any(marker in question for marker in direct_card_markers):
+        return False
+
+    mechanic_markers = [
+        f"tiene {name}",
+        f"con {name}",
+        f"habilidad {name}",
+        f"mecanica {name}",
+        f"mecánica {name}",
+        f"{name} y ",
+        f"{name} junto",
+        f"{name} a la vez",
+    ]
+
+    rules_context = any(
+        marker in question
+        for marker in [
+            "muere",
+            "morir",
+            "contador",
+            "contadores",
+            "0/0",
+            "pila",
+            "habilidad disparada",
+            "acciones basadas en estado",
+        ]
+    )
+
+    return any(marker in question for marker in mechanic_markers) or rules_context
 
 
 def find_ambiguous_card_references(

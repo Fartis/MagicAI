@@ -51,12 +51,13 @@ def enrich(context):
                     query,
                 )
 
-        for query in oracle_rule_queries:
-
-            _add_unique_query(
-                context.rule_queries,
-                query,
-            )
+        # Los conceptos derivados del Oracle recuperado son evidencia más
+        # específica que las expansiones léxicas de la pregunta. Se priorizan
+        # para que el límite MAX_RULES no los deje fuera por ruido anterior.
+        context.rule_queries = _merge_unique_queries(
+            oracle_rule_queries,
+            context.rule_queries,
+        )
 
     enriched_rules = []
 
@@ -213,3 +214,19 @@ def _needs_oracle_rule_queries(context) -> bool:
         marker in q
         for marker in markers
     )
+
+def _merge_unique_queries(
+    preferred: list[str],
+    existing: list[str],
+) -> list[str]:
+
+    merged = []
+
+    for query in preferred + existing:
+
+        _add_unique_query(
+            merged,
+            query,
+        )
+
+    return merged

@@ -1,0 +1,1002 @@
+from magicai.validation.rule_renderer import render_rule_answer
+
+
+def assert_contains(text: str, expected: list[str], label: str):
+    lower = text.lower()
+
+    missing = [
+        item
+        for item in expected
+        if item.lower() not in lower
+    ]
+
+    if missing:
+        raise AssertionError(
+            f"{label}: missing {missing!r} in answer:\n{text}"
+        )
+
+
+def assert_not_contains(text: str, forbidden: list[str], label: str):
+    lower = text.lower()
+
+    present = [
+        item
+        for item in forbidden
+        if item.lower() in lower
+    ]
+
+    if present:
+        raise AssertionError(
+            f"{label}: unexpected {present!r} in answer:\n{text}"
+        )
+
+
+def test_no_priority_during_resolution():
+    knowledge = """
+QUESTION
+
+Si una habilidad está resolviéndose y pone una carta en mesa, ¿puedo activar esa carta antes de que termine de resolver la habilidad?
+
+============================================================
+RULES
+
+117
+Timing and Priority
+
+117.2e
+No player has priority while a spell or ability is resolving.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No",
+            "resolviendo",
+            "prioridad",
+            "durante la resolución",
+        ],
+        "no priority during resolution",
+    )
+
+
+def test_untap_step_priority():
+    knowledge = """
+QUESTION
+
+Si una habilidad se dispara al comienzo del paso de enderezar, ¿se puede responder?
+
+============================================================
+RULES
+
+502
+Untap Step
+
+502.4
+No player receives priority during the untap step. Any ability that triggers during this step will be held until the next time a player would receive priority.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "paso de enderezar",
+            "prioridad",
+            "no",
+            "pila",
+        ],
+        "untap step priority",
+    )
+
+
+def test_apnap_triggers():
+    knowledge = """
+QUESTION
+
+Si varias habilidades disparadas se disparan al mismo tiempo, ¿quién decide el orden?
+
+============================================================
+RULES
+
+603
+Handling Triggered Abilities
+
+405
+Stack
+
+405.3
+If an effect puts two or more objects on the stack at the same time, those controlled by the active player are put on lowest, followed by each other player's objects in APNAP order.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "habilidades disparadas",
+            "APNAP",
+            "jugador activo",
+            "jugador no activo",
+            "controla",
+            "pila",
+            "orden",
+        ],
+        "apnap triggers",
+    )
+
+
+def test_mana_ability_uses_recovered_arcane_signet_oracle():
+    knowledge = """
+QUESTION
+
+¿La habilidad de maná de Arcane Signet usa la pila o se puede responder?
+
+============================================================
+CARDS
+
+Arcane Signet
+Artifact
+
+{T}: Add one mana of any color in your commander's color identity.
+
+============================================================
+RULES
+
+605
+Mana Abilities
+
+605.3b
+An activated mana ability doesn't go on the stack, so it can't be responded to and resolves immediately.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Arcane Signet",
+            "habilidad de maná",
+            "pila",
+            "no se puede responder",
+        ],
+        "mana ability Arcane Signet",
+    )
+
+    assert_not_contains(
+        answer,
+        ["Sol Ring"],
+        "mana ability Arcane Signet",
+    )
+
+
+def test_mana_ability_is_inferred_from_recovered_oracle():
+    knowledge = """
+QUESTION
+
+Cuando giro Llanowar Elves para añadir maná, ¿mi rival puede responder a esa habilidad?
+
+============================================================
+CARDS
+
+Llanowar Elves
+Creature — Elf Druid
+
+{T}: Add {G}.
+
+============================================================
+RULES
+
+605
+Mana Abilities
+
+605.3b
+An activated mana ability doesn't go on the stack, so it can't be responded to and resolves immediately.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Llanowar Elves",
+            "habilidad de maná",
+            "añadir maná",
+            "pila",
+            "no se puede responder",
+        ],
+        "mana ability Llanowar Elves",
+    )
+
+
+
+def test_single_recovered_mana_ability_supports_generic_card_reference():
+    knowledge = """
+QUESTION
+
+¿Puedo responder a la habilidad de Mind Stone?
+
+============================================================
+CARDS
+
+Mind Stone
+Artifact
+
+{T}: Add {C}.
+
+============================================================
+RULES
+
+605
+Mana Abilities
+
+605.3b
+An activated mana ability doesn't go on the stack and resolves immediately.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Mind Stone",
+            "habilidad de maná",
+            "pila",
+            "no se puede responder",
+        ],
+        "generic recovered mana ability",
+    )
+
+def test_sol_ring_mana_ability_ignores_mana_cost_metadata():
+    knowledge = """
+QUESTION
+
+¿Puedo responder a la habilidad de Sol Ring?
+
+============================================================
+CARDS
+
+Sol Ring
+Mana Cost: {1}
+Artifact
+
+{T}: Add {C}{C}.
+
+============================================================
+RULES
+
+605
+Mana Abilities
+
+605.3b
+An activated mana ability doesn't go on the stack and resolves immediately.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Sol Ring",
+            "habilidad de maná",
+            "añadir maná",
+            "pila",
+            "no se puede responder",
+        ],
+        "Sol Ring mana ability with metadata",
+    )
+
+
+def test_mana_renderer_requires_recovered_rule_evidence():
+    knowledge = """
+QUESTION
+
+Cuando giro Llanowar Elves para añadir maná, ¿mi rival puede responder a esa habilidad?
+
+============================================================
+CARDS
+
+Llanowar Elves
+Creature — Elf Druid
+
+{T}: Add {G}.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    if answer is not None:
+        raise AssertionError(
+            "mana renderer must not answer without recovered rule 605 evidence"
+        )
+
+
+def test_stack_resolves_one_object_then_returns_priority():
+    knowledge = """
+QUESTION
+
+Si hay dos objetos esperando en la pila, ¿se resuelven todos automáticamente sin dar prioridad entre medias?
+
+============================================================
+RULES
+
+405
+Stack
+
+405.5
+When all players pass in succession, the top spell or ability on the stack resolves.
+
+117
+Timing and Priority
+
+117.3b
+The active player receives priority after a spell or ability resolves.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No",
+            "pila",
+            "uno a uno",
+            "prioridad",
+            "entre",
+        ],
+        "stack progression",
+    )
+
+
+def test_priority_returns_between_stack_objects():
+    knowledge = """
+QUESTION
+
+Después de que se resuelve un hechizo de la pila, ¿puedo responder antes de que se resuelva el siguiente?
+
+============================================================
+RULES
+
+405
+Stack
+
+117
+Timing and Priority
+
+117.3b
+The active player receives priority after a spell or ability resolves.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Sí",
+            "pila",
+            "prioridad",
+            "antes de que se resuelva el siguiente",
+        ],
+        "priority between stack objects",
+    )
+
+
+def test_opponent_can_respond_before_spell_resolves():
+    knowledge = """
+QUESTION
+
+Si lanzo un hechizo, ¿mi oponente puede responder antes de que se resuelva?
+
+============================================================
+RULES
+
+117
+Timing and Priority
+
+405
+Stack
+
+405.5
+When all players pass in succession, the top object on the stack resolves.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Sí",
+            "oponente",
+            "prioridad",
+            "antes",
+            "se resuelva",
+        ],
+        "response before resolution",
+    )
+
+
+def test_ward_is_triggered_and_can_be_responded_to():
+    knowledge = """
+QUESTION
+
+Una criatura con Ward es objetivo de un removal. ¿Puedo responder a esa habilidad de Ward?
+
+============================================================
+RULES
+
+702.21
+Ward
+
+702.21a
+Ward is a triggered ability.
+
+603
+Handling Triggered Abilities
+
+405
+Stack
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Ward",
+            "habilidad disparada",
+            "pila",
+            "Sí",
+            "responder",
+        ],
+        "Ward trigger",
+    )
+
+
+def test_activated_ability_exists_independently_of_source():
+    knowledge = """
+QUESTION
+
+Si activo una habilidad de una criatura y después destruyen esa criatura, ¿la habilidad desaparece de la pila?
+
+============================================================
+RULES
+
+113
+Abilities
+
+113.7a
+Once activated or triggered, an ability exists on the stack independently of its source.
+
+405
+Stack
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No",
+            "pila",
+            "fuente",
+            "no se contrarresta",
+            "permanece",
+        ],
+        "ability source independence",
+    )
+
+
+def test_activated_and_triggered_ability_taxonomy():
+    knowledge = """
+QUESTION
+
+¿Cómo distingo una habilidad activada de una habilidad disparada?
+
+============================================================
+RULES
+
+602
+Activating Activated Abilities
+
+602.1
+Activated abilities have a cost and an effect. They are written as “[Cost]: [Effect.]”.
+
+603
+Handling Triggered Abilities
+
+603.1
+Triggered abilities begin with “when,” “whenever,” or “at.”
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No",
+            "habilidad activada",
+            "habilidad disparada",
+            "coste",
+            ":",
+            "cuando",
+        ],
+        "ability taxonomy",
+    )
+
+
+
+def test_cleanup_step_normally_has_no_priority():
+    knowledge = """
+QUESTION
+
+Si descarto una carta por tamaño máximo de mano en el paso de limpieza, ¿hay prioridad?
+
+============================================================
+RULES
+
+514
+Cleanup Step
+
+514.3
+Normally, no player receives priority during the cleanup step.
+
+514.3a
+If any state-based actions are performed or any triggered abilities are waiting to be put onto the stack, the active player gets priority.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Normalmente no",
+            "paso de limpieza",
+            "prioridad",
+            "acciones basadas en estado",
+            "habilidades disparadas",
+        ],
+        "cleanup priority",
+    )
+
+
+def test_sacrifice_is_not_destroy():
+    knowledge = """
+QUESTION
+
+¿Sacrificar una criatura cuenta como destruirla?
+
+============================================================
+RULES
+
+701.8
+Destroy
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner's graveyard. Sacrificing a permanent doesn't destroy it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No",
+            "Sacrificar",
+            "no cuenta como destruir",
+            "campo de batalla",
+            "cementerio",
+        ],
+        "sacrifice is not destroy",
+    )
+
+
+def test_commander_dies_before_state_based_move():
+    knowledge = """
+QUESTION
+
+Si mi comandante muere, ¿puedo mandarlo a la zona de mando y aun así disparar habilidades de 'cuando muera'?
+
+============================================================
+RULES
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+903.9a
+If a commander is in a graveyard or in exile and was put there since the last state-based action check, its owner may put it into the command zone.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Sí",
+            "muere",
+            "cementerio",
+            "zona de mando",
+            "cuando muera",
+            "acciones basadas en estado",
+        ],
+        "commander death trigger",
+    )
+
+
+def test_commander_hand_library_is_replacement_effect():
+    knowledge = """
+QUESTION
+
+Si mi comandante fuera a mi mano o biblioteca, ¿la zona de mando funciona igual que cuando muere?
+
+============================================================
+RULES
+
+903.9a
+If a commander is in a graveyard or exile, its owner may put it into the command zone as a state-based action.
+
+903.9b
+If a commander would be put into its owner's hand or library from anywhere, its owner may put it into the command zone instead. This is a replacement effect.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No exactamente",
+            "mano",
+            "biblioteca",
+            "efecto de reemplazo",
+            "zona de mando",
+            "cementerio",
+        ],
+        "commander hand library replacement",
+    )
+
+
+def test_copy_of_commander_is_not_commander():
+    knowledge = """
+QUESTION
+
+Si una copia de mi comandante muere, ¿puedo mover esa copia a la zona de mando?
+
+============================================================
+RULES
+
+903.3
+Each deck has a legendary card designated as its commander. This designation is an attribute of the card itself. A permanent copying a commander is not a commander.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "No",
+            "copia",
+            "comandante",
+            "carta",
+            "zona de mando",
+        ],
+        "copy commander designation",
+    )
+
+
+def test_elenda_commander_death_uses_recovered_card_name():
+    knowledge = """
+QUESTION
+
+Si Elenda, the Dusk Rose muere y la mando a la zona de mando, ¿se dispara su habilidad?
+
+============================================================
+CARDS
+
+Elenda, the Dusk Rose
+Mana Cost: {2}{W}{B}
+Legendary Creature — Vampire Knight
+When Elenda, the Dusk Rose dies, create X 1/1 white Vampire creature tokens with lifelink.
+
+============================================================
+RULES
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+903.9a
+If a commander is in a graveyard and was put there since the last state-based action check, its owner may put it into the command zone.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+
+    assert_contains(
+        answer,
+        [
+            "Elenda",
+            "muere",
+            "se disparan",
+            "cementerio",
+            "zona de mando",
+        ],
+        "Elenda commander death",
+    )
+
+
+def test_undying_sacrifice_is_rendered_deterministically():
+    knowledge = """
+QUESTION
+
+Si sacrifico Young Wolf teniendo Undying, ¿qué ocurre?
+
+============================================================
+RULES
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner's graveyard.
+
+702.93a
+Undying is a triggered ability. When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield with a +1/+1 counter on it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["sacrificar", "cementerio", "Undying", "vuelve", "campo de batalla", "+1/+1"],
+        "deterministic undying",
+    )
+    assert_not_contains(answer, ["no se activa"], "deterministic undying")
+
+
+def test_exile_does_not_trigger_undying():
+    knowledge = """
+QUESTION
+
+Si exilio Young Wolf, ¿vuelve por Undying?
+
+============================================================
+RULES
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+
+701.11a
+To exile an object, move it to the exile zone from wherever it is.
+
+702.93a
+Undying is a triggered ability. When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield with a +1/+1 counter on it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["exilio", "Undying", "no se dispara", "no muere", "cementerio", "no vuelve"],
+        "undying exile",
+    )
+
+
+def test_multiple_counter_replacement_effects_choose_order():
+    knowledge = """
+QUESTION
+
+Si controlo dos efectos que doblan contadores, ¿cómo se aplican?
+
+============================================================
+RULES
+
+122.6
+Counters put on an object as it enters are counters put on that object.
+
+614.1c
+Effects that read enters with are replacement effects.
+
+616.1
+If two or more replacement effects attempt to modify an event, the affected object's controller or affected player chooses one.
+
+616.1f
+After applying one effect, repeat the process until none remain.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["efectos de reemplazo", "contadores", "controlador", "elige", "orden", "4N"],
+        "counter replacement order",
+    )
+
+
+def test_entering_with_counters_uses_replacement_sequence():
+    knowledge = """
+QUESTION
+
+Si un permanente entra con contadores y varios efectos los modifican, ¿se suman o se reemplazan?
+
+============================================================
+RULES
+
+122.6
+Counters put on an object as it enters are counters put on that object.
+
+614.1c
+Effects that read enters with are replacement effects.
+
+616.1
+The affected object's controller chooses one replacement effect to apply.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["contadores", "entra", "efectos de reemplazo", "orden", "aplica"],
+        "enter counters replacements",
+    )
+
+
+def test_zero_zero_persist_mentions_state_based_actions():
+    knowledge = """
+QUESTION
+
+Si una criatura 0/0 entra con un contador +1/+1 y tiene Persist, ¿qué pasa cuando muere?
+
+============================================================
+RULES
+
+122.3
++1/+1 and -1/-1 counters are removed as a state-based action.
+
+704.5f
+A creature with toughness 0 or less is put into its owner's graveyard.
+
+702.79a
+Persist returns the permanent with a -1/-1 counter if it had no -1/-1 counters.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["Persist", "muere", "vuelve", "-1/-1", "acciones basadas en estado"],
+        "zero zero persist",
+    )
+
+
+def test_persist_and_undying_share_stack_but_only_one_returns_card():
+    knowledge = """
+QUESTION
+
+Si una criatura tiene Persist y Undying a la vez y muere sin contadores, ¿puede volver infinitamente?
+
+============================================================
+RULES
+
+405
+The Stack
+
+400.7
+An object that moves from one zone to another becomes a new object.
+
+603
+Handling Triggered Abilities
+
+702.79a
+Persist returns the permanent with a -1/-1 counter.
+
+702.93a
+Undying returns the permanent with a +1/+1 counter.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["Persist", "Undying", "dos habilidades", "pila", "+1/+1", "-1/-1"],
+        "persist undying",
+    )
+
+
+def main():
+    tests = [
+        test_no_priority_during_resolution,
+        test_untap_step_priority,
+        test_apnap_triggers,
+        test_mana_ability_uses_recovered_arcane_signet_oracle,
+        test_mana_ability_is_inferred_from_recovered_oracle,
+        test_single_recovered_mana_ability_supports_generic_card_reference,
+        test_sol_ring_mana_ability_ignores_mana_cost_metadata,
+        test_mana_renderer_requires_recovered_rule_evidence,
+        test_stack_resolves_one_object_then_returns_priority,
+        test_priority_returns_between_stack_objects,
+        test_opponent_can_respond_before_spell_resolves,
+        test_ward_is_triggered_and_can_be_responded_to,
+        test_activated_ability_exists_independently_of_source,
+        test_activated_and_triggered_ability_taxonomy,
+        test_cleanup_step_normally_has_no_priority,
+        test_sacrifice_is_not_destroy,
+        test_commander_dies_before_state_based_move,
+        test_commander_hand_library_is_replacement_effect,
+        test_copy_of_commander_is_not_commander,
+        test_elenda_commander_death_uses_recovered_card_name,
+        test_undying_sacrifice_is_rendered_deterministically,
+        test_exile_does_not_trigger_undying,
+        test_multiple_counter_replacement_effects_choose_order,
+        test_entering_with_counters_uses_replacement_sequence,
+        test_zero_zero_persist_mentions_state_based_actions,
+        test_persist_and_undying_share_stack_but_only_one_returns_card,
+    ]
+
+    errors = []
+
+    for test in tests:
+        try:
+            test()
+            print(f"OK: {test.__name__}")
+
+        except Exception as exc:
+            errors.append((test.__name__, exc))
+            print(f"ERROR: {test.__name__}")
+            print(exc)
+
+    print()
+    print("=" * 80)
+    print("RESULT")
+    print("=" * 80)
+    print(f"Tests : {len(tests)}")
+    print(f"Errors: {len(errors)}")
+
+    if errors:
+        raise SystemExit(1)
+
+    print("OK")
+
+
+if __name__ == "__main__":
+    main()

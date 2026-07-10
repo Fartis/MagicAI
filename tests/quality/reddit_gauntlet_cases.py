@@ -9,13 +9,13 @@ QUALITY_CASES = [
                 "required_all": [
                     "sacrificar",
                     "cementerio",
-                    "campo de batalla",
                     "+1/+1",
                 ],
                 "required_any": [
                     ["Undying"],
                     ["muere", "morir", "muerte", "dies"],
-                    ["vuelve", "regresa"],
+                    ["vuelve", "regresa", "retorna"],
+                    ["campo de batalla", "campo"],
                 ],
                 "forbidden": [
                     "Food",
@@ -60,11 +60,11 @@ QUALITY_CASES = [
                 "question": "¿Sacrificar una criatura cuenta como destruirla?",
                 "required_all": [
                     "sacrificar",
-                    "destruir",
                 ],
                 "required_any": [
+                    ["destruir", "destruye", "destrucción"],
                     ["no"],
-                    ["no cuenta", "no es lo mismo"],
+                    ["no cuenta", "no es lo mismo", "no la destruye"],
                 ],
                 "forbidden": [
                     "sí cuenta como destruir",
@@ -140,7 +140,10 @@ QUALITY_CASES = [
                     "la habilidad de Undying es parte del costo",
                     "porque es parte del coste",
                     "porque es parte del costo",
-                    "se resuelve durante el lanzamiento",
+                    "la habilidad se resuelve durante el lanzamiento",
+                    "Undying se resuelve durante el lanzamiento",
+                    "se resuelve al momento de sacrificar",
+                    "se resuelve inmediatamente al sacrificar",
                     "no se dispara",
                     "la pila entera se resuelve",
                 ],
@@ -275,7 +278,7 @@ QUALITY_CASES = [
                 ],
                 "required_any": [
                     ["APNAP", "jugador activo", "jugador no activo"],
-                    ["controlador", "controladores"],
+                    ["controlador", "controladores", "controla", "controlan"],
                     ["orden"],
                 ],
                 "forbidden": [

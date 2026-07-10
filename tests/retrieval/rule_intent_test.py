@@ -34,6 +34,14 @@ def test_common_language_alias_blocks_final():
     )
 
 
+
+def test_common_language_alias_blocks_sin():
+
+    assert is_common_language_card_alias(
+        "sin",
+        "Si hay dos objetos en la pila, ¿se resuelven sin dar prioridad?",
+    )
+
 def main():
 
     tests = [
@@ -41,6 +49,7 @@ def main():
         test_general_rule_question_detects_end_step,
         test_common_language_alias_blocks_mesa,
         test_common_language_alias_blocks_final,
+        test_common_language_alias_blocks_sin,
     ]
 
     errors = []

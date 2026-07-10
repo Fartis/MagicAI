@@ -1,4 +1,5 @@
 import argparse
+import re
 import sys
 import time
 import traceback
@@ -96,6 +97,37 @@ def _missing_required_any(
     return failures
 
 
+def contains_forbidden_term(text: str, term: str) -> bool:
+    normalized_text = normalize(text)
+    normalized_term = normalize(term)
+
+    if not normalized_term:
+        return False
+
+    pattern = re.compile(
+        r"(?<!\w)" + re.escape(normalized_term) + r"(?!\w)"
+    )
+    matches = list(pattern.finditer(normalized_text))
+
+    if not matches:
+        return False
+
+    # A forbidden proposition must not be reported when the answer explicitly
+    # negates it, e.g. "No son lo mismo" or "no se contrarresta". Terms that
+    # already begin with a negation keep their literal meaning. Exact token
+    # boundaries also prevent "no se activa" from matching "no se activan".
+    if re.match(r"^(?:no|nunca|jamas)\b", normalized_term):
+        return True
+
+    for match in matches:
+        prefix = normalized_text[max(0, match.start() - 12):match.start()]
+
+        if not re.search(r"\b(?:no|nunca|jamas)\s+$", prefix):
+            return True
+
+    return False
+
+
 def _present_forbidden(
     answer: str,
     terms: list[str],
@@ -105,7 +137,7 @@ def _present_forbidden(
     return [
         f"{label} term present: {term}"
         for term in terms
-        if contains_term(
+        if contains_forbidden_term(
             answer,
             term,
         )

@@ -218,6 +218,30 @@ LEXICAL_BRIDGE.update(
             "mana abilities",
             "do not use the stack",
         ],
+        "añadir maná": [
+            "mana ability",
+            "mana abilities",
+            "add mana",
+            "do not use the stack",
+        ],
+        "anadir mana": [
+            "mana ability",
+            "mana abilities",
+            "add mana",
+            "do not use the stack",
+        ],
+        "agregar maná": [
+            "mana ability",
+            "mana abilities",
+            "add mana",
+            "do not use the stack",
+        ],
+        "agregar mana": [
+            "mana ability",
+            "mana abilities",
+            "add mana",
+            "do not use the stack",
+        ],
         "paso de enderezar": [
             "untap step",
             "no player receives priority",
@@ -284,6 +308,22 @@ LEXICAL_BRIDGE.update(
             "source",
             "activated ability",
         ],
+        "destruir": [
+            "destroy",
+            "destroy a permanent",
+        ],
+        "destruye": [
+            "destroy",
+            "destroy a permanent",
+        ],
+        "destrucción": [
+            "destruction",
+            "destroy",
+        ],
+        "destruccion": [
+            "destruction",
+            "destroy",
+        ],
         "ward": [
             "ward",
             "triggered ability",
@@ -308,6 +348,13 @@ def build_rule_queries(
     queries = []
 
     translated_terms = _translate_question_terms(question)
+
+    for query in _rule_number_queries(question):
+
+        _add_unique(
+            queries,
+            query,
+        )
 
     for query in _specialized_queries(question):
 
@@ -349,6 +396,442 @@ def build_rule_queries(
         action_terms or [],
     )
 
+
+
+def _rule_number_queries(question: str) -> list[str]:
+
+    q = _normalize_question(
+        question
+    )
+
+    queries = []
+
+    def add(*numbers: str):
+        for number in numbers:
+            _add_unique(
+                queries,
+                number,
+            )
+
+    if _contains_any(
+        q,
+        [
+            "prioridad",
+            "priority",
+        ],
+    ):
+
+        add(
+            "117",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "responder",
+            "respuesta",
+            "antes de que se resuelva",
+            "antes de resolverse",
+            "in response",
+        ],
+    ):
+
+        add(
+            "117",
+            "405",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "pila",
+            "stack",
+            "resuelve de golpe",
+            "resuelve entera",
+            "resuelva el siguiente",
+            "resuelve el siguiente",
+        ],
+    ):
+
+        add(
+            "405",
+            "608",
+            "117",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "resolviendo",
+            "resolviendose",
+            "resolverse",
+            "resolucion",
+            "termine de resolver",
+        ],
+    ):
+
+        add(
+            "117",
+            "608",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "paso de enderezar",
+            "untap step",
+        ],
+    ):
+
+        add(
+            "502",
+            "117",
+            "603",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "paso final",
+            "end step",
+        ],
+    ):
+
+        add(
+            "513",
+            "405",
+            "603",
+            "101",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "habilidades disparadas",
+            "habilidad disparada",
+            "habilidad desencadenada",
+            "triggered ability",
+            "triggered abilities",
+            "se dispara",
+            "al mismo tiempo",
+            "apnap",
+            "jugador activo",
+            "jugador no activo",
+        ],
+    ):
+
+        add(
+            "603",
+            "405",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "puedes",
+            "may",
+        ],
+    ) and _contains_any(
+        q,
+        [
+            "habilidad disparada",
+            "habilidad desencadenada",
+            "triggered ability",
+        ],
+    ):
+
+        add(
+            "603",
+            "608",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "paso de limpieza",
+            "limpieza",
+            "cleanup step",
+            "tamano maximo de mano",
+            "tamaño máximo de mano",
+        ],
+    ):
+
+        add(
+            "514",
+            "117",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "habilidad de mana",
+            "habilidad de maná",
+            "mana ability",
+            "añadir maná",
+            "añadir mana",
+            "anadir mana",
+            "agregar maná",
+            "agregar mana",
+        ],
+    ):
+
+        add(
+            "605",
+            "405",
+            "117",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "coste",
+            "costo",
+            "como coste",
+            "como costo",
+        ],
+    ):
+
+        add(
+            "601",
+            "117",
+            "603",
+            "405",
+            "701.21",
+            "700.4",
+        )
+
+    if _contains_any(q, ["sacrificar", "sacrificio", "sacrifice"]):
+
+        add(
+            "701.21",
+            "700.4",
+        )
+
+    if _contains_any(q, ["exilio", "exiliar", "exiliado", "exiliada", "exile"]):
+
+        add(
+            "701.11",
+        )
+
+        if "undying" in q:
+            add(
+                "702.93",
+                "700.4",
+            )
+
+    if (
+        _contains_any(q, ["sacrificar", "sacrificio", "sacrifice"])
+        and _contains_any(q, ["destruir", "destruye", "destruccion", "destroy"])
+    ):
+
+        queries.extend(
+            [
+                "sacrificing a permanent doesn't destroy it",
+                "regeneration or replacement effects that replace destruction can't affect sacrifice",
+                "to sacrifice a permanent controller moves it directly from battlefield to graveyard",
+            ]
+        )
+
+    if _contains_any(
+        q,
+        [
+            "ward",
+        ],
+    ):
+
+        add(
+            "702.21",
+            "603",
+            "405",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "zona de mando",
+            "command zone",
+            "comandante",
+            "commander",
+        ],
+    ):
+
+        add(
+            "903.3",
+            "903.9a",
+            "903.9b",
+            "700.4",
+            "704",
+            "614",
+        )
+
+    if (
+        _contains_any(
+            q,
+            [
+                "sacrificar",
+                "sacrificio",
+                "sacrifice",
+            ],
+        )
+        and _contains_any(
+            q,
+            [
+                "destruir",
+                "destruye",
+                "destruccion",
+                "destroy",
+            ],
+        )
+    ):
+
+        add(
+            "701.8",
+            "701.21",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "efecto de reemplazo",
+            "efectos de reemplazo",
+            "replacement effect",
+            "replacement effects",
+            "reemplazo",
+            "doubling season",
+            "vorinclex",
+        ],
+    ):
+
+        add(
+            "614.1c",
+            "616.1",
+            "616.1f",
+            "122.6",
+        )
+
+    if (
+        _contains_any(q, ["entra", "entrar", "enters"])
+        and _contains_any(q, ["contador", "contadores", "counter", "counters"])
+        and _contains_any(
+            q,
+            [
+                "varios efectos",
+                "dos efectos",
+                "efectos que",
+                "modifican",
+                "se suman",
+                "se reemplazan",
+            ],
+        )
+    ):
+
+        add(
+            "614.1c",
+            "616.1",
+            "616.1f",
+            "122.6",
+        )
+
+    if "persist" in q and "undying" in q:
+
+        add(
+            "702.79",
+            "702.93",
+            "603",
+            "405",
+            "400.7",
+            "700.4",
+        )
+
+    if (
+        "persist" in q
+        and _contains_any(q, ["0/0", "cero cero"])
+    ):
+
+        add(
+            "702.79",
+            "704.5f",
+            "704.5q",
+            "122.3",
+            "603",
+            "405",
+            "700.4",
+        )
+
+    if "persist" in q:
+
+        add(
+            "702.79",
+            "603",
+            "405",
+            "704",
+            "122",
+            "700.4",
+        )
+
+    if "undying" in q:
+
+        add(
+            "702.93",
+            "603",
+            "405",
+            "704",
+            "122",
+            "700.4",
+        )
+
+    if _contains_any(
+        q,
+        [
+            "habilidad activada",
+            "habilidades activadas",
+            "activated ability",
+            "activo una habilidad",
+            "activa una habilidad",
+            "activar una habilidad",
+            "fuente",
+            "origen",
+            "mato",
+            "matar",
+            "destruyen esa criatura",
+            "destruir esa criatura",
+            "desaparece de la pila",
+            "contrarresta la habilidad",
+        ],
+    ):
+
+        add(
+            "602",
+            "113",
+            "405",
+        )
+
+    return queries
+
+
+def _normalize_question(text: str) -> str:
+
+    text = text.lower()
+
+    replacements = {
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+        "ü": "u",
+    }
+
+    for source, target in replacements.items():
+        text = text.replace(source, target)
+
+    text = re.sub(
+        r"\s+",
+        " ",
+        text,
+    )
+
+    return text.strip()
 
 def _specialized_queries(question: str) -> list[str]:
 
@@ -565,7 +1048,10 @@ def _specialized_queries(question: str) -> list[str]:
             "habilidad de maná",
             "habilidad de mana",
             "mana ability",
-            "sol ring",
+            "añadir maná",
+            "anadir mana",
+            "agregar maná",
+            "agregar mana",
         ],
     ):
 
@@ -621,11 +1107,35 @@ def _specialized_queries(question: str) -> list[str]:
 
         queries.extend(
             [
+                "commander card retains designation when it changes zones copy of commander is not a commander",
                 "commander graveyard exile owner may put it into command zone state-based action",
-                "commander hand library owner may put it into command zone replacement effect",
-                "commander dies graveyard command zone",
+                "commander hand library owner may put it into command zone instead replacement effect",
+                "dies means put into a graveyard from the battlefield commander",
             ]
         )
+
+        if _contains_any(q, ["copia", "copy"]):
+            queries.extend(
+                [
+                    "permanent copying a commander is not a commander",
+                    "commander designation is an attribute of the card itself not copiable",
+                ]
+            )
+
+        if _contains_any(q, ["mano", "biblioteca", "hand", "library"]):
+            queries.extend(
+                [
+                    "903.9b commander hand library command zone instead replacement effect",
+                ]
+            )
+
+        if _contains_any(q, ["muere", "muerto", "cementerio", "dies", "graveyard"]):
+            queries.extend(
+                [
+                    "903.9a commander graveyard command zone state-based action",
+                    "700.4 dies graveyard from battlefield",
+                ]
+            )
 
     if _contains_any(
         q,
@@ -637,13 +1147,52 @@ def _specialized_queries(question: str) -> list[str]:
             "doubling season",
             "vorinclex",
         ],
+    ) or (
+        _contains_any(q, ["entra", "entrar", "enters"])
+        and _contains_any(q, ["contador", "contadores", "counter", "counters"])
+        and _contains_any(q, ["varios efectos", "efectos que", "modifican", "se suman", "se reemplazan"])
     ):
 
         queries.extend(
             [
-                "replacement effects affected player or controller of affected permanent chooses order",
-                "two or more replacement effects are attempting to modify event affected player chooses one",
-                "replacement effects modifying how a permanent enters the battlefield counters",
+                "616.1 affected object's controller or affected player chooses one replacement effect to apply",
+                "616.1f repeat replacement effect process until none apply",
+                "614.1c enters with counters replacement effect",
+                "122.6 counters put on object as it enters battlefield",
+            ]
+        )
+
+    if "persist" in q:
+        queries.extend(
+            [
+                "702.79a persist triggered ability no -1/-1 counters return battlefield with -1/-1 counter",
+                "704.5f creature toughness zero or less put into graveyard state-based action",
+                "704.5q +1/+1 and -1/-1 counters removed state-based action",
+            ]
+        )
+
+    if "undying" in q:
+        queries.extend(
+            [
+                "702.93a undying triggered ability no +1/+1 counters return battlefield with +1/+1 counter",
+            ]
+        )
+
+        if _contains_any(q, ["exilio", "exiliar", "exiliado", "exiliada", "exile"]):
+            queries.extend(
+                [
+                    "701.11a to exile an object move it to the exile zone",
+                    "700.4 dies means put into a graveyard from the battlefield",
+                    "undying does not trigger when a permanent is exiled instead of dying",
+                ]
+            )
+
+    if "persist" in q and "undying" in q:
+        queries.extend(
+            [
+                "multiple triggered abilities controlled by same player choose order on stack",
+                "400.7 object that moves zones becomes a new object",
+                "triggered ability returning card from graveyard second ability cannot find card",
             ]
         )
 
@@ -651,8 +1200,12 @@ def _specialized_queries(question: str) -> list[str]:
         q,
         [
             "fuente",
+            "origen",
             "mato",
             "matar",
+            "destruyen esa criatura",
+            "destruir esa criatura",
+            "desaparece de la pila",
             "contrarresta la habilidad",
         ],
     ):
