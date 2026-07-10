@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧙 MagicAI
+# ![🧙 MagicAI](/sources/logo.png)
 
 ## *More Gathering. Less Guessing.*
 
