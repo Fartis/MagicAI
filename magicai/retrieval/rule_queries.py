@@ -181,21 +181,17 @@ def build_rule_queries(
             keyword,
         )
 
-    if action_terms:
+    for query in _action_queries(action_terms or []):
 
         _add_unique(
             queries,
-            " ".join(action_terms),
+            query,
         )
 
-        for term in action_terms:
-
-            _add_unique(
-                queries,
-                term,
-            )
-
-    return queries
+    return _remove_noisy_action_queries(
+        queries,
+        action_terms or [],
+    )
 
 
 def _specialized_queries(question: str) -> list[str]:
@@ -384,3 +380,168 @@ def _looks_spanish(text: str) -> bool:
         marker in text
         for marker in markers
     )
+
+def _action_queries(action_terms: list[str]) -> list[str]:
+
+    if not action_terms:
+
+        return []
+
+    terms = set(
+        term.lower()
+        for term in action_terms
+    )
+
+    queries = []
+
+    if {
+        "sacrifice",
+        "permanent",
+        "graveyard",
+    }.issubset(terms):
+
+        queries.extend(
+            [
+                "to sacrifice a permanent controller moves it from the battlefield directly to its owner's graveyard",
+                "sacrifice permanent battlefield graveyard",
+            ]
+        )
+
+    elif "sacrifice" in terms:
+
+        queries.append(
+            "to sacrifice a permanent"
+        )
+
+    if {
+        "dies",
+        "graveyard",
+        "battlefield",
+    }.issubset(terms):
+
+        queries.extend(
+            [
+                "dies graveyard from the battlefield",
+                "put into a graveyard from the battlefield",
+            ]
+        )
+
+    elif "dies" in terms:
+
+        queries.append(
+            "dies graveyard from the battlefield"
+        )
+
+    if "exile zone" in terms:
+
+        queries.append(
+            "to exile an object exile zone"
+        )
+
+    elif "exile" in terms:
+
+        queries.append(
+            "to exile an object"
+        )
+
+    if "enters the battlefield" in terms:
+
+        queries.append(
+            "enters the battlefield"
+        )
+
+    if {
+        "cast",
+        "spell",
+        "priority",
+    }.issubset(terms):
+
+        queries.extend(
+            [
+                "cast spell priority",
+                "casts a spell receives priority afterward",
+            ]
+        )
+
+    elif "cast" in terms and "spell" in terms:
+
+        queries.append(
+            "cast spell"
+        )
+
+    return queries
+
+def _remove_noisy_action_queries(
+    queries: list[str],
+    action_terms: list[str],
+) -> list[str]:
+
+    if not action_terms:
+
+        return queries
+
+    terms = {
+        term.lower()
+        for term in action_terms
+    }
+
+    noisy_exact_queries = set()
+
+    if "sacrifice" in terms:
+
+        noisy_exact_queries.update(
+            {
+                "sacrifice",
+                "permanent",
+                "graveyard",
+                "battlefield",
+            }
+        )
+
+    if "dies" in terms:
+
+        noisy_exact_queries.update(
+            {
+                "dies",
+                "graveyard",
+                "battlefield",
+                "dies graveyard battlefield",
+            }
+        )
+
+    if "exile" in terms or "exile zone" in terms:
+
+        noisy_exact_queries.update(
+            {
+                "exile",
+                "exile zone",
+            }
+        )
+
+    if "cast" in terms and "spell" in terms:
+
+        noisy_exact_queries.update(
+            {
+                "cast",
+                "spell",
+                "priority",
+            }
+        )
+
+    filtered = []
+
+    for query in queries:
+
+        normalized = query.lower().strip()
+
+        if normalized in noisy_exact_queries:
+
+            continue
+
+        if query not in filtered:
+
+            filtered.append(
+                query
+            )
+
+    return filtered
