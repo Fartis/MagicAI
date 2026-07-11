@@ -262,6 +262,17 @@ def render_rule_answer(knowledge: str) -> str | None:
             "hechizo si nadie responde."
         )
 
+    if _is_source_independence_question(q) and _has_rules(
+        knowledge,
+        ["abilities", "stack"],
+    ):
+        return (
+            "No. La habilidad no se contrarresta por destruir o retirar su "
+            "fuente. Una vez activada, existe en la pila de forma independiente "
+            "de la criatura que la originó; permanece en la pila y normalmente "
+            "seguirá resolviéndose."
+        )
+
     if _is_no_priority_during_resolution(q) and _has_rules(
         knowledge,
         ["priority"],
@@ -300,17 +311,6 @@ def render_rule_answer(knowledge: str) -> str | None:
             "hechizo o habilidad que controla un oponente, Ward se dispara y su "
             "habilidad se pone en la pila. Sí, los jugadores reciben prioridad y "
             "pueden responder a esa habilidad antes de que se resuelva."
-        )
-
-    if _is_source_independence_question(q) and _has_rules(
-        knowledge,
-        ["abilities", "stack"],
-    ):
-        return (
-            "No. La habilidad no se contrarresta por destruir o retirar su "
-            "fuente. Una vez activada, existe en la pila de forma independiente "
-            "de la criatura que la originó; permanece en la pila y normalmente "
-            "seguirá resolviéndose."
         )
 
     if _is_ability_taxonomy_question(q) and _has_rules(
@@ -584,21 +584,27 @@ def _is_sacrifice_as_cost_death_trigger(question: str) -> bool:
 
 
 def _is_no_priority_during_resolution(question: str) -> bool:
-    return (
-        "habilidad" in question
-        and (
-            "resolviendo" in question
-            or "resolviendose" in question
-            or "resolucion" in question
-            or "termine de resolver" in question
-        )
-        and (
-            "activar" in question
-            or "activa" in question
-            or "usar" in question
-            or "puedo" in question
-        )
+    has_resolution_window = any(
+        marker in question
+        for marker in [
+            "esta resolviendo",
+            "esta resolviendose",
+            "se esta resolviendo",
+            "mientras se resuelve",
+            "durante la resolucion",
+            "termine de resolver",
+        ]
     )
+
+    # Token boundaries are essential here: the old substring check for
+    # ``activa`` also matched ``activada``, routing source-independence
+    # questions to the no-priority renderer.
+    asks_to_act = re.search(
+        r"\b(?:activar|activo|activa|usar|uso|puedo|puede|lanzar|responder)\b",
+        question,
+    ) is not None
+
+    return "habilidad" in question and has_resolution_window and asks_to_act
 
 
 def _is_mana_ability_response(question: str) -> bool:
