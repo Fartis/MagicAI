@@ -36,6 +36,7 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 - Validación, reintento y fallback source-grounded.
 - API REST de desarrollo.
 - Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
+- Open Judge Gauntlet con contratos semánticos para conversaciones reales.
 
 ### Alcance de cartas
 
@@ -249,7 +250,18 @@ PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
 PYTHONPATH=. python -m tests.retrieval.rule_queries_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
+PYTHONPATH=. python -m tests.quality.open_judge_contract_test
+PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
+PYTHONPATH=. python -m tests.quality.open_judge_reports_test
 ```
+
+Open Judge Gauntlet:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test
+```
+
+Genera una baseline semántica de 9 conversaciones y 25 turnos, con informes TXT, JSON, XML y HTML.
 
 Gauntlet dinámico reproducible:
 
@@ -307,12 +319,13 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Medir al Juez con preguntas abiertas y heterogéneas.
-2. Crear `JudgeResult` como contrato factual estable.
-3. Completar cobertura guiada por fallos reales.
-4. Cerrar un Judge Release Candidate.
-5. Construir una UI modular para conversar con el Juez.
-6. Añadir Deck Master y Deckbuilder sobre la misma UI.
+1. Ejecutar y estabilizar la baseline del Open Judge Gauntlet.
+2. Corregir por familias los fallos de contexto, retrieval y atribución.
+3. Crear `JudgeResult` como contrato factual estable.
+4. Completar cobertura guiada por fallos reales.
+5. Cerrar un Judge Release Candidate.
+6. Construir una UI modular para conversar con el Juez.
+7. Añadir Deck Master y Deckbuilder sobre la misma UI.
 
 Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracle ni reglas**. Para cartas, legalidad, rulings e interacciones deberán consultar al Juez mediante su API interna.
 

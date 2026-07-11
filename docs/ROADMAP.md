@@ -14,7 +14,7 @@ Renderizadores y validación          ✅
 Gauntlet dinámico                    ✅
 Campañas multisemilla                ✅
 Filtro de cartas oficiales           ✅
-Open Judge Gauntlet                  ⏭️
+Open Judge Gauntlet                  🚧
 JudgeResult estructurado             ⏳
 Cobertura guiada por fallos          ⏳
 Judge Release Candidate              ⏳
@@ -72,41 +72,56 @@ Matriz completa: 216/216 ejecuciones · 0 WARN · 0 FAIL
 
 ---
 
-## Sprint 10.14 — Open Judge Gauntlet ⏭️
+## Sprint 10.14 — Open Judge Gauntlet 🚧
 
-Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas.
+Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas y separar errores técnicos de fallos semánticos.
 
-El conjunto incluirá preguntas heterogéneas sobre:
+Infraestructura implementada:
 
-- lanzamiento y costes;
-- objetivos y modos;
-- combate;
-- acciones basadas en estado;
-- fichas;
-- cambios de control;
-- disparos y disparos retrasados;
-- reemplazo y prevención;
-- copias;
-- Commander;
-- cartas multiface;
-- capas;
-- preguntas ambiguas;
-- premisas falsas.
+- corpus inicial de 9 conversaciones y 25 turnos;
+- contratos semánticos por turno;
+- reutilización del mismo corpus por la Regression Suite legacy;
+- captura del estado conversacional después de cada respuesta;
+- clasificación de fallos por categoría;
+- informes TXT, JSON, XML y HTML;
+- artefactos JSON individuales para cada turno no satisfactorio;
+- modo baseline por defecto y modos estrictos opcionales.
 
-Clasificación prevista:
+Clasificación disponible:
 
 ```text
-correct
-correct_but_incomplete
-needs_clarification
-insufficient_evidence
-false_premise
-retrieval_failure
-incorrect
-hallucination
+PASS
+CORRECT_BUT_INCOMPLETE
+NEEDS_CLARIFICATION
+INSUFFICIENT_EVIDENCE
+FALSE_PREMISE_HANDLED
+RETRIEVAL_FAILURE
+CONTEXT_FAILURE
+FACTUAL_CONTRADICTION
+HALLUCINATION
+EXECUTION_ERROR
 ```
 
-El resultado determinará la prioridad real de los siguientes sprints.
+Siguiente acción inmediata: ejecutar la primera baseline completa contra Ollama, revisar falsos positivos de los contratos y fijar los resultados iniciales antes de modificar el pipeline del Juez.
+
+La primera ronda cubre especialmente:
+
+- continuidad de una carta entre turnos;
+- diferencias entre lanzar y entrar al campo de batalla;
+- keyword frente a carta homónima;
+- comparación de dos cartas y atribución correcta de habilidades;
+- seguimiento de una regla explícita;
+- cambio de tema;
+- continuidad de procedimientos como London Mulligan;
+- Undying con y sin contador +1/+1.
+
+Criterio de cierre del sprint:
+
+- baseline reproducible guardada;
+- contratos ajustados tras revisión manual;
+- cero errores de ejecución del runner;
+- cada fallo relevante clasificado;
+- prioridades de hardening ordenadas por familia genérica.
 
 ---
 

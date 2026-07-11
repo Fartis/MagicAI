@@ -1,7 +1,7 @@
 # 📊 Estado actual de MagicAI
 
 > Snapshot de desarrollo: **v0.1.0-alpha**
-> Última actualización documental: **11 de julio de 2026**
+> Última actualización documental: **12 de julio de 2026**
 
 [Español](#-estado-del-proyecto) · [English](#-project-status)
 
@@ -30,6 +30,8 @@ No se considera finalizado porque todavía falta medir y ampliar su comportamien
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
+- Open Judge Gauntlet con 9 conversaciones, 25 turnos y contratos semánticos.
+- Clasificación separada de fallos de contexto, retrieval, contradicción y alucinación.
 
 ### Conceptos dinámicos cubiertos
 
@@ -80,6 +82,22 @@ Ejecuciones validadas   216/216
 WARN                           0
 FAIL                           0
 ```
+
+### Open Judge Gauntlet
+
+El Sprint 10.14 ya dispone de su infraestructura inicial:
+
+```text
+Conversaciones contratadas       9
+Turnos contratados              25
+Formatos de informe              4
+Categorías semánticas           10
+Baseline completa        pendiente
+```
+
+La Regression Suite y el Open Judge Gauntlet comparten ahora el mismo corpus de preguntas. La primera sigue siendo útil para inspección humana; el segundo añade evaluación automática y estado conversacional.
+
+El siguiente paso no es añadir renderizadores concretos, sino ejecutar la baseline, auditar los contratos y agrupar los fallos por causas genéricas.
 
 Los últimos hardenings añadieron regresiones deterministas para:
 
@@ -141,6 +159,7 @@ brawl
 - El sistema no simula una partida completa como un motor de reglas digital.
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
 - La UI todavía no está implementada.
+- La baseline completa del Open Judge Gauntlet aún debe ejecutarse y revisarse manualmente.
 
 ### Definición de “Juez finalizado y funcional”
 

@@ -32,7 +32,7 @@ if __package__:
     from .regression_cases import TESTS
 else:
     # Compatibilidad con ejecución directa:
-    # python tests/regression/regression_test.py.py
+    # python tests/regression/regression_test.py
     from regression_cases import TESTS
 
 ###############################################################################

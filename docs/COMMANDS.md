@@ -248,6 +248,9 @@ PYTHONPATH=. python -m tests.retrieval.context_enricher_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
 PYTHONPATH=. python -m tests.quality.gauntlet_matcher_test
+PYTHONPATH=. python -m tests.quality.open_judge_contract_test
+PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
+PYTHONPATH=. python -m tests.quality.open_judge_reports_test
 ```
 
 ### API
@@ -267,6 +270,54 @@ Paralela:
 
 ```bash
 PYTHONPATH=. python -m tests.regression.regression_parallel
+```
+
+### Open Judge Gauntlet
+
+Validar contratos y evaluador sin Ollama:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_contract_test
+PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
+PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+```
+
+Listar conversaciones:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test --list-cases
+```
+
+Ejecutar la baseline completa:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test
+```
+
+Ejecutar solo casos concretos:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test \
+  --case OJ-002 \
+  --case OJ-006
+```
+
+Por defecto, la baseline genera informes aunque existan fallos semánticos. Para usarla como puerta de calidad:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test --fail-on-critical
+PYTHONPATH=. python -m tests.quality.open_judge_test --strict
+```
+
+Salida:
+
+```text
+resultado_open_judge/<run-id>/
+├── open_judge_summary.txt
+├── open_judge_summary.json
+├── open_judge_summary.xml
+├── open_judge_summary.html
+└── open_judge_failures/
 ```
 
 ### Performance

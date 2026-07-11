@@ -196,13 +196,25 @@ Profile Router
           └── budget and power targets
 ```
 
-### Frontera factual obligatoria
+### Jerarquía de autoridad futura
 
 ```text
-Deck Master ──┐
-              ├──► JudgeClient ──► Judge ──► Oracle / Rules / Rulings
-Deckbuilder ──┘
+Evidencia
+   │
+   ▼
+Juez
+   │  hechos, reglas, Oracle, legalidad e interacciones validadas
+   ▼
+Deck Master
+   │  criterio estratégico validado sobre jugadas y planes de mazo
+   ▼
+Deckbuilder
+      propuestas concretas de construcción y modificación
 ```
+
+- **Juez:** autoridad factual y reglamentaria absoluta.
+- **Deck Master:** autoridad estratégica, siempre subordinada a los hechos del Juez.
+- **Deckbuilder:** motor de propuestas; necesita validación factual del Juez y validación estratégica de Deck Master.
 
 Deck Master y Deckbuilder:
 
@@ -212,7 +224,14 @@ Deck Master y Deckbuilder:
 - no inventarán interacciones;
 - recibirán evidencia factual únicamente mediante el Juez.
 
-Podrán ser creativos en estrategia y construcción, pero sus afirmaciones factuales deberán estar respaldadas por `JudgeResult`.
+Una propuesta del Deckbuilder solo se presentará como validada cuando tenga las dos firmas:
+
+```text
+FACTUAL_VALIDATION   = Judge
+STRATEGIC_VALIDATION = Deck Master
+```
+
+La sesión futura será compartida entre perfiles y conservará un `authority_trace` para distinguir hechos, recomendaciones y propuestas.
 
 ---
 
