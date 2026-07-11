@@ -510,6 +510,47 @@ Stack
     )
 
 
+def test_source_independence_wins_over_resolution_wording():
+    knowledge = """
+QUESTION
+
+Una habilidad activada de Marble Gargoyle ya está en la pila y destruyen la carta. ¿La habilidad sigue resolviéndose?
+
+============================================================
+RULES
+
+113
+Abilities
+
+113.7a
+Once activated or triggered, an ability exists on the stack independently of its source.
+
+405
+Stack
+
+117
+Timing and Priority
+
+117.2e
+No player has priority while a spell or ability is resolving.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        ["pila", "fuente", "no se contrarresta", "seguirá resolviéndose"],
+        "source independence resolution wording",
+    )
+    assert_not_contains(
+        answer,
+        ["no tienen prioridad", "durante la resolución"],
+        "source independence resolution wording",
+    )
+
+
+
 def test_activated_and_triggered_ability_taxonomy():
     knowledge = """
 QUESTION
@@ -958,6 +999,7 @@ def main():
         test_opponent_can_respond_before_spell_resolves,
         test_ward_is_triggered_and_can_be_responded_to,
         test_activated_ability_exists_independently_of_source,
+        test_source_independence_wins_over_resolution_wording,
         test_activated_and_triggered_ability_taxonomy,
         test_cleanup_step_normally_has_no_priority,
         test_sacrifice_is_not_destroy,

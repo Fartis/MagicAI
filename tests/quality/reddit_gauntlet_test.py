@@ -451,6 +451,8 @@ def write_txt_report(
     results: list[dict],
     output_file: Path,
     total_elapsed: float,
+    suite_name: str = "MagicAI Reddit Gauntlet Quality Test",
+    metadata: dict[str, str] | None = None,
 ):
 
     lines = []
@@ -487,9 +489,16 @@ def write_txt_report(
     current_suite_status = suite_status(results)
 
     lines.append("=" * 80)
-    lines.append("MagicAI Reddit Gauntlet Quality Test")
+    lines.append(suite_name)
     lines.append("=" * 80)
     lines.append("")
+
+    for key, value in (metadata or {}).items():
+        lines.append(f"{key:<11}: {value}")
+
+    if metadata:
+        lines.append("")
+
     lines.append(f"Cases      : {len(results)}")
     lines.append(f"Steps      : {total_steps}")
     lines.append(f"Failures   : {len(failed_steps)}")
@@ -630,6 +639,8 @@ def write_xml_report(
     results: list[dict],
     output_file: Path,
     total_elapsed: float,
+    suite_name: str = "MagicAI Reddit Gauntlet",
+    metadata: dict[str, str] | None = None,
 ):
 
     total_steps = sum(
@@ -654,7 +665,7 @@ def write_xml_report(
     root = ET.Element(
         "qualitySuite",
         {
-            "name": "MagicAI Reddit Gauntlet",
+            "name": suite_name,
             "cases": str(len(results)),
             "steps": str(total_steps),
             "failures": str(len(failed_steps)),
@@ -663,6 +674,13 @@ def write_xml_report(
             "status": current_suite_status,
         },
     )
+
+    if metadata:
+        metadata_node = ET.SubElement(root, "metadata")
+
+        for key, value in metadata.items():
+            item_node = ET.SubElement(metadata_node, "item", {"key": key})
+            item_node.text = value
 
     for result in results:
 
@@ -876,6 +894,11 @@ def write_html_report(
     results: list[dict],
     output_file: Path,
     total_elapsed: float,
+    suite_name: str = "MagicAI Reddit Gauntlet",
+    suite_subtitle: str = (
+        "Suite de calidad semántica para preguntas reales de reglas y Commander."
+    ),
+    metadata: dict[str, str] | None = None,
 ):
 
     total_steps = sum(
@@ -1044,12 +1067,20 @@ def write_html_report(
             + "</details>"
         )
 
+    metadata_html = "".join(
+        '<div class="metric">'
+        f'<strong>{escape(value)}</strong>'
+        f'<span>{escape(key)}</span>'
+        '</div>'
+        for key, value in (metadata or {}).items()
+    )
+
     html = f"""<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MagicAI Reddit Gauntlet</title>
+  <title>{escape(suite_name)}</title>
   <style>
     :root {{
       color-scheme: light dark;
@@ -1332,13 +1363,14 @@ def write_html_report(
   <main>
     <header>
       <div>
-        <h1>MagicAI Reddit Gauntlet</h1>
-        <p class="subtitle">Suite de calidad semántica para preguntas reales de reglas y Commander.</p>
+        <h1>{escape(suite_name)}</h1>
+        <p class="subtitle">{escape(suite_subtitle)}</p>
       </div>
       <div class="suite-status {status_class}">{status_label}</div>
     </header>
 
     <section class="metrics">
+      {metadata_html}
       <div class="metric"><strong>{len(results)}</strong><span>Casos</span></div>
       <div class="metric"><strong>{total_steps}</strong><span>Preguntas</span></div>
       <div class="metric"><strong>{passed_cases}</strong><span>Casos OK</span></div>
