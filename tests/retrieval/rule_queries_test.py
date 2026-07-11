@@ -362,6 +362,24 @@ def test_counter_replacement_queries_include_exact_interaction_rules():
     )
 
 
+def test_counter_replacement_queries_detect_natural_language_order_paraphrase():
+    queries = build_rule_queries(
+        question=(
+            "Hay dos efectos que modifican los contadores que va a recibir un "
+            "permanente. ¿El controlador del objeto afectado elige el orden en "
+            "que se aplican?"
+        ),
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        ["614.1c", "616.1", "616.1f", "122.6"],
+        "counter replacement natural-language order paraphrase",
+    )
+
+
 def test_persist_zero_zero_queries_include_keyword_and_state_based_rules():
     queries = build_rule_queries(
         question="Si una criatura 0/0 entra con un contador +1/+1 y tiene Persist, ¿qué pasa cuando muere?",
@@ -422,6 +440,7 @@ def main():
         test_commander_hand_library_queries_include_replacement_effect,
         test_commander_copy_queries_include_designation_rule,
         test_counter_replacement_queries_include_exact_interaction_rules,
+        test_counter_replacement_queries_detect_natural_language_order_paraphrase,
         test_persist_zero_zero_queries_include_keyword_and_state_based_rules,
         test_undying_exile_queries_include_exile_and_dies_rules,
         test_persist_undying_queries_include_both_keywords_and_stack,

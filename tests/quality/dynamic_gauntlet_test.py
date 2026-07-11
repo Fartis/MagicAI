@@ -127,9 +127,10 @@ def main():
     suite_start = time.perf_counter()
 
     for scenario in scenarios:
+        source_label = scenario.card_name or "rules-only"
         print(
             f"[{scenario.id}] {scenario.concept_id} · "
-            f"{scenario.card_name} · {scenario.template_id}"
+            f"{source_label} · {scenario.template_id}"
         )
         result = run_case(assistant, scenario.to_case())
         result["dynamic"] = scenario.to_dict()

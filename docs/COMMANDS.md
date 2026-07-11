@@ -39,7 +39,7 @@ Lista los conceptos dinámicos disponibles:
 python -m tests.quality.dynamic_gauntlet_test --list-concepts
 ```
 
-Genera y ejecuta 30 escenarios reproducibles desde el Oracle local:
+Genera y ejecuta 30 escenarios reproducibles combinando cartas del Oracle local y escenarios generales respaldados por reglas:
 
 ```bash
 python -m tests.quality.dynamic_gauntlet_test \
@@ -64,5 +64,16 @@ python -m tests.quality.dynamic_gauntlet_test \
   --replay resultado_dynamic_gauntlet_failures/184729_DG-001_mana_ability.json
 ```
 
-El manifiesto JSON conserva la semilla, carta, plantilla, pregunta, contrato de
-validación y evidencia Oracle de cada escenario generado.
+El manifiesto JSON conserva la semilla, tipo de fuente, plantilla, pregunta y
+contrato de validación. En escenarios basados en cartas también conserva la
+carta, su tipo, keywords y evidencia Oracle.
+
+Los conceptos de tipo `rules-only` pueden ejecutarse sin cargar el bulk Oracle:
+
+```bash
+python -m tests.quality.dynamic_gauntlet_test \
+  --seed 184729 \
+  --cases 12 \
+  --concept cleanup_priority \
+  --concept commander_copy
+```

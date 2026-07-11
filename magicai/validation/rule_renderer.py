@@ -279,9 +279,10 @@ def render_rule_answer(knowledge: str) -> str | None:
     ):
         return (
             "No. Mientras una habilidad se está resolviendo, los jugadores no "
-            "tienen prioridad. Aunque esa habilidad ponga una carta en el campo "
-            "de batalla, no puedes activar esa carta durante la resolución salvo "
-            "que el propio efecto te indique explícitamente que lo hagas."
+            "tienen prioridad. Aunque esa habilidad ponga un permanente en el campo "
+            "de batalla o cree una ficha, no puedes activar habilidades de ese "
+            "permanente durante la resolución salvo que el propio efecto te indique "
+            "explícitamente que lo hagas."
         )
 
     if _is_mana_ability_response(q) and _has_rules(

@@ -689,41 +689,7 @@ def _rule_number_queries(question: str) -> list[str]:
             "701.21",
         )
 
-    if _contains_any(
-        q,
-        [
-            "efecto de reemplazo",
-            "efectos de reemplazo",
-            "replacement effect",
-            "replacement effects",
-            "reemplazo",
-            "doubling season",
-            "vorinclex",
-        ],
-    ):
-
-        add(
-            "614.1c",
-            "616.1",
-            "616.1f",
-            "122.6",
-        )
-
-    if (
-        _contains_any(q, ["entra", "entrar", "enters"])
-        and _contains_any(q, ["contador", "contadores", "counter", "counters"])
-        and _contains_any(
-            q,
-            [
-                "varios efectos",
-                "dos efectos",
-                "efectos que",
-                "modifican",
-                "se suman",
-                "se reemplazan",
-            ],
-        )
-    ):
+    if _is_counter_replacement_interaction(q):
 
         add(
             "614.1c",
@@ -1137,21 +1103,7 @@ def _specialized_queries(question: str) -> list[str]:
                 ]
             )
 
-    if _contains_any(
-        q,
-        [
-            "efecto de reemplazo",
-            "efectos de reemplazo",
-            "replacement effect",
-            "replacement effects",
-            "doubling season",
-            "vorinclex",
-        ],
-    ) or (
-        _contains_any(q, ["entra", "entrar", "enters"])
-        and _contains_any(q, ["contador", "contadores", "counter", "counters"])
-        and _contains_any(q, ["varios efectos", "efectos que", "modifican", "se suman", "se reemplazan"])
-    ):
+    if _is_counter_replacement_interaction(q):
 
         queries.extend(
             [
@@ -1286,6 +1238,74 @@ def _english_tokens(text: str) -> list[str]:
         for token in tokens
         if token not in stopwords
     ]
+
+
+def _is_counter_replacement_interaction(question: str) -> bool:
+
+    mentions_counters = _contains_any(
+        question,
+        [
+            "contador",
+            "contadores",
+            "counter",
+            "counters",
+        ],
+    )
+
+    if not mentions_counters:
+
+        return False
+
+    explicitly_mentions_replacement = _contains_any(
+        question,
+        [
+            "efecto de reemplazo",
+            "efectos de reemplazo",
+            "replacement effect",
+            "replacement effects",
+            "reemplazo",
+            "doubling season",
+            "vorinclex",
+        ],
+    )
+
+    mentions_multiple_effects = _contains_any(
+        question,
+        [
+            "varios efectos",
+            "dos efectos",
+            "ambos efectos",
+            "efectos que",
+            "multiple effects",
+            "two effects",
+        ],
+    )
+
+    asks_how_they_interact = _contains_any(
+        question,
+        [
+            "orden",
+            "elige",
+            "decide",
+            "como se aplican",
+            "cómo se aplican",
+            "se aplica",
+            "se aplican",
+            "modifican",
+            "se suman",
+            "se reemplazan",
+            "doblan",
+            "duplican",
+            "order",
+            "choose",
+            "apply",
+            "modify",
+        ],
+    )
+
+    return explicitly_mentions_replacement or (
+        mentions_multiple_effects and asks_how_they_interact
+    )
 
 
 def _contains_any(text: str, items: list[str]) -> bool:

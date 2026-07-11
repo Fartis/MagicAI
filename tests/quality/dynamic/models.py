@@ -55,7 +55,7 @@ class QuestionTemplate:
     id: str
     text: str
 
-    def render(self, card_name: str) -> str:
+    def render(self, card_name: str = "") -> str:
         return self.text.format(card=card_name)
 
 
@@ -63,7 +63,7 @@ class QuestionTemplate:
 class DynamicConcept:
     id: str
     name: str
-    selector: str
+    selector: str | None
     tags: tuple[str, ...]
     templates: tuple[QuestionTemplate, ...]
     contract: EvaluationContract
@@ -83,11 +83,17 @@ class DynamicScenario:
     oracle_evidence: str = ""
     card_type_line: str = ""
     card_keywords: tuple[str, ...] = ()
+    source_kind: str = "card"
 
     def to_case(self) -> dict[str, Any]:
+        case_name = self.concept_name
+
+        if self.card_name:
+            case_name += f" · {self.card_name}"
+
         return {
             "id": self.id,
-            "name": f"{self.concept_name} · {self.card_name}",
+            "name": case_name,
             "tags": list(self.tags),
             "steps": [self.contract.to_step(self.question)],
         }
@@ -107,6 +113,7 @@ class DynamicScenario:
             "oracle_evidence": self.oracle_evidence,
             "card_type_line": self.card_type_line,
             "card_keywords": list(self.card_keywords),
+            "source_kind": self.source_kind,
         }
 
     @classmethod
@@ -132,4 +139,10 @@ class DynamicScenario:
             oracle_evidence=str(payload.get("oracle_evidence", "")),
             card_type_line=str(payload.get("card_type_line", "")),
             card_keywords=tuple(payload.get("card_keywords", [])),
+            source_kind=str(
+                payload.get(
+                    "source_kind",
+                    "card" if payload.get("card_name") else "rules",
+                )
+            ),
         )

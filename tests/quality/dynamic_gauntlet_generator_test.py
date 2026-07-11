@@ -11,6 +11,7 @@ from tests.quality.dynamic.failure_store import (
     save_failure,
     write_manifest,
 )
+from tests.quality.dynamic.models import DynamicScenario
 from tests.quality.dynamic.scenario_generator import ScenarioGenerator
 
 
@@ -259,6 +260,60 @@ def test_generated_manifest_keeps_card_audit_metadata():
 
 
 
+def test_rules_only_concept_does_not_require_oracle_file():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        missing_oracle = Path(temp_dir) / "missing-oracle.json"
+        scenarios = ScenarioGenerator(
+            456,
+            CardCatalog(missing_oracle),
+            get_concepts(["cleanup_priority"]),
+        ).generate(3)
+
+        assert all(scenario.source_kind == "rules" for scenario in scenarios)
+        assert all(not scenario.card_name for scenario in scenarios)
+        assert all(not scenario.oracle_evidence for scenario in scenarios)
+        assert all(" · " not in scenario.to_case()["name"] for scenario in scenarios)
+
+
+def test_rules_only_manifest_and_replay_keep_source_kind():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        scenario = ScenarioGenerator(
+            654,
+            CardCatalog(root / "missing-oracle.json"),
+            get_concepts(["commander_copy"]),
+        ).generate(1)[0]
+        manifest = write_manifest(root / "manifest.json", 654, [scenario])
+        replay = load_replay(manifest)
+
+        assert replay == scenario
+        assert replay.source_kind == "rules"
+        assert replay.card_name == ""
+
+
+def test_replay_without_source_kind_remains_backward_compatible():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        card_scenario = ScenarioGenerator(
+            222,
+            _fixture_catalog(root),
+            get_concepts(["ward"]),
+        ).generate(1)[0]
+        card_payload = card_scenario.to_dict()
+        card_payload.pop("source_kind")
+
+        rules_scenario = ScenarioGenerator(
+            333,
+            CardCatalog(root / "missing-oracle.json"),
+            get_concepts(["cleanup_priority"]),
+        ).generate(1)[0]
+        rules_payload = rules_scenario.to_dict()
+        rules_payload.pop("source_kind")
+
+        assert DynamicScenario.from_dict(card_payload).source_kind == "card"
+        assert DynamicScenario.from_dict(rules_payload).source_kind == "rules"
+
+
 def main():
     tests = [
         test_same_seed_generates_identical_scenarios,
@@ -267,6 +322,9 @@ def main():
         test_concept_cycle_covers_every_selected_concept,
         test_manifest_and_failure_replay_round_trip,
         test_generated_manifest_keeps_card_audit_metadata,
+        test_rules_only_concept_does_not_require_oracle_file,
+        test_rules_only_manifest_and_replay_keep_source_kind,
+        test_replay_without_source_kind_remains_backward_compatible,
     ]
     errors = []
 
