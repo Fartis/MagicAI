@@ -1,79 +1,446 @@
-MagicAI Cheat Sheet
+# 🧰 Comandos de MagicAI
 
-Activar entorno
----------------
+> Referencia operativa para desarrollo, fuentes, API, pruebas, campañas y Git.
+
+[Entorno](#-entorno) · [Fuentes](#-fuentes-locales) · [Ollama](#-ollama) · [API](#-api-rest) · [Tests](#-pruebas) · [Git](#-git) · [English](#-english-quick-reference)
+
+---
+
+## 🐍 Entorno
+
+Crear y activar el entorno:
+
+```bash
+cd ~/MagicAI
+python3.12 -m venv .venv
 source .venv/bin/activate
+```
 
-API
+Instalar dependencias:
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+```
+
+Comprobar instalación:
+
+```bash
+python --version
+python -c "import magicai; print('MagicAI import OK')"
+```
+
+Salir del entorno:
+
+```bash
+deactivate
+```
+
 ---
-uvicorn magicai.api:app --reload
 
-Swagger
---------
-http://127.0.0.1:8000/docs
+## 📚 Fuentes locales
 
-Performance
------------
-python tests/test_performance.py
+Descargar el bulk Oracle utilizado por el Juez:
 
-Regresión
-----------
-python tests/regression/regression_test.py
+```bash
+./scripts/download_sources.sh
+```
 
-Ollama
--------
-ollama ps
+Descargar la última versión disponible de Comprehensive Rules:
+
+```bash
+./scripts/download_rules.sh
+```
+
+Actualizar símbolos de Scryfall:
+
+```bash
+python scripts/update_scryfall_symbology.py
+```
+
+Comprobar ficheros:
+
+```bash
+ls -lh sources/scryfall/oracle-cards.json
+ls -lh sources/scryfall/symbology.json
+ls -lh sources/rules/MagicCompRules.txt
+```
+
+Explorar la primera entrada del bulk Oracle:
+
+```bash
+python scripts/explore_scryfall.py
+```
+
+Los bulk JSON, informes y bases locales están excluidos de Git.
+
+---
+
+## 🤖 Ollama
+
+Variables por defecto:
+
+```bash
+export OLLAMA_URL=http://127.0.0.1:11434/api/chat
+export MAGICAI_MODEL=qwen3:8b
+```
+
+Ollama instalado en el host:
+
+```bash
 ollama list
+ollama ps
+ollama pull qwen3:8b
+```
 
-Git
+Ollama en el contenedor `ollama`:
+
+```bash
+docker ps --filter name=ollama
+docker exec ollama ollama list
+docker exec ollama ollama ps
+docker exec ollama ollama pull qwen3:8b
+```
+
+Comprobar la API:
+
+```bash
+curl http://127.0.0.1:11434/api/tags
+```
+
 ---
-git add .
-git commit -m "..."
-git tag v0.1.0-alpha
 
-## Dynamic Gauntlet
+## 🌐 API REST
 
-Lista los conceptos dinámicos disponibles:
+Iniciar en desarrollo:
+
+```bash
+python -m uvicorn magicai.api:app --reload
+```
+
+Iniciar accesible desde la red local:
+
+```bash
+python -m uvicorn magicai.api:app \
+  --host 0.0.0.0 \
+  --port 8000
+```
+
+Rutas:
+
+```text
+http://127.0.0.1:8000/
+http://127.0.0.1:8000/docs
+http://127.0.0.1:8000/redoc
+```
+
+Pregunta nueva:
+
+```bash
+curl -X POST http://127.0.0.1:8000/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"¿Puedo responder a Ward?"}'
+```
+
+Continuar una conversación:
+
+```bash
+curl -X POST http://127.0.0.1:8000/ask \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "session_id":"ID_DEVUELTO_POR_LA_PRIMERA_PREGUNTA",
+    "question":"¿Y si destruyen la fuente?"
+  }'
+```
+
+---
+
+## 🔎 Herramientas de diagnóstico
+
+Buscar una carta:
+
+```bash
+python scripts/search_card.py "Young Wolf"
+```
+
+Buscar una regla:
+
+```bash
+python scripts/search_rule.py "Undying"
+```
+
+Crear la base SQLite experimental:
+
+```bash
+python scripts/build_database.py
+```
+
+La base SQLite todavía no forma parte del pipeline principal del Juez.
+
+---
+
+## 🧪 Pruebas
+
+### Compilación y formato del diff
+
+```bash
+python -m compileall -q magicai tests
+git diff --check
+```
+
+### Suite rápida recomendada
+
+```bash
+PYTHONPATH=. python -m tests.quality.dynamic_gauntlet_generator_test
+PYTHONPATH=. python -m tests.quality.dynamic_campaign_planner_test
+PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
+PYTHONPATH=. python -m tests.retrieval.rule_queries_test
+PYTHONPATH=. python -m tests.retrieval.rule_intent_test
+PYTHONPATH=. python -m tests.retrieval.card_extractor_test
+PYTHONPATH=. python -m tests.retrieval.context_enricher_test
+PYTHONPATH=. python -m tests.validation.rule_renderer_test
+PYTHONPATH=. python -m tests.validation.oracle_renderer_test
+PYTHONPATH=. python -m tests.quality.gauntlet_matcher_test
+```
+
+### API
+
+```bash
+PYTHONPATH=. python -m tests.api.api_smoke_test
+PYTHONPATH=. python -m tests.api.api_ambiguity_test
+```
+
+### Regression Suite
+
+```bash
+PYTHONPATH=. python -m tests.regression.regression_test
+```
+
+Paralela:
+
+```bash
+PYTHONPATH=. python -m tests.regression.regression_parallel
+```
+
+### Performance
+
+```bash
+PYTHONPATH=. python -m tests.test_performance
+```
+
+### Reddit Gauntlet
+
+```bash
+PYTHONPATH=. python -m tests.quality.reddit_gauntlet_test
+```
+
+### Generalization Probe
+
+```bash
+PYTHONPATH=. python -m tests.quality.generalization_probe_test
+```
+
+Las suites anteriores pueden requerir Oracle, reglas y Ollama.
+
+---
+
+## 🎲 Dynamic Gauntlet
+
+Listar conceptos:
 
 ```bash
 python -m tests.quality.dynamic_gauntlet_test --list-concepts
 ```
 
-Genera y ejecuta 30 escenarios reproducibles combinando cartas del Oracle local y escenarios generales respaldados por reglas:
+Ejecutar 42 escenarios reproducibles:
 
 ```bash
 python -m tests.quality.dynamic_gauntlet_test \
   --seed 184729 \
-  --cases 30
+  --cases 42
 ```
 
-Restringe la ejecución a uno o varios conceptos:
+Restringir conceptos:
 
 ```bash
 python -m tests.quality.dynamic_gauntlet_test \
   --seed 184729 \
-  --cases 12 \
+  --cases 9 \
   --concept mana_ability \
-  --concept ward
+  --concept ward \
+  --concept source_independence
 ```
 
-Reproduce exactamente un fallo guardado:
-
-```bash
-python -m tests.quality.dynamic_gauntlet_test \
-  --replay resultado_dynamic_gauntlet_failures/184729_DG-001_mana_ability.json
-```
-
-El manifiesto JSON conserva la semilla, tipo de fuente, plantilla, pregunta y
-contrato de validación. En escenarios basados en cartas también conserva la
-carta, su tipo, keywords y evidencia Oracle.
-
-Los conceptos de tipo `rules-only` pueden ejecutarse sin cargar el bulk Oracle:
+Solo conceptos basados en reglas:
 
 ```bash
 python -m tests.quality.dynamic_gauntlet_test \
   --seed 184729 \
   --cases 12 \
   --concept cleanup_priority \
-  --concept commander_copy
+  --concept commander_copy \
+  --concept persist \
+  --concept counter_replacement_order
 ```
+
+Parar en el primer FAIL:
+
+```bash
+python -m tests.quality.dynamic_gauntlet_test \
+  --seed 184729 \
+  --cases 42 \
+  --fail-fast
+```
+
+Reproducir un fallo guardado:
+
+```bash
+python -m tests.quality.dynamic_gauntlet_test \
+  --replay resultado_dynamic_gauntlet_failures/SEED_CASO_CONCEPTO.json
+```
+
+Archivos generados por defecto:
+
+```text
+resultado_dynamic_gauntlet.txt
+resultado_dynamic_gauntlet.xml
+resultado_dynamic_gauntlet.html
+resultado_dynamic_gauntlet_manifest.json
+resultado_dynamic_gauntlet_failures/
+```
+
+---
+
+## 🧭 Campaña multisemilla
+
+Semillas explícitas:
+
+```bash
+python -m tests.quality.dynamic_campaign_test \
+  --seed 184729 \
+  --seed 987654 \
+  --seed 424242 \
+  --cases 42 \
+  --require-full-coverage \
+  --fail-on-warn
+```
+
+Semillas derivadas desde una base:
+
+```bash
+python -m tests.quality.dynamic_campaign_test \
+  --base-seed 184729 \
+  --runs 5 \
+  --cases 42 \
+  --require-full-coverage
+```
+
+Salida:
+
+```text
+resultado_dynamic_campaign/
+├── campaign_summary.json
+├── campaign_summary.txt
+├── campaign_summary.html
+├── run_01_seed_.../
+├── run_02_seed_.../
+└── run_03_seed_.../
+```
+
+Limpiar resultados:
+
+```bash
+rm -rf \
+  resultado_dynamic_gauntlet.txt \
+  resultado_dynamic_gauntlet.xml \
+  resultado_dynamic_gauntlet.html \
+  resultado_dynamic_gauntlet_manifest.json \
+  resultado_dynamic_gauntlet_failures \
+  resultado_dynamic_campaign
+```
+
+---
+
+## 🗄️ Backup
+
+Crear backup:
+
+```bash
+./tools/backup.sh
+```
+
+Cambiar el directorio de destino:
+
+```bash
+MAGICAI_BACKUP_ROOT=/ruta/de/backups ./tools/backup.sh
+```
+
+---
+
+## 🌿 Git
+
+Actualizar `develop`:
+
+```bash
+git switch develop
+git pull --ff-only origin develop
+```
+
+Crear una rama:
+
+```bash
+git switch -c feature/nombre-corto
+```
+
+Revisar cambios:
+
+```bash
+git status --short
+git diff --stat
+git diff --check
+```
+
+Commit y push:
+
+```bash
+git add -A
+git commit -m "Descripción del cambio"
+git push -u origin "$(git branch --show-current)"
+```
+
+Aplicar un parche:
+
+```bash
+git apply --check ~/cambio.patch
+git apply ~/cambio.patch
+```
+
+Revertir un parche no confirmado:
+
+```bash
+git apply -R ~/cambio.patch
+```
+
+Guardar cambios temporales:
+
+```bash
+git stash push -u -m "descripcion"
+git stash list
+git stash pop
+```
+
+---
+
+## 🇬🇧 English quick reference
+
+The commands above are directly usable regardless of language. The usual workflow is:
+
+```bash
+source .venv/bin/activate
+./scripts/download_sources.sh
+./scripts/download_rules.sh
+python -m uvicorn magicai.api:app --reload
+```
+
+Run the fast validation set before committing, then execute a 42-case Dynamic Gauntlet or a multiseed campaign for changes that affect retrieval, selection, rendering or evaluation.

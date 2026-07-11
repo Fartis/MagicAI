@@ -1,46 +1,41 @@
 #!/usr/bin/env bash
 
-set -e
-
-###############################################################################
-# CONFIGURACIÓN
-###############################################################################
+set -euo pipefail
 
 PROJECT_NAME="MagicAI"
-BACKUP_ROOT="/home/fartis/backup"
-
-DATE=$(date +%Y-%m-%d)
-VERSION="v0.1.0-alpha"
-
+BACKUP_ROOT="${MAGICAI_BACKUP_ROOT:-$HOME/backup}"
+DATE="$(date +%Y-%m-%d)"
+VERSION="v$(python - <<'PY'
+import tomllib
+from pathlib import Path
+payload = tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8'))
+print(payload['project']['version'])
+PY
+)-alpha"
 DEST="$BACKUP_ROOT/$DATE"
 
-###############################################################################
-# COMPROBACIONES
-###############################################################################
-
-if [ ! -f "pyproject.toml" ]; then
+if [[ ! -f "pyproject.toml" ]]; then
     echo "ERROR: Ejecuta este script desde la raíz del proyecto."
     exit 1
 fi
 
 mkdir -p "$DEST"
 
-echo
-echo "=============================================="
-echo " MagicAI Backup"
-echo "=============================================="
-echo
+cat <<INFO
 
-echo "Destino:"
-echo "$DEST"
-echo
+==============================================
+ MagicAI Backup
+==============================================
 
-echo "Generando información del proyecto..."
+Destino:
+$DEST
+INFO
 
 {
     echo "MagicAI"
     echo
-    echo "Fecha: $(date)"
+    echo "Fecha: $(date --iso-8601=seconds 2>/dev/null || date)"
+    echo "Versión: $VERSION"
     echo
     echo "Git:"
     git status 2>/dev/null || true
@@ -49,76 +44,77 @@ echo "Generando información del proyecto..."
     python --version
     echo
     echo "Ollama:"
-    docker exec ollama ollama --version 2>/dev/null || true
+    docker exec ollama ollama --version 2>/dev/null || ollama --version 2>/dev/null || true
 } > "$DEST/INFO.txt"
 
-###############################################################################
-# ZIP DEL CÓDIGO
-###############################################################################
+COMMON_EXCLUDES=(
+    ".git/*"
+    ".venv/*"
+    "venv/*"
+    "**/__pycache__/*"
+    "*.pyc"
+    ".pytest_cache/*"
+    ".mypy_cache/*"
+    ".ruff_cache/*"
+    ".idea/*"
+    ".vscode/*"
+    "*.egg-info/*"
+    "build/*"
+    "dist/*"
+    "resultado_*.txt"
+    "resultado_*.xml"
+    "resultado_*.html"
+    "resultado_*.json"
+    "resultado_dynamic_gauntlet_failures/*"
+    "resultado_dynamic_campaign/*"
+    "quality-results/*"
+    "test-results/*"
+    "reports/*"
+    "audit_gauntlet_*_failures.txt"
+    "sprint*.patch"
+    "MagicAI-*.zip"
+    "*.db"
+    "*.sqlite*"
+)
+
+zip_project() {
+    local output="$1"
+    shift
+
+    local args=(zip -rq "$output" .)
+
+    for pattern in "${COMMON_EXCLUDES[@]}" "$@"; do
+        args+=(-x "$pattern")
+    done
+
+    "${args[@]}"
+}
 
 SOURCE_ZIP="$DEST/${PROJECT_NAME}-${VERSION}-source.zip"
-
 echo "Creando backup del código..."
-
-zip -rq "$SOURCE_ZIP" . \
-    -x ".git/*" \
-    -x ".venv/*" \
-    -x "**/__pycache__/*" \
-    -x "*.pyc" \
-    -x ".pytest_cache/*" \
-    -x ".mypy_cache/*" \
-    -x ".ruff_cache/*" \
-    -x ".idea/*" \
-    -x ".vscode/*" \
-    -x "magicai.egg-info/*" \
-    -x "Resultado.txt" \
-    -x "database/magic.db" \
-    -x "sources/scryfall/*" \
-    -x "sources/commander/*" \
-    -x "sources/strategy/*"
-
-###############################################################################
-# ZIP COMPLETO
-###############################################################################
+zip_project "$SOURCE_ZIP" \
+    "sources/scryfall/oracle-cards.json" \
+    "sources/scryfall/default-cards.json" \
+    "sources/scryfall/all-cards.json" \
+    "sources/scryfall/unique-artwork.json" \
+    "sources/scryfall/rulings.json"
 
 FULL_ZIP="$DEST/${PROJECT_NAME}-${VERSION}-full.zip"
-
 echo "Creando snapshot completo..."
+zip_project "$FULL_ZIP"
 
-zip -rq "$FULL_ZIP" . \
-    -x ".git/*" \
-    -x ".venv/*" \
-    -x "**/__pycache__/*" \
-    -x "*.pyc" \
-    -x ".pytest_cache/*" \
-    -x ".mypy_cache/*" \
-    -x ".ruff_cache/*" \
-    -x ".idea/*" \
-    -x ".vscode/*" \
-    -x "magicai.egg-info/*" \
-    -x "Resultado.txt"
+cat <<INFO
 
-###############################################################################
-# RESUMEN
-###############################################################################
+==============================================
+ Backup completado
+==============================================
 
-echo
-echo "=============================================="
-echo " Backup completado"
-echo "=============================================="
-echo
+Código:
+$(ls -lh "$SOURCE_ZIP")
 
-echo "Código:"
-ls -lh "$SOURCE_ZIP"
+Snapshot:
+$(ls -lh "$FULL_ZIP")
 
-echo
-
-echo "Snapshot:"
-ls -lh "$FULL_ZIP"
-
-echo
-
-echo "Archivos creados en:"
-echo "$DEST"
-
-echo
+Archivos creados en:
+$DEST
+INFO

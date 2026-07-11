@@ -1,406 +1,271 @@
-# 🏗 Architecture
+# 🏗️ Arquitectura de MagicAI
 
-<table>
-<tr>
+> Arquitectura actual del Juez y evolución prevista hacia una UI multiperfil.
 
-<td width="50%" valign="top">
-
-# 🇪🇸 Arquitectura
-
-MagicAI está diseñado siguiendo una filosofía muy simple:
-
-> **Cada componente debe tener una única responsabilidad.**
-
-En lugar de construir un asistente monolítico donde toda la lógica se mezcla, MagicAI divide el proceso de razonamiento en pequeños bloques independientes.
-
-Esto facilita:
-
-- 🧩 Mantener el código
-- ⚡ Optimizar componentes individuales
-- 🧪 Probar cada etapa por separado
-- 🔄 Sustituir implementaciones sin afectar al resto del sistema
-
-Cada respuesta es el resultado de un pipeline donde cada componente aporta únicamente el conocimiento necesario para la siguiente etapa.
-
-</td>
-
-<td width="50%" valign="top">
-
-# 🇬🇧 Architecture
-
-MagicAI follows one simple principle:
-
-> **Each component should have a single responsibility.**
-
-Instead of building one monolithic assistant where every task happens at once, MagicAI divides the reasoning process into small independent stages.
-
-This makes it easier to:
-
-- 🧩 Maintain the codebase
-- ⚡ Optimize individual components
-- 🧪 Test each stage independently
-- 🔄 Replace implementations without affecting the rest of the system
-
-Every answer is produced by a pipeline where each component contributes only the knowledge required for the next stage.
-
-</td>
-
-</tr>
-</table>
+[Español](#-arquitectura-actual) · [English](#-architecture-summary)
 
 ---
 
-# 📊 High-Level Architecture
+## 🇪🇸 Arquitectura actual
 
-```
-                         User
-                           │
-                           ▼
-                    MagicAI Assistant
-                           │
-                           ▼
-                     Conversation
-                           │
-                           ▼
-                    Context Builder
-                           │
-                           ▼
-                   Context Enricher
-                           │
-                           ▼
-                  Knowledge Builder
-                           │
-                           ▼
-                      Ollama (LLM)
-                           │
-                           ▼
-                        Response
+MagicAI separa recuperación, razonamiento, generación y validación. El LLM no consulta fuentes por su cuenta ni actúa como autoridad factual.
+
+### Pipeline del Juez
+
+```text
+HTTP /ask or test harness
+          │
+          ▼
+ConversationManager
+          │
+          ▼
+MagicAI.ask
+          │
+          ├── card disambiguation
+          ├── conversation history
+          └── active-card references
+          │
+          ▼
+Context Builder
+          │
+          ├── deterministic intent hints
+          ├── card extraction
+          ├── keyword extraction
+          ├── explicit rule extraction
+          ├── action detection
+          └── rule query generation
+          │
+          ▼
+Context Enricher
+          │
+          ├── CardRepository → local Scryfall Oracle
+          ├── RuleRepository → Comprehensive Rules
+          ├── Oracle-derived rule queries
+          └── Scryfall symbology
+          │
+          ▼
+Knowledge Builder
+          │
+          ├── QUESTION
+          ├── CARDS
+          ├── SYMBOLS
+          ├── RULES
+          └── REASONING HINTS
+          │
+          ▼
+Answer Generator
+          │
+          ├── deterministic Rule Renderer
+          │        └── final answer when matched
+          │
+          └── Ollama when no deterministic answer exists
+                   │
+                   ▼
+             answer validation
+                   │
+             ┌─────┴─────┐
+             │           │
+           valid       rejected
+             │           │
+             │         retry
+             │           │
+             │      safe fallback
+             ▼           ▼
+                 final answer
 ```
 
----
+### Responsabilidades
 
-<table>
-<tr>
+#### `magicai.assistant`
 
-<td width="50%" valign="top">
+Orquesta una consulta completa. No implementa reglas ni búsqueda directa.
 
-# 🇪🇸 Flujo de una consulta
+#### `magicai.conversation`
 
-Cada pregunta sigue exactamente el mismo recorrido.
+Mantiene historial, cartas activas y estados pendientes de desambiguación. Las sesiones actuales viven en memoria.
 
-1. El usuario realiza una pregunta.
-2. Se recupera el historial de conversación.
-3. Se identifican cartas, reglas y referencias implícitas.
-4. Se construye un contexto estructurado.
-5. El conocimiento se entrega al LLM.
-6. El modelo genera una respuesta utilizando únicamente dicho contexto.
+#### `magicai.context_builder`
 
-El modelo nunca recibe únicamente la pregunta del usuario.
+Convierte la pregunta en un `AssistantContext`: intención, cartas, keywords, reglas explícitas, consultas semánticas y pistas de acciones.
 
-Siempre recibe conocimiento previamente preparado.
+#### `magicai.context_enricher`
 
-</td>
+Resuelve nombres de cartas, recupera reglas, añade símbolos y prioriza consultas derivadas del Oracle cuando la pregunta trata sobre habilidades.
 
-<td width="50%" valign="top">
+#### `magicai.repositories` y `magicai.services`
 
-# 🇬🇧 Request Flow
+Definen la frontera de acceso a cartas y reglas. El resto del pipeline no debería depender directamente del formato de los ficheros fuente.
 
-Every question follows the same execution pipeline.
+#### `magicai.retrieval`
 
-1. The user asks a question.
-2. Conversation history is retrieved.
-3. Cards, rules and implicit references are extracted.
-4. A structured context is built.
-5. Knowledge is sent to the language model.
-6. The LLM generates an answer using that knowledge.
+Genera consultas de reglas y conceptos Oracle. Aquí se resuelven muchos fallos de generalización lingüística.
 
-The language model never receives only the user's question.
+#### `magicai.validation`
 
-It always receives structured knowledge first.
+Contiene:
 
-</td>
+- renderizador determinista de reglas;
+- renderizador Oracle;
+- validadores de contradicciones y alucinaciones;
+- fallback seguro basado en evidencia recuperada.
 
-</tr>
-</table>
+#### `magicai.llm`
 
----
+Cliente de Ollama. El modelo recibe conocimiento preparado, no acceso directo a fuentes ni a Internet.
 
-# 🧩 Components
+### Prioridad de evidencia
 
-<table>
-<tr>
+```text
+Oracle recuperado
+    > reglas recuperadas
+        > rulings recuperados (futuro contrato formal)
+            > pistas semánticas
+                > memoria del modelo, que no es autoridad
+```
 
-<td width="50%" valign="top">
-
-## 🧠 Assistant
-
-Punto de entrada principal del sistema.
-
-Coordina el pipeline completo y mide el rendimiento de cada etapa.
+Las pistas de razonamiento solo ayudan a interpretar la intención. Nunca sustituyen reglas.
 
 ---
 
-## 💬 Conversation
+## Renderizado determinista y LLM
 
-Mantiene el estado de la conversación.
+MagicAI utiliza un enfoque híbrido:
 
-Permite resolver preguntas como:
+1. Si la evidencia coincide con una familia formal cubierta, el `rule_renderer` genera una respuesta determinista.
+2. Si no existe renderer, Ollama explica el contexto recuperado.
+3. La respuesta del modelo se valida.
+4. Si falla, se reintenta con las violaciones detectadas.
+5. Si sigue fallando, se produce un fallback seguro.
 
-> "¿Y si lo sacrifico?"
-
-sin repetir el nombre de la carta.
-
----
-
-## 🔍 Context Builder
-
-Detecta automáticamente:
-
-- cartas
-- palabras clave
-- reglas relevantes
-- referencias implícitas
-
-Su objetivo es comprender **de qué está hablando el usuario**.
+Esto permite aprovechar la flexibilidad lingüística del LLM sin convertirlo en la fuente de verdad.
 
 ---
 
-## 📚 Context Enricher
+## Arquitectura de pruebas
 
-Amplía el contexto recuperando información adicional cuando es necesario.
+```text
+Unit and contract tests
+├── retrieval
+├── card extraction
+├── renderers
+├── validation
+└── campaign planning
 
-Añade únicamente conocimiento útil.
+Fixed quality suites
+├── Reddit Gauntlet
+├── Generalization Probe
+└── Regression Suite
 
-Nunca inventa información.
+Generated quality suites
+├── Dynamic Gauntlet
+│   ├── card-backed scenarios
+│   └── rules-only scenarios
+└── Multiseed Campaign
+    ├── per-seed manifest
+    ├── replayable failures
+    └── aggregate coverage
+```
 
----
-
-## 🧠 Knowledge Builder
-
-Organiza toda la información recopilada en un formato estructurado que el LLM pueda interpretar fácilmente.
-
-Es el último paso antes de la inferencia.
-
----
-
-## 🤖 Ollama
-
-El modelo de lenguaje.
-
-Su única responsabilidad es transformar el conocimiento proporcionado en una explicación comprensible.
-
-No es la fuente de verdad.
-
-Es el narrador.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🧠 Assistant
-
-Main entry point.
-
-Coordinates the complete pipeline and measures the execution time of every stage.
+El Gauntlet no solo evalúa la respuesta. También conserva la carta elegida, Oracle, tipo, set, legalidad, plantilla y contrato para auditar premisas falsas.
 
 ---
 
-## 💬 Conversation
+## Arquitectura futura multiperfil
 
-Stores the conversation state.
+La UI será una única aplicación modular. El Juez será el primer perfil disponible.
 
-Allows follow-up questions like:
+```text
+MagicAI UI
+    │
+    ▼
+Profile Router
+    │
+    ├── Judge
+    │     └── factual authority
+    │
+    ├── Deck Master
+    │     ├── deck evaluation
+    │     ├── game plans
+    │     ├── mulligans
+    │     └── matchup strategy
+    │
+    └── Deckbuilder
+          ├── build from zero
+          ├── improve a list
+          ├── packages and curve
+          └── budget and power targets
+```
 
-> "What if I sacrifice it?"
+### Frontera factual obligatoria
 
-without mentioning the card again.
+```text
+Deck Master ──┐
+              ├──► JudgeClient ──► Judge ──► Oracle / Rules / Rulings
+Deckbuilder ──┘
+```
 
----
+Deck Master y Deckbuilder:
 
-## 🔍 Context Builder
+- no consultarán Scryfall directamente;
+- no consultarán Comprehensive Rules directamente;
+- no usarán Internet para afirmar texto, legalidad o reglas;
+- no inventarán interacciones;
+- recibirán evidencia factual únicamente mediante el Juez.
 
-Automatically detects:
-
-- cards
-- keywords
-- relevant rules
-- implicit references
-
-Its goal is understanding **what the player is talking about**.
-
----
-
-## 📚 Context Enricher
-
-Expands the retrieved context whenever additional knowledge is required.
-
-Only useful information is added.
-
-Nothing is invented.
-
----
-
-## 🧠 Knowledge Builder
-
-Organizes all collected information into a structured format for the language model.
-
-This is the final stage before inference.
-
----
-
-## 🤖 Ollama
-
-The language model.
-
-Its only responsibility is transforming structured knowledge into a clear explanation.
-
-It is not the source of truth.
-
-It is the storyteller.
-
-</td>
-
-</tr>
-</table>
+Podrán ser creativos en estrategia y construcción, pero sus afirmaciones factuales deberán estar respaldadas por `JudgeResult`.
 
 ---
 
-# 🎯 Design Principles
+## Contrato futuro `JudgeResult`
 
-<table>
-<tr>
+La API actual devuelve `answer` y `session_id`. La siguiente frontera estable será un objeto parecido a:
 
-<td width="50%" valign="top">
+```json
+{
+  "status": "answered",
+  "answer": "...",
+  "cards": [],
+  "rules": [],
+  "rulings": [],
+  "assumptions": [],
+  "warnings": [],
+  "confidence": "high",
+  "source_versions": {}
+}
+```
 
-MagicAI sigue cinco principios fundamentales.
+Estados previstos:
 
-## 📖 Official Knowledge First
+```text
+answered
+needs_clarification
+insufficient_evidence
+false_premise
+```
 
-La información oficial siempre tiene prioridad sobre el conocimiento del modelo.
+Este contrato será utilizado por:
 
----
-
-## 🧩 Single Responsibility
-
-Cada componente hace una sola cosa.
-
-Y procura hacerla bien.
-
----
-
-## 🧠 Context Engineering
-
-Es mejor mejorar el contexto que hacer prompts cada vez más largos.
-
----
-
-## 🔄 Modular Design
-
-Cada componente puede sustituirse sin modificar el resto del sistema.
-
----
-
-## 🧪 Test Everything
-
-Toda mejora importante debe poder verificarse mediante pruebas automáticas.
-
-</td>
-
-<td width="50%" valign="top">
-
-MagicAI follows five core principles.
-
-## 📖 Official Knowledge First
-
-Official sources always take precedence over the model's memory.
+- la UI;
+- Deck Master;
+- Deckbuilder;
+- tests de integración;
+- exportación y auditoría.
 
 ---
 
-## 🧩 Single Responsibility
+## Decisiones de diseño no negociables
 
-Each component performs exactly one task.
-
-And aims to do it well.
-
----
-
-## 🧠 Context Engineering
-
-Improving the context is better than endlessly expanding prompts.
+- El Juez es la autoridad factual única.
+- Los fixes deben ser genéricos, no hardcodes de cartas o preguntas.
+- Una premisa falsa invalida un PASS aunque la explicación abstracta sea correcta.
+- Las cartas de broma, silver-border, acorn y playtest quedan fuera del flujo estándar.
+- La incertidumbre debe expresarse, no rellenarse con memoria del modelo.
+- La UI no contendrá conocimiento de Magic; solo presentará perfiles, respuestas y evidencia.
 
 ---
 
-## 🔄 Modular Design
+## 🇬🇧 Architecture summary
 
-Every component can be replaced independently.
+MagicAI separates retrieval, generation and validation. The Judge builds a grounded context from local Oracle data, Comprehensive Rules and conversation state. Deterministic renderers answer covered rule families; Ollama handles the remaining explanations under strict validation and safe fallback rules.
 
----
-
-## 🧪 Test Everything
-
-Every important improvement should be validated through automated tests.
-
-</td>
-
-</tr>
-</table>
-
----
-
-# 🔮 Future Evolution
-
-<table>
-<tr>
-
-<td width="50%" valign="top">
-
-La arquitectura está preparada para crecer.
-
-Las próximas versiones podrán incorporar nuevos componentes como:
-
-- ⚡ Caché
-- 🎴 Índice de cartas
-- 🧠 Grafo de conocimiento
-- 📊 Métricas
-- 🌐 Frontend
-- 🐳 Docker
-
-sin modificar el flujo principal.
-
-La arquitectura fue diseñada para evolucionar sin romper compatibilidad.
-
-</td>
-
-<td width="50%" valign="top">
-
-The architecture is designed to evolve.
-
-Future versions may introduce new components such as:
-
-- ⚡ Cache
-- 🎴 Card Index
-- 🧠 Knowledge Graph
-- 📊 Metrics
-- 🌐 Frontend
-- 🐳 Docker
-
-without changing the core pipeline.
-
-The architecture is built to grow without breaking compatibility.
-
-</td>
-
-</tr>
-</table>
-
----
-
-<div align="center">
-
-### 🧙
-
-**Good software answers questions.**
-
-**Great software explains how it reached the answer.**
-
-</div>
+The future UI will host multiple profiles. Deck Master and Deckbuilder will remain strategically creative but will have no direct factual access to card or rules sources. They must request Oracle text, legality, rulings and interaction validation through the Judge.
