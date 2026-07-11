@@ -68,6 +68,27 @@ FAIL                       0
 
 La campaña incluye escenarios `rules-only` y escenarios respaldados por cartas reales del Oracle local.
 
+### Matriz de regresión validada
+
+```text
+Reddit Gauntlet          30/30
+Generalization Probe     18/18
+Dynamic Gauntlet         42/42
+Dynamic Campaign        126/126
+--------------------------------
+Ejecuciones validadas   216/216
+WARN                           0
+FAIL                           0
+```
+
+Los últimos hardenings añadieron regresiones deterministas para:
+
+- sacrificios pagados como coste y colocación posterior de disparos en la pila;
+- referencias a la zona de mando aunque la pregunta no diga literalmente «comandante»;
+- efectos continuos que comienzan en una capa y continúan en capas posteriores;
+- dependencias entre efectos de cambio de tipo;
+- separación de resultados cuando dos cartas similares producen interacciones distintas.
+
 ### Filtro de cartas del Gauntlet
 
 El catálogo dinámico solo admite cartas:
@@ -107,13 +128,16 @@ brawl
 - Copias de comandantes.
 - Orden de efectos de reemplazo sobre contadores.
 - Contadores aplicados al entrar al campo de batalla.
+- Sacrificio como coste frente a habilidades disparadas de muerte.
+- Reconocimiento implícito del contexto Commander mediante la zona de mando.
+- Cobertura inicial determinista de capas, continuidad y dependencias.
 
 ### Limitaciones conocidas
 
 - La salida pública sigue siendo texto, no un objeto `JudgeResult` estructurado.
 - Las sesiones de la API viven en memoria y no persisten tras reiniciar el proceso.
 - La cobertura determinista todavía no abarca todas las familias de reglas.
-- Interacciones con capas, dependencias, CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
+- La cobertura de capas y dependencias ya tiene casos iniciales, pero todavía no es general; CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
 - El sistema no simula una partida completa como un motor de reglas digital.
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
 - La UI todavía no está implementada.

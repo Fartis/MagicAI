@@ -16,19 +16,65 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 ```
 
-Instalar dependencias:
+Instalar MagicAI en modo editable y resolver sus dependencias declaradas en `pyproject.toml`:
 
 ```bash
 python -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -e .
+python -m pip install -r requirements.txt
 ```
 
-Comprobar instalación:
+Instalar usando exactamente las versiones validadas del lock:
+
+```bash
+python -m pip install -r requirements.txt   -c requirements.lock.txt
+```
+
+`requirements.txt` contiene `-e .`; no es necesario ejecutar además `pip install -e .`.
+
+Comprobar instalación y dependencias:
 
 ```bash
 python --version
-python -c "import magicai; print('MagicAI import OK')"
+python -m pip check
+python -m pip show magicai
+python -c "import magicai; print('MagicAI import OK:', magicai.__file__)"
+```
+
+En `python -m pip show magicai`, el campo `Requires` debe incluir:
+
+```text
+fastapi, pydantic, requests, uvicorn
+```
+
+Prueba reproducible desde un entorno vacío:
+
+```bash
+cd ~/MagicAI
+rm -rf /tmp/magicai-clean-venv
+python3.12 -m venv /tmp/magicai-clean-venv
+source /tmp/magicai-clean-venv/bin/activate
+
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt   -c requirements.lock.txt
+python -m pip check
+python -m pip show magicai
+
+python - <<'PY'
+import fastapi
+import magicai
+import pydantic
+import requests
+import uvicorn
+
+print("MagicAI:", magicai.__file__)
+print("FastAPI:", fastapi.__version__)
+print("Pydantic:", pydantic.__version__)
+print("Requests:", requests.__version__)
+print("Uvicorn:", uvicorn.__version__)
+PY
+
+deactivate
+rm -rf /tmp/magicai-clean-venv
 ```
 
 Salir del entorno:

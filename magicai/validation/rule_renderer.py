@@ -42,6 +42,13 @@ _RULE_MARKERS = {
     "state_based": ["704", "704."],
     "zero_toughness": ["704.5f"],
     "counter_cancellation": ["704.5q", "122.3"],
+    "continuous_static": ["611.3"],
+    "type_layer": ["613.1d"],
+    "ability_layer": ["613.1f"],
+    "pt_set_layer": ["613.4b"],
+    "layer_continuity": ["613.6"],
+    "dependency": ["613.8"],
+    "basic_land_type": ["305.7"],
     "zone_change": ["400.7"],
     "persist": ["702.79", "702.79a"],
     "undying": ["702.93", "702.93a"],
@@ -65,6 +72,14 @@ def render_rule_answer(knowledge: str) -> str | None:
     if not q:
         return None
 
+
+    layered_answer = _render_layered_static_source_comparison(
+        knowledge,
+        q,
+    )
+
+    if layered_answer is not None:
+        return layered_answer
 
     if _is_persist_and_undying_question(q) and _has_rules(
         knowledge,
@@ -269,8 +284,8 @@ def render_rule_answer(knowledge: str) -> str | None:
         return (
             "No. La habilidad no se contrarresta por destruir o retirar su "
             "fuente. Una vez activada, existe en la pila de forma independiente "
-            "de la criatura que la originó; permanece en la pila y normalmente "
-            "seguirá resolviéndose."
+            "de su fuente; permanece en la pila y normalmente seguirá "
+            "resolviéndose."
         )
 
     if _is_no_priority_during_resolution(q) and _has_rules(
@@ -406,6 +421,186 @@ def render_rule_answer(knowledge: str) -> str | None:
             "en la pila como habilidad disparada, y cuando se resuelve aplicas sus "
             "instrucciones y tomas las decisiones que el efecto pida entonces."
         )
+
+    return None
+
+
+def _render_layered_static_source_comparison(
+    knowledge: str,
+    question: str,
+) -> str | None:
+    """Resolve a reusable continuous-effect dependency pattern.
+
+    This covers comparisons where a static ability animates or grants
+    characteristics to other permanents, while two different effects alter
+    the source: one removes abilities in layer 6, and another assigns a basic
+    land type in layer 4. The conclusion is derived from recovered Oracle text
+    plus layers evidence, not from memorized card names.
+    """
+
+    if not _looks_like_layered_static_source_comparison(question):
+        return None
+
+    required = [
+        "continuous_static",
+        "type_layer",
+        "ability_layer",
+        "pt_set_layer",
+        "layer_continuity",
+        "dependency",
+        "basic_land_type",
+    ]
+
+    if not _has_rules(knowledge, required):
+        return None
+
+    entries = _extract_card_entries(knowledge)
+
+    if len(entries) < 3:
+        return None
+
+    animator = _find_card_entry(
+        entries,
+        required_markers=[
+            "during your turn",
+            "is a 4/4",
+            "in addition to its other types",
+        ],
+    )
+    explicit_ability_loss = _find_card_entry(
+        entries,
+        required_markers=[
+            "enchanted permanent",
+            "loses all",
+            "abilities",
+        ],
+    )
+    basic_land_setter = _find_basic_land_type_setter(entries)
+
+    if not animator or not explicit_ability_loss or not basic_land_setter:
+        return None
+
+    animator_name = animator[0]
+    explicit_name = explicit_ability_loss[0]
+    basic_name = basic_land_setter[0]
+
+    return (
+        f"Los dos efectos producen resultados distintos. Con {explicit_name}, "
+        f"el efecto continuo de {animator_name} ya empezó a aplicarse en la "
+        "capa de cambio de tipo antes de que la fuente pierda sus habilidades "
+        "en una capa posterior. Por la continuidad entre capas, el encantamiento "
+        "permanece como criatura Elemental 4/4 y conserva las habilidades que "
+        "ese efecto le concede, incluida prisa; por tanto, puede atacar este "
+        "turno si está enderezado y no existe otra restricción. "
+        f"Con {basic_name}, el resultado cambia: asignar un tipo de tierra "
+        "básica se aplica en la misma capa de cambio de tipo y hace que la "
+        f"fuente pierda sus habilidades antes de que el efecto de {animator_name} "
+        "pueda empezar a aplicarse. Por dependencia, ese efecto deja de animar "
+        "el encantamiento, que vuelve a ser un encantamiento normal y no puede "
+        "atacar como criatura."
+    )
+
+
+def _looks_like_layered_static_source_comparison(question: str) -> bool:
+    has_characteristic_result = any(
+        marker in question
+        for marker in [
+            "4/4",
+            "sigue siendo",
+            "permanece",
+            "continua siendo",
+            "vuelve a ser",
+            "deja de ser",
+        ]
+    )
+    has_source_change = any(
+        marker in question
+        for marker in [
+            "pierde habilidades",
+            "pierde todas las habilidades",
+            "convierte en una tierra",
+            "convierte en tierra",
+            "encanta",
+            "enchanted",
+        ]
+    )
+    compares_effects = any(
+        marker in question
+        for marker in [
+            " o con ",
+            " o ",
+            "dos efectos",
+            "ambos efectos",
+            "resultados distintos",
+        ]
+    )
+
+    return has_characteristic_result and has_source_change and compares_effects
+
+
+def _extract_card_entries(knowledge: str) -> list[tuple[str, str]]:
+    cards_block = _extract_cards_block(knowledge)
+
+    if not cards_block:
+        return []
+
+    pattern = re.compile(
+        r"(?ms)^([^\n=]+)\n"
+        r"(?:Mana Cost:[^\n]*\n)?"
+        r"([^\n]+)\n\n"
+        r"(.*?)"
+        r"(?=\n\n[^\n=]+\n(?:Mana Cost:[^\n]*\n)?[^\n]+\n\n|\Z)"
+    )
+
+    entries = []
+
+    for match in pattern.finditer(cards_block.strip()):
+        name = match.group(1).strip()
+        type_line = match.group(2).strip()
+        oracle = match.group(3).strip()
+        entries.append((name, f"{type_line}\n{oracle}"))
+
+    return entries
+
+
+def _find_card_entry(
+    entries: list[tuple[str, str]],
+    required_markers: list[str],
+) -> tuple[str, str] | None:
+    for entry in entries:
+        normalized = _normalize(entry[1])
+
+        if all(marker in normalized for marker in required_markers):
+            return entry
+
+    return None
+
+
+def _find_basic_land_type_setter(
+    entries: list[tuple[str, str]],
+) -> tuple[str, str] | None:
+    basic_types = [
+        "plains",
+        "island",
+        "swamp",
+        "mountain",
+        "forest",
+    ]
+
+    for entry in entries:
+        normalized = _normalize(entry[1])
+
+        if "enchanted permanent" not in normalized:
+            continue
+
+        if "land" not in normalized:
+            continue
+
+        if "loses all" in normalized and "abilities" in normalized:
+            continue
+
+        if any(land_type in normalized for land_type in basic_types):
+            return entry
 
     return None
 

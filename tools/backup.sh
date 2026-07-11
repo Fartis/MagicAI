@@ -5,6 +5,12 @@ set -euo pipefail
 PROJECT_NAME="MagicAI"
 BACKUP_ROOT="${MAGICAI_BACKUP_ROOT:-$HOME/backup}"
 DATE="$(date +%Y-%m-%d)"
+
+if [[ ! -f "pyproject.toml" ]]; then
+    echo "ERROR: Ejecuta este script desde la raíz del proyecto."
+    exit 1
+fi
+
 VERSION="v$(python - <<'PY'
 import tomllib
 from pathlib import Path
@@ -13,11 +19,6 @@ print(payload['project']['version'])
 PY
 )-alpha"
 DEST="$BACKUP_ROOT/$DATE"
-
-if [[ ! -f "pyproject.toml" ]]; then
-    echo "ERROR: Ejecuta este script desde la raíz del proyecto."
-    exit 1
-fi
 
 mkdir -p "$DEST"
 
@@ -81,13 +82,24 @@ zip_project() {
     local output="$1"
     shift
 
-    local args=(zip -rq "$output" .)
+    # `zip` actualiza archivos existentes, pero no elimina entradas que ya no
+    # existen en el árbol. Crear primero un archivo temporal evita que un backup
+    # reutilizado conserve módulos borrados o resultados antiguos.
+    local temporary_output="${output%.zip}.tmp.zip"
+    rm -f "$temporary_output" "$output"
+
+    local args=(zip -rq "$temporary_output" .)
 
     for pattern in "${COMMON_EXCLUDES[@]}" "$@"; do
         args+=(-x "$pattern")
     done
 
-    "${args[@]}"
+    if ! "${args[@]}"; then
+        rm -f "$temporary_output"
+        return 1
+    fi
+
+    mv "$temporary_output" "$output"
 }
 
 SOURCE_ZIP="$DEST/${PROJECT_NAME}-${VERSION}-source.zip"

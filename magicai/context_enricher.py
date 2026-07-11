@@ -1,3 +1,5 @@
+import re
+
 from magicai.extractors.keywords import extract_keywords
 
 from magicai.repositories.card_repository import CardRepository
@@ -38,13 +40,18 @@ def enrich(context):
 
     context.symbols = symbols
 
-    if _needs_oracle_rule_queries(context):
+    oracle_query_focus = _oracle_query_focus(context)
+
+    if oracle_query_focus:
 
         oracle_rule_queries = []
 
         for card in context.cards:
 
-            for query in build_oracle_rule_queries(card.oracle_text or ""):
+            for query in build_oracle_rule_queries(
+                card.oracle_text or "",
+                focus=oracle_query_focus,
+            ):
 
                 _add_unique_query(
                     oracle_rule_queries,
@@ -182,38 +189,118 @@ def _add_unique_query(items: list[str], query: str):
 
 def _needs_oracle_rule_queries(context) -> bool:
 
+    return bool(_oracle_query_focus(context))
+
+
+def _oracle_query_focus(context) -> set[str]:
+
     q = context.question.lower()
 
+    focus: set[str] = set()
+
+    if _looks_like_continuous_effect_question(q):
+        focus.add("continuous")
+
+    if any(
+        marker in q
+        for marker in [
+            "habilidad activada",
+            "habilidades activadas",
+            "activar",
+            "activa",
+            "activated ability",
+            "activated abilities",
+        ]
+    ):
+        focus.add("activated")
+
+    if any(
+        marker in q
+        for marker in [
+            "habilidad disparada",
+            "habilidad desencadenada",
+            "habilidades disparadas",
+            "se dispara",
+            "disparada",
+            "desencadenada",
+            "triggered ability",
+            "triggered abilities",
+        ]
+    ):
+        focus.add("triggered")
+
+    if any(
+        marker in q
+        for marker in [
+            "habilidad de maná",
+            "habilidad de mana",
+            "añadir maná",
+            "anadir mana",
+            "agregar maná",
+            "agregar mana",
+            "mana ability",
+        ]
+    ):
+        focus.update({"activated", "mana"})
+
+    # "habilidad" o "habilidades" por sí solas son demasiado amplias.
+    # En preguntas como "pierde habilidades y deja de ser criatura" deben
+    # conducir a capas, no a recuperar cualquier habilidad disparada
+    # incidental que aparezca en el Oracle de la carta.
+
+    return focus
+
+
+def _looks_like_continuous_effect_question(q: str) -> bool:
+
     markers = [
-        "habilidad",
-        "habilidades",
-        "ability",
-        "abilities",
-        "habilidad activada",
-        "habilidades activadas",
-        "habilidad disparada",
-        "habilidad desencadenada",
-        "habilidades disparadas",
-        "activar",
-        "activa",
-        "se dispara",
-        "disparada",
-        "desencadenada",
-        "responder",
-        "respuesta",
-        "activated ability",
-        "activated abilities",
-        "triggered ability",
-        "triggered abilities",
-        "mana ability",
-        "habilidad de maná",
-        "habilidad de mana",
+        "efecto continuo",
+        "efectos continuos",
+        "capa",
+        "capas",
+        "convierte en",
+        "lo convierte en",
+        "la convierte en",
+        "se convierte en",
+        "sigue siendo",
+        "deja de ser",
+        "vuelve a ser",
+        "pierde todas las habilidades",
+        "pierde habilidades",
+        "gana habilidades",
+        "en adición a sus otros tipos",
+        "además de sus otros tipos",
+        "in addition to its other types",
+        "loses all abilities",
+        "type-changing",
+        "ability-removing",
     ]
 
-    return any(
+    if any(marker in q for marker in markers):
+        return True
+
+    has_power_toughness = re.search(r"\b\d+/\d+\b", q) is not None
+    characteristic_markers = [
+        "fija",
+        "fijar",
+        "establece",
+        "se vuelve",
+        "pasa a ser",
+        "gana",
+        "pierde",
+        "base power",
+        "base toughness",
+        "set power",
+        "set toughness",
+        "becomes",
+        "gets",
+    ]
+
+    return has_power_toughness and any(
         marker in q
-        for marker in markers
+        for marker in characteristic_markers
     )
+
 
 def _merge_unique_queries(
     preferred: list[str],

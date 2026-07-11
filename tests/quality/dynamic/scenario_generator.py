@@ -53,6 +53,10 @@ class ScenarioGenerator:
                     oracle_evidence=card.oracle_text if card else "",
                     card_type_line=card.type_line if card else "",
                     card_keywords=card.keywords if card else (),
+                    card_set_code=card.set_code if card else "",
+                    card_set_name=card.set_name if card else "",
+                    card_set_type=card.set_type if card else "",
+                    card_legal_formats=card.legal_formats if card else (),
                     source_kind="card" if card else "rules",
                 )
             )

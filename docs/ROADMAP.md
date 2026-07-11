@@ -58,12 +58,16 @@ Completado:
 - escenarios `rules-only`;
 - campañas multisemilla;
 - auditoría de premisas;
-- exclusión de cartas funny, silver-border, acorn y playtest.
+- exclusión de cartas funny, silver-border, acorn y playtest;
+- routing de sacrificios pagados como coste y disparos de muerte;
+- detección de Commander mediante referencias a la zona de mando;
+- cobertura determinista inicial de capas, continuidad y dependencias.
 
-Último checkpoint validado:
+Últimos checkpoints validados:
 
 ```text
-3 seeds · 126/126 PASS · 14 concepts · 42 templates
+Dynamic Campaign: 3 seeds · 126/126 PASS · 14 concepts · 42 templates
+Matriz completa: 216/216 ejecuciones · 0 WARN · 0 FAIL
 ```
 
 ---

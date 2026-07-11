@@ -413,6 +413,25 @@ def _rule_number_queries(question: str) -> list[str]:
                 number,
             )
 
+    # Las interacciones que cambian tipos, habilidades o fuerza/resistencia
+    # necesitan capas antes que reglas incidentales de lanzamiento o Commander.
+    if _is_characteristic_continuous_effect_question(q):
+
+        add(
+            "611.3",
+            "613.1d",
+            "613.1f",
+            "613.4b",
+            "613.6",
+            "613.8",
+        )
+
+        if _mentions_basic_land_type_interaction(q):
+            add("305.7")
+
+    if _mentions_mana_value(q):
+        add("202.3")
+
     if _contains_any(
         q,
         [
@@ -581,15 +600,7 @@ def _rule_number_queries(question: str) -> list[str]:
             "117",
         )
 
-    if _contains_any(
-        q,
-        [
-            "coste",
-            "costo",
-            "como coste",
-            "como costo",
-        ],
-    ):
+    if _is_sacrifice_as_cost_death_trigger_question(q):
 
         add(
             "601",
@@ -598,6 +609,13 @@ def _rule_number_queries(question: str) -> list[str]:
             "405",
             "701.21",
             "700.4",
+        )
+
+    elif _is_casting_cost_question(q):
+
+        add(
+            "601",
+            "117",
         )
 
     if _contains_any(q, ["sacrificar", "sacrificio", "sacrifice"]):
@@ -645,15 +663,7 @@ def _rule_number_queries(question: str) -> list[str]:
             "405",
         )
 
-    if _contains_any(
-        q,
-        [
-            "zona de mando",
-            "command zone",
-            "comandante",
-            "commander",
-        ],
-    ):
+    if _is_commander_rules_question(q):
 
         add(
             "903.3",
@@ -804,6 +814,24 @@ def _specialized_queries(question: str) -> list[str]:
     q = question.lower()
 
     queries = []
+
+    if _is_characteristic_continuous_effect_question(q):
+
+        queries.extend(
+            [
+                "continuous effects interaction of continuous effects layers",
+                "type-changing effects layer 4",
+                "ability-adding and ability-removing effects layer 6",
+                "set power and toughness specific number layer 7b",
+                "effect starts applying in one layer continues in later layers even if ability is removed",
+                "dependency system continuous effects same layer",
+            ]
+        )
+
+        if _mentions_basic_land_type_interaction(q):
+            queries.append(
+                "basic land type loses abilities generated from rules text 305.7"
+            )
 
     if _contains_any(
         q,
@@ -1043,33 +1071,34 @@ def _specialized_queries(question: str) -> list[str]:
             ]
         )
 
-    if _contains_any(
-        q,
-        [
-            "coste",
-            "costo",
-            "como coste",
-            "como costo",
-        ],
-    ):
+    if _is_sacrifice_as_cost_death_trigger_question(q):
 
         queries.extend(
             [
-                "triggered abilities can trigger while a spell is being cast put on stack next time a player would receive priority",
-                "if multiple abilities have triggered since last time a player received priority placed on the stack",
-                "total cost includes mana payment activate mana abilities costs are paid",
+                "triggered abilities trigger during casting wait until a player would receive priority",
+                "triggered ability put on stack after spell becomes cast",
+                "sacrifice as additional cost dies trigger above spell on stack",
             ]
         )
 
-    if _contains_any(
-        q,
-        [
-            "zona de mando",
-            "command zone",
-            "comandante",
-            "commander",
-        ],
-    ):
+    elif _is_casting_cost_question(q):
+
+        queries.extend(
+            [
+                "total cost includes mana cost alternative costs additional costs cost increases and cost reductions",
+                "casting a spell determine total cost then pay costs",
+            ]
+        )
+
+    elif _mentions_mana_value(q):
+
+        queries.extend(
+            [
+                "mana value derived from mana cost",
+            ]
+        )
+
+    if _is_commander_rules_question(q):
 
         queries.extend(
             [
@@ -1192,6 +1221,9 @@ def _translate_question_terms(question: str) -> list[str]:
 
     for source, targets in LEXICAL_BRIDGE.items():
 
+        if source in {"comandante", "commander"} and not _is_commander_rules_question(lower):
+            continue
+
         if source in lower:
 
             for target in targets:
@@ -1238,6 +1270,215 @@ def _english_tokens(text: str) -> list[str]:
         for token in tokens
         if token not in stopwords
     ]
+
+
+def _is_characteristic_continuous_effect_question(question: str) -> bool:
+
+    markers = [
+        "efecto continuo",
+        "efectos continuos",
+        "capa",
+        "capas",
+        "convierte en",
+        "lo convierte en",
+        "la convierte en",
+        "se convierte en",
+        "sigue siendo",
+        "deja de ser",
+        "vuelve a ser",
+        "pierde todas las habilidades",
+        "pierde habilidades",
+        "gana habilidades",
+        "otros tipos",
+        "type-changing",
+        "ability-removing",
+        "loses all abilities",
+        "in addition to its other types",
+    ]
+
+    if _contains_any(question, markers):
+        return True
+
+    # A bare printed power/toughness such as ``0/0`` is not enough to infer
+    # a layers question. It is also common in state-based-action, combat and
+    # counter interactions. Only treat P/T as a continuous-effect signal when
+    # the wording also describes an effect changing or setting characteristics.
+    has_power_toughness = re.search(r"\b\d+/\d+\b", question) is not None
+    has_characteristic_change = _contains_any(
+        question,
+        [
+            "fija",
+            "fijar",
+            "establece",
+            "se vuelve",
+            "pasa a ser",
+            "gana",
+            "pierde",
+            "base power",
+            "base toughness",
+            "set power",
+            "set toughness",
+            "becomes",
+            "gets",
+        ],
+    )
+
+    return has_power_toughness and has_characteristic_change
+
+
+def _mentions_basic_land_type_interaction(question: str) -> bool:
+
+    return _contains_any(
+        question,
+        [
+            "basic land type",
+            "tipo de tierra básica",
+            "tipo de tierra basica",
+            "plains",
+            "island",
+            "swamp",
+            "mountain",
+            "forest",
+            "llanura",
+            "isla",
+            "pantano",
+            "montaña",
+            "montana",
+            "bosque",
+            "song of the dryads",
+        ],
+    )
+
+
+def _mentions_mana_value(question: str) -> bool:
+
+    if _contains_any(
+        question,
+        [
+            "valor de maná",
+            "valor de mana",
+            "mana value",
+            "converted mana cost",
+            "coste de maná convertido",
+            "coste de mana convertido",
+        ],
+    ):
+        return True
+
+    return bool(
+        re.search(
+            r"\b(?:coste|costo)\s+(?:de\s+)?\d+\b",
+            question,
+        )
+    )
+
+
+def _is_sacrifice_as_cost_death_trigger_question(question: str) -> bool:
+
+    return (
+        "sacrific" in question
+        and _contains_any(
+            question,
+            [
+                "como coste",
+                "como costo",
+                "as a cost",
+                "additional cost",
+            ],
+        )
+        and _contains_any(
+            question,
+            [
+                "habilidad de morir",
+                "habilidad disparada",
+                "habilidad desencadenada",
+                "se dispara",
+                "dies trigger",
+                "death trigger",
+                "undying",
+                "persist",
+            ],
+        )
+    )
+
+
+def _is_casting_cost_question(question: str) -> bool:
+
+    cost_markers = [
+        "coste",
+        "costo",
+        "cost",
+    ]
+
+    if not _contains_any(question, cost_markers):
+        return False
+
+    casting_cost_markers = [
+        "pagar",
+        "pago",
+        "pagando",
+        "sin pagar",
+        "coste adicional",
+        "costo adicional",
+        "coste alternativo",
+        "costo alternativo",
+        "reducir el coste",
+        "reducir el costo",
+        "aumentar el coste",
+        "aumentar el costo",
+        "cuesta lanzar",
+        "cuesta jugar",
+        "total cost",
+        "additional cost",
+        "alternative cost",
+        "cost reduction",
+        "cost increase",
+    ]
+
+    return _contains_any(question, casting_cost_markers)
+
+
+def _is_commander_rules_question(question: str) -> bool:
+
+    mentions_command_zone = _contains_any(
+        question,
+        [
+            "zona de mando",
+            "command zone",
+        ],
+    )
+
+    if not (
+        mentions_command_zone
+        or _contains_any(question, ["comandante", "commander"])
+    ):
+        return False
+
+    return _contains_any(
+        question,
+        [
+            "zona de mando",
+            "command zone",
+            "muere",
+            "dies",
+            "cementerio",
+            "graveyard",
+            "exilio",
+            "exile",
+            "mano",
+            "hand",
+            "biblioteca",
+            "library",
+            "daño de comandante",
+            "commander damage",
+            "identidad de color",
+            "color identity",
+            "copia de mi comandante",
+            "copy of my commander",
+            "designación",
+            "designation",
+        ],
+    )
 
 
 def _is_counter_replacement_interaction(question: str) -> bool:

@@ -118,18 +118,24 @@ def main():
         results=results,
         output_file=txt_file,
         total_elapsed=total_elapsed,
+        suite_name="MagicAI Generalization Probe",
     )
 
     write_xml_report(
         results=results,
         output_file=xml_file,
         total_elapsed=total_elapsed,
+        suite_name="MagicAI Generalization Probe",
     )
 
     write_html_report(
         results=results,
         output_file=html_file,
         total_elapsed=total_elapsed,
+        suite_name="MagicAI Generalization Probe",
+        suite_subtitle=(
+            "Pruebas de generalización y regresión semántica del Juez."
+        ),
     )
 
     failed_steps = count_steps_by_status(

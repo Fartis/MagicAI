@@ -57,6 +57,19 @@ La última campaña dinámica validada cubrió:
 0 FAIL
 ```
 
+La matriz completa de regresión actualmente validada es:
+
+```text
+Reddit Gauntlet          30/30
+Generalization Probe     18/18
+Dynamic Gauntlet         42/42
+Dynamic Campaign        126/126
+--------------------------------
+Ejecuciones validadas   216/216
+WARN                           0
+FAIL                           0
+```
+
 Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado y [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta.
 
 ---
@@ -163,8 +176,16 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 
 python -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -e .
+python -m pip install -r requirements.txt
+```
+
+`requirements.txt` instala el proyecto en modo editable mediante `-e .`. Las dependencias directas se declaran en `pyproject.toml`.
+
+Para reproducir exactamente el entorno validado:
+
+```bash
+python -m pip install -r requirements.txt   -c requirements.lock.txt
+python -m pip check
 ```
 
 Descarga las fuentes locales:
