@@ -31,7 +31,12 @@ from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import as_completed
 
-from regression_cases import TESTS
+if __package__:
+    from .regression_cases import TESTS
+else:
+    # Compatibilidad con ejecución directa:
+    # python tests/regression/regression_parallel.py.py
+    from regression_cases import TESTS
 
 
 ###############################################################################

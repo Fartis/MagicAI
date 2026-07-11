@@ -1,0 +1,1 @@
+"""Regression suites for MagicAI."""
