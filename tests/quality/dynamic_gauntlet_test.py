@@ -3,25 +3,16 @@ from __future__ import annotations
 import argparse
 import secrets
 import sys
-import time
-from pathlib import Path
 
 from magicai.assistant import MagicAI
 from tests.quality.dynamic.card_catalog import CardCatalog
 from tests.quality.dynamic.concepts import CONCEPTS, get_concepts
-from tests.quality.dynamic.failure_store import (
-    load_replay,
-    save_failure,
-    write_manifest,
-)
+from tests.quality.dynamic.failure_store import load_replay, write_manifest
 from tests.quality.dynamic.scenario_generator import ScenarioGenerator
-from tests.quality.reddit_gauntlet_test import (
-    count_steps_by_status,
-    run_case,
-    suite_status,
-    write_html_report,
-    write_txt_report,
-    write_xml_report,
+from tests.quality.dynamic.execution import (
+    run_dynamic_scenarios,
+    summarize_results,
+    write_dynamic_reports,
 )
 
 
@@ -122,29 +113,25 @@ def main():
         print(f"Manifest : {manifest}")
 
     assistant = MagicAI()
-    results = []
-    saved_failures = []
-    suite_start = time.perf_counter()
 
-    for scenario in scenarios:
+    def _print_progress(scenario, result):
+        source_label = scenario.card_name or "rules-only"
         print(
             f"[{scenario.id}] {scenario.concept_id} · "
-            f"{scenario.card_name} · {scenario.template_id}"
+            f"{source_label} · {scenario.template_id}"
         )
-        result = run_case(assistant, scenario.to_case())
-        result["dynamic"] = scenario.to_dict()
-        results.append(result)
         print(f"  {result['status']} ({result['elapsed']:.2f}s)")
 
-        if result["status"] == "FAIL":
-            failure_file = save_failure(args.failure_dir, scenario, result)
-            saved_failures.append(failure_file)
-            print(f"  Saved failure: {failure_file}")
+        if result.get("dynamic_failure_file"):
+            print(f"  Saved failure: {result['dynamic_failure_file']}")
 
-            if args.fail_fast:
-                break
-
-    total_elapsed = time.perf_counter() - suite_start
+    results, saved_failures, total_elapsed = run_dynamic_scenarios(
+        assistant,
+        scenarios,
+        failure_dir=args.failure_dir,
+        fail_fast=args.fail_fast,
+        progress_callback=_print_progress,
+    )
     metadata = {
         "Seed": str(seed),
         "Generated cases": str(len(scenarios)),
@@ -152,35 +139,19 @@ def main():
         "Mode": "replay" if args.replay else "generated",
     }
 
-    write_txt_report(
+    write_dynamic_reports(
         results=results,
-        output_file=Path(args.txt),
+        txt_file=args.txt,
+        xml_file=args.xml,
+        html_file=args.html,
         total_elapsed=total_elapsed,
-        suite_name="MagicAI Dynamic Gauntlet",
-        metadata=metadata,
-    )
-    write_xml_report(
-        results=results,
-        output_file=Path(args.xml),
-        total_elapsed=total_elapsed,
-        suite_name="MagicAI Dynamic Gauntlet",
-        metadata=metadata,
-    )
-    write_html_report(
-        results=results,
-        output_file=Path(args.html),
-        total_elapsed=total_elapsed,
-        suite_name="MagicAI Dynamic Gauntlet",
-        suite_subtitle=(
-            "Escenarios reproducibles generados desde Oracle y contratos "
-            "deterministas de reglas."
-        ),
         metadata=metadata,
     )
 
-    failed_steps = count_steps_by_status(results, "FAIL")
-    warning_steps = count_steps_by_status(results, "WARN")
-    current_status = suite_status(results)
+    summary = summarize_results(results)
+    failed_steps = summary["failures"]
+    warning_steps = summary["warnings"]
+    current_status = summary["status"]
 
     print()
     print("=" * 80)

@@ -36,7 +36,7 @@ class ScenarioGenerator:
                 self.random.shuffle(concept_queue)
 
             concept = concept_queue.pop()
-            card = self._next_card(concept)
+            card = self._next_card(concept) if concept.selector else None
             template = self._next_template(concept)
 
             scenarios.append(
@@ -45,20 +45,30 @@ class ScenarioGenerator:
                     seed=self.seed,
                     concept_id=concept.id,
                     concept_name=concept.name,
-                    card_name=card.name,
+                    card_name=card.name if card else "",
                     template_id=template.id,
-                    question=template.render(card.name),
+                    question=template.render(card.name if card else ""),
                     tags=concept.tags + (f"template:{template.id}",),
                     contract=concept.contract,
-                    oracle_evidence=card.oracle_text,
-                    card_type_line=card.type_line,
-                    card_keywords=card.keywords,
+                    oracle_evidence=card.oracle_text if card else "",
+                    card_type_line=card.type_line if card else "",
+                    card_keywords=card.keywords if card else (),
+                    card_set_code=card.set_code if card else "",
+                    card_set_name=card.set_name if card else "",
+                    card_set_type=card.set_type if card else "",
+                    card_legal_formats=card.legal_formats if card else (),
+                    source_kind="card" if card else "rules",
                 )
             )
 
         return scenarios
 
     def _next_card(self, concept: DynamicConcept) -> CardCandidate:
+        if concept.selector is None:
+            raise ValueError(
+                f"Concept {concept.id!r} does not use a card selector."
+            )
+
         remaining = self._remaining_cards.get(concept.id)
 
         if not remaining:

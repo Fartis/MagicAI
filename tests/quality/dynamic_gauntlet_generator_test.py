@@ -11,6 +11,7 @@ from tests.quality.dynamic.failure_store import (
     save_failure,
     write_manifest,
 )
+from tests.quality.dynamic.models import DynamicScenario
 from tests.quality.dynamic.scenario_generator import ScenarioGenerator
 
 
@@ -131,11 +132,74 @@ _FIXTURE_CARDS = [
         "games": ["paper"],
     },
     {
+        "name": "Undying Named Ability",
+        "oracle_text": (
+            "Undying Vengeance — Whenever you play a land or cast a spell "
+            "from anywhere other than your hand, this enchantment deals 1 "
+            "damage to each opponent."
+        ),
+        "type_line": "Enchantment",
+        "keywords": ["Undying", "Undying Vengeance"],
+        "games": ["paper"],
+    },
+    {
         "name": "Undying Sticker Sheet",
         "oracle_text": "{TK}{TK}{TK} — Undying",
         "type_line": "Sticker",
         "keywords": ["Undying"],
         "games": ["paper"],
+    },
+    {
+        "name": "Silver Joke Card",
+        "oracle_text": "Undying",
+        "type_line": "Creature — Clown",
+        "keywords": ["Undying"],
+        "games": ["paper"],
+        "set": "ugl",
+        "set_name": "Unglued",
+        "set_type": "funny",
+        "border_color": "silver",
+        "legalities": {"commander": "legal"},
+    },
+    {
+        "name": "Acorn Joke Card",
+        "oracle_text": "Ward {2}",
+        "type_line": "Creature — Performer",
+        "keywords": ["Ward"],
+        "games": ["paper"],
+        "set": "unf",
+        "set_name": "Unfinity",
+        "set_type": "funny",
+        "security_stamp": "acorn",
+        "legalities": {"commander": "legal"},
+    },
+    {
+        "name": "Mystery Playtest Card",
+        "oracle_text": "{T}: Add {G}.",
+        "type_line": "Land",
+        "keywords": [],
+        "games": ["paper"],
+        "set": "cmb2",
+        "set_name": "Mystery Booster 2 Playtest Cards",
+        "set_type": "memorabilia",
+        "promo_types": ["playtest"],
+        "legalities": {"commander": "legal"},
+    },
+    {
+        "name": "Paper But Illegal Everywhere",
+        "oracle_text": "{T}: Add {C}.",
+        "type_line": "Land",
+        "keywords": [],
+        "games": ["paper"],
+        "set": "tst",
+        "set_name": "Test Expansion",
+        "set_type": "expansion",
+        "legalities": {
+            "standard": "not_legal",
+            "modern": "not_legal",
+            "commander": "not_legal",
+            "vintage": "not_legal",
+        },
     },
     {
         "name": "Digital Only Card",
@@ -150,8 +214,19 @@ _FIXTURE_CARDS = [
 
 def _fixture_catalog(directory: Path) -> CardCatalog:
     oracle_file = directory / "oracle-cards.json"
+    cards = []
+
+    for source_card in _FIXTURE_CARDS:
+        card = dict(source_card)
+        card.setdefault("set", "tst")
+        card.setdefault("set_name", "Test Expansion")
+        card.setdefault("set_type", "expansion")
+        card.setdefault("border_color", "black")
+        card.setdefault("legalities", {"commander": "legal"})
+        cards.append(card)
+
     oracle_file.write_text(
-        json.dumps(_FIXTURE_CARDS),
+        json.dumps(cards),
         encoding="utf-8",
     )
     return CardCatalog(oracle_file)
@@ -206,6 +281,18 @@ def test_each_selector_returns_only_matching_fixture_cards():
         }
 
 
+def test_catalog_excludes_funny_playtest_and_illegal_cards():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        catalog = _fixture_catalog(Path(temp_dir))
+        names = {card.name for card in catalog.load()}
+
+        assert "Silver Joke Card" not in names
+        assert "Acorn Joke Card" not in names
+        assert "Mystery Playtest Card" not in names
+        assert "Paper But Illegal Everywhere" not in names
+        assert "Alpha Mana Druid" in names
+
+
 def test_concept_cycle_covers_every_selected_concept():
     with tempfile.TemporaryDirectory() as temp_dir:
         concepts = get_concepts()
@@ -256,7 +343,65 @@ def test_generated_manifest_keeps_card_audit_metadata():
 
         assert payload["card_type_line"]
         assert isinstance(payload["card_keywords"], list)
+        assert payload["card_set_code"] == "tst"
+        assert payload["card_set_name"] == "Test Expansion"
+        assert payload["card_set_type"] == "expansion"
+        assert payload["card_legal_formats"] == ["commander"]
 
+
+
+def test_rules_only_concept_does_not_require_oracle_file():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        missing_oracle = Path(temp_dir) / "missing-oracle.json"
+        scenarios = ScenarioGenerator(
+            456,
+            CardCatalog(missing_oracle),
+            get_concepts(["cleanup_priority"]),
+        ).generate(3)
+
+        assert all(scenario.source_kind == "rules" for scenario in scenarios)
+        assert all(not scenario.card_name for scenario in scenarios)
+        assert all(not scenario.oracle_evidence for scenario in scenarios)
+        assert all(" · " not in scenario.to_case()["name"] for scenario in scenarios)
+
+
+def test_rules_only_manifest_and_replay_keep_source_kind():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        scenario = ScenarioGenerator(
+            654,
+            CardCatalog(root / "missing-oracle.json"),
+            get_concepts(["commander_copy"]),
+        ).generate(1)[0]
+        manifest = write_manifest(root / "manifest.json", 654, [scenario])
+        replay = load_replay(manifest)
+
+        assert replay == scenario
+        assert replay.source_kind == "rules"
+        assert replay.card_name == ""
+
+
+def test_replay_without_source_kind_remains_backward_compatible():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        root = Path(temp_dir)
+        card_scenario = ScenarioGenerator(
+            222,
+            _fixture_catalog(root),
+            get_concepts(["ward"]),
+        ).generate(1)[0]
+        card_payload = card_scenario.to_dict()
+        card_payload.pop("source_kind")
+
+        rules_scenario = ScenarioGenerator(
+            333,
+            CardCatalog(root / "missing-oracle.json"),
+            get_concepts(["cleanup_priority"]),
+        ).generate(1)[0]
+        rules_payload = rules_scenario.to_dict()
+        rules_payload.pop("source_kind")
+
+        assert DynamicScenario.from_dict(card_payload).source_kind == "card"
+        assert DynamicScenario.from_dict(rules_payload).source_kind == "rules"
 
 
 def main():
@@ -264,9 +409,13 @@ def main():
         test_same_seed_generates_identical_scenarios,
         test_different_seed_changes_generated_manifest,
         test_each_selector_returns_only_matching_fixture_cards,
+        test_catalog_excludes_funny_playtest_and_illegal_cards,
         test_concept_cycle_covers_every_selected_concept,
         test_manifest_and_failure_replay_round_trip,
         test_generated_manifest_keeps_card_audit_metadata,
+        test_rules_only_concept_does_not_require_oracle_file,
+        test_rules_only_manifest_and_replay_keep_source_kind,
+        test_replay_without_source_kind_remains_backward_compatible,
     ]
     errors = []
 

@@ -385,11 +385,14 @@ GENERALIZATION_CASES = [
                 ],
                 "required_any": [
                     ["acciones basadas en estado", "state-based"],
-                    ["resistencia", "0 o menos", "cementerio"],
+                    ["resistencia", "toughness"],
+                    ["0 o menos", "-1", "cementerio"],
                 ],
                 "forbidden": [
                     "sobrevive automáticamente",
                     "vuelve con +1/+1 por Persist",
+                    "fuerza 0 o menos",
+                    "su fuerza es -1, lo que la hace morir",
                 ],
             }
         ],
@@ -419,5 +422,43 @@ GENERALIZATION_CASES = [
             }
         ],
     },
+
+    {
+        "id": "GQ-018",
+        "name": "Bello loses abilities through two different land auras",
+        "tags": ["layers", "continuous-effects", "dependency", "generalization"],
+        "steps": [
+            {
+                "question": (
+                    "Tengo en mesa a Bello, Bard of the Brambles como mi "
+                    "comandante. Es mi turno y controlo un encantamiento de "
+                    "coste 4 sin habilidades de criatura, por lo que Bello lo "
+                    "convierte en una criatura Elemental 4/4 con indestructible "
+                    "y prisa. Un oponente encanta a Bello con Imprisoned in the "
+                    "Moon o con Song of the Dryads. ¿El encantamiento sigue "
+                    "siendo una criatura 4/4 que puede atacar o vuelve a ser un "
+                    "encantamiento normal?"
+                ),
+                "required_all": [
+                    "Imprisoned",
+                    "Song",
+                    "4/4",
+                ],
+                "required_any": [
+                    ["sigue siendo", "permanece", "continúa siendo"],
+                    ["vuelve a ser", "deja de ser", "ya no es criatura"],
+                    ["capa", "capas", "efecto continuo", "dependencia"],
+                ],
+                "forbidden": [
+                    "habilidades desencadenadas por cambios de zona",
+                    "ambas auras producen exactamente el mismo resultado",
+                    "ambos efectos producen el mismo resultado",
+                    "en los dos casos vuelve a ser un encantamiento normal",
+                    "Imprisoned en la Luna y Song of the Dryads convierten a Bello en una tierra",
+                ],
+            }
+        ],
+    },
+
 
 ]

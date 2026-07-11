@@ -177,6 +177,7 @@ $RECYCLE.BIN/
 /resultado_*.json
 /audit_gauntlet_*_failures.txt
 /resultado_dynamic_gauntlet_failures/
+/resultado_dynamic_campaign/
 
 # Common output directories when reports are redirected
 /quality-results/

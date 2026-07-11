@@ -1,453 +1,155 @@
-# 🧙 Philosophy
+# 🧙 Filosofía de MagicAI
 
-<table>
-<tr>
+> More Gathering. Less Guessing.
 
-<td width="50%" valign="top">
-
-# 🇪🇸 Filosofía
-
-MagicAI no nació para demostrar lo que un modelo de lenguaje puede hacer.
-
-Nació para demostrar lo que un modelo de lenguaje puede hacer **cuando recibe el conocimiento adecuado**.
-
-El objetivo nunca ha sido construir un chatbot más.
-
-El objetivo es construir una herramienta que ayude a comprender **Magic: The Gathering** utilizando siempre información oficial y razonamiento estructurado.
-
-MagicAI no pretende sustituir el conocimiento del jugador.
-
-Pretende ayudarle a construirlo.
-
-</td>
-
-<td width="50%" valign="top">
-
-# 🇬🇧 Philosophy
-
-MagicAI was never created to demonstrate what a language model can do.
-
-It was created to demonstrate what a language model can do **when provided with the right knowledge**.
-
-The goal has never been to build another chatbot.
-
-The goal is to build a tool that helps players understand **Magic: The Gathering** through official information and structured reasoning.
-
-MagicAI doesn't aim to replace the player's knowledge.
-
-It aims to help build it.
-
-</td>
-
-</tr>
-</table>
+[Español](#-por-qué-existe-magicai) · [English](#-philosophy-summary)
 
 ---
 
-# 🎯 The Problem
+## 🇪🇸 Por qué existe MagicAI
 
-<table>
-<tr>
+Los modelos de lenguaje explican muy bien, pero no deben considerarse una fuente oficial de Magic. Sus datos pueden estar incompletos, desactualizados o mezclados con texto impreso antiguo, rulings históricos y patrones aprendidos sin contexto.
 
-<td width="50%" valign="top">
+MagicAI parte de una decisión distinta:
 
-## 🇪🇸
+> Recuperar primero. Razonar después. Explicar al final.
 
-Los modelos de lenguaje modernos son excelentes explicando información.
-
-Sin embargo, presentan un problema importante cuando se utilizan para responder preguntas sobre Magic:
-
-**responden desde su memoria.**
-
-Magic evoluciona constantemente.
-
-Oracle cambia.
-
-Las reglas cambian.
-
-Las interacciones cambian.
-
-Un modelo entrenado hace meses no puede ser considerado una fuente oficial.
-
-Por ese motivo MagicAI nunca pregunta primero al modelo.
-
-Primero consulta las fuentes oficiales.
-
-Después permite que el modelo las explique.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-Modern language models are excellent at explaining information.
-
-However, they share one important limitation when answering Magic questions:
-
-**they answer from memory.**
-
-Magic constantly evolves.
-
-Oracle changes.
-
-Rules change.
-
-Interactions change.
-
-A model trained months ago should never be considered an official source.
-
-That's why MagicAI never asks the model first.
-
-It first retrieves official knowledge.
-
-Only then does it ask the model to explain it.
-
-</td>
-
-</tr>
-</table>
+El objetivo no es construir un chatbot que suene seguro. Es construir una herramienta local que pueda mostrar de dónde sale una respuesta y que sepa detenerse cuando no dispone de evidencia suficiente.
 
 ---
 
-# 📖 Official Knowledge First
+## El Juez como autoridad factual
 
-<table>
-<tr>
+El Juez es la única autoridad factual de MagicAI para:
 
-<td width="50%" valign="top">
+- texto Oracle;
+- características de cartas;
+- reglas;
+- rulings;
+- legalidad;
+- identidad de color;
+- resultado reglamentario de una interacción.
 
-## 🇪🇸
+El LLM no “sabe” estas cosas dentro de la arquitectura. Solo explica evidencia recuperada.
 
-MagicAI considera que la única fuente de verdad es la documentación oficial.
-
-Por ello, todas las respuestas se construyen utilizando:
-
-- 📖 Oracle oficial de Scryfall
-- 📚 Comprehensive Rules
-- 💬 Contexto de la conversación
-
-El modelo de lenguaje nunca sustituye esas fuentes.
-
-Únicamente las transforma en una explicación comprensible.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-MagicAI considers official documentation to be the only source of truth.
-
-Every answer is built using:
-
-- 📖 Official Scryfall Oracle
-- 📚 Comprehensive Rules
-- 💬 Conversation context
-
-The language model never replaces those sources.
-
-It simply transforms them into an understandable explanation.
-
-</td>
-
-</tr>
-</table>
+Los futuros Deck Master y Deckbuilder no tendrán una vía alternativa. Cuando necesiten verificar una carta o interacción, deberán preguntárselo al Juez.
 
 ---
 
-# 🧠 The Role of the LLM
+## Retrieve, do not memorize
 
-<table>
-<tr>
+MagicAI no intenta introducir todo Magic en un prompt ni entrenar al modelo para recordar el juego completo.
 
-<td width="50%" valign="top">
+```text
+Carta mencionada
+    → recuperar Oracle
 
-## 🇪🇸
+Mecánica detectada
+    → recuperar reglas
 
-En la mayoría de asistentes conversacionales el modelo de lenguaje es quien responde.
+Pregunta ambigua
+    → pedir aclaración
 
-En MagicAI ocurre algo diferente.
+Evidencia insuficiente
+    → reconocer el límite
+```
 
-El modelo no es el juez.
-
-No es quien decide.
-
-No es quien conoce las reglas.
-
-Su función es mucho más concreta:
-
-**explicar el conocimiento que ya ha sido recuperado.**
-
-El LLM no es la fuente de verdad.
-
-Es el narrador.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-In most conversational assistants, the language model is responsible for answering.
-
-MagicAI follows a different approach.
-
-The model is not the judge.
-
-It does not decide.
-
-It does not know the rules.
-
-Its responsibility is much simpler:
-
-**explain the knowledge that has already been retrieved.**
-
-The LLM is not the source of truth.
-
-It is the storyteller.
-
-</td>
-
-</tr>
-</table>
+Cuanto menos tenga que imaginar el modelo, menor será la superficie de alucinación.
 
 ---
 
-# 🧩 Engineering over Prompting
+## Ingeniería antes que prompting
 
-<table>
-<tr>
+Los problemas deben resolverse en la capa correcta:
 
-<td width="50%" valign="top">
+- una carta equivocada se corrige en el selector;
+- una regla ausente se corrige en retrieval;
+- una premisa falsa se corrige en el generador;
+- una respuesta formal repetible puede convertirse en renderer;
+- una contradicción se captura en validación;
+- una ambigüedad se gestiona en conversación.
 
-## 🇪🇸
-
-MagicAI intenta resolver los problemas mediante ingeniería, no mediante prompts cada vez más largos.
-
-En lugar de pedir al modelo que recuerde veinte mil cartas...
-
-las recupera.
-
-En lugar de pedirle que recuerde las reglas...
-
-las consulta.
-
-En lugar de pedirle que imagine el contexto...
-
-lo construye.
-
-Cuanto menos tenga que imaginar el modelo...
-
-menos posibilidades tendrá de equivocarse.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-MagicAI solves problems through engineering rather than increasingly larger prompts.
-
-Instead of asking the model to remember twenty thousand cards...
-
-it retrieves them.
-
-Instead of asking it to remember the rules...
-
-it looks them up.
-
-Instead of asking it to guess the context...
-
-it builds it.
-
-The less the model has to imagine...
-
-the less it can hallucinate.
-
-</td>
-
-</tr>
-</table>
+Añadir una frase al prompt es la última opción, no la primera.
 
 ---
 
-# 🎓 Teaching instead of Answering
+## No hardcodes de cartas
 
-<table>
-<tr>
+Un test puede revelar el problema, pero no define la solución.
 
-<td width="50%" valign="top">
+No se debe arreglar “Sol Ring”, “Young Wolf” o una frase exacta. Debe arreglarse la categoría general:
 
-## 🇪🇸
+```text
+habilidades de maná
+keywords intrínsecas
+fuentes separadas de habilidades en la pila
+cambios de zona de comandantes
+efectos de reemplazo concurrentes
+```
 
-El objetivo de MagicAI no es responder preguntas.
-
-Es enseñar.
-
-Responder ayuda una vez.
-
-Comprender ayuda para siempre.
-
-Una buena respuesta no solo dice qué ocurre.
-
-Explica por qué ocurre.
-
-Si un jugador entiende el razonamiento detrás de una interacción, podrá resolver muchas otras sin volver a preguntar.
-
-Ese es el verdadero objetivo del proyecto.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-MagicAI's goal is not to answer questions.
-
-Its goal is to teach.
-
-Answers help once.
-
-Understanding helps forever.
-
-A good answer should not only explain what happens.
-
-It should explain why it happens.
-
-When players understand the reasoning behind an interaction, they can solve many future interactions on their own.
-
-That is the real goal of MagicAI.
-
-</td>
-
-</tr>
-</table>
+Un fix correcto debe mejorar preguntas nuevas que no existían cuando se escribió.
 
 ---
 
-# 🚀 The Four Stages of Intelligence
+## Una respuesta correcta no basta
 
-<table>
-<tr>
+MagicAI también audita la premisa.
 
-<td width="50%" valign="top">
+Una explicación correcta sobre Undying sigue siendo un fallo si la carta seleccionada no tiene Undying. Por eso los escenarios dinámicos conservan Oracle, tipo, set, legalidad y selector utilizado.
 
-## 🇪🇸
+La calidad se evalúa en dos niveles:
 
-MagicAI evoluciona siguiendo cuatro etapas.
-
-### 📖 Recordar
-
-Conocer las fuentes oficiales.
-
----
-
-### 🧠 Razonar
-
-Entender cómo interactúan.
+```text
+Premisa válida
+    +
+Respuesta correcta y respaldada
+    =
+PASS real
+```
 
 ---
 
-### 🃏 Construir
+## Incertidumbre segura
 
-Ayudar a tomar decisiones.
+El Juez debe diferenciar:
 
-(IABuilding)
+- sé la respuesta y tengo evidencia;
+- necesito una aclaración;
+- la premisa es falsa;
+- la evidencia recuperada no basta.
 
----
-
-### 🎓 Enseñar
-
-Explicar el razonamiento para que el jugador aprenda.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-MagicAI evolves through four stages.
-
-### 📖 Remember
-
-Know the official sources.
+Responder “no puedo determinarlo con seguridad” puede ser un fallo de retrieval que haya que corregir, pero sigue siendo preferible a inventar.
 
 ---
 
-### 🧠 Reason
+## Alcance pragmático
 
-Understand how they interact.
+MagicAI prioriza casos reales de jugadores y formatos oficiales. Las cartas de broma, silver-border, acorn y playtest quedan fuera del catálogo estándar.
 
----
+No se pretende gastar desarrollo o computación en escenarios extremadamente marginales mientras falten familias de reglas utilizadas a diario.
 
-### 🃏 Build
-
-Help players make better decisions.
-
-(IABuilding)
+Esto no impide crear en el futuro un modo experimental separado. Simplemente evita que ese contenido contamine el núcleo del producto.
 
 ---
 
-### 🎓 Teach
+## Local-first
 
-Explain the reasoning so players can learn.
+La inferencia se ejecuta en local mediante Ollama. Las preguntas y conversaciones no necesitan enviarse a un proveedor de IA externo.
 
-</td>
-
-</tr>
-</table>
+Las fuentes pueden actualizarse mediante Internet, pero el flujo normal de respuesta utiliza los ficheros locales preparados por el usuario.
 
 ---
 
-# 🔮 The Long-Term Vision
+## Enseñar, no solo contestar
 
-<table>
-<tr>
+El Juez debe dar respuestas comprensibles y suficientemente precisas para que el jugador pueda reconocer el patrón en futuras partidas.
 
-<td width="50%" valign="top">
-
-## 🇪🇸
-
-El éxito de MagicAI no se medirá por el número de respuestas que sea capaz de generar.
-
-Se medirá por el número de veces que un jugador piense:
-
-> "Ahora entiendo por qué funciona."
-
-El mejor momento para MagicAI será aquel en el que un jugador ya no necesite preguntarle una interacción porque habrá aprendido a razonarla por sí mismo.
-
-Ese día, MagicAI habrá cumplido su propósito.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-MagicAI will not be measured by the number of answers it can generate.
-
-It will be measured by the number of times a player thinks:
-
-> "Now I understand why it works."
-
-The greatest success for MagicAI will be the day a player no longer needs to ask about an interaction because they have learned how to reason through it themselves.
-
-That is when MagicAI will have fulfilled its purpose.
-
-</td>
-
-</tr>
-</table>
+Después, Deck Master ayudará a valorar y jugar mazos, y Deckbuilder ayudará a construirlos o mejorarlos. Ninguno sustituirá al Juez: lo utilizarán como base factual.
 
 ---
 
-<div align="center">
+## 🇬🇧 Philosophy summary
 
-## 🧙
+MagicAI retrieves before it explains. The language model is not the authority; the Judge is. Card text, rules, rulings and legality must come from retrieved sources, while uncertainty and false premises must be represented explicitly.
 
-> **MagicAI doesn't aim to know more than the player.**
->
-> **It aims to help the player understand more than they did yesterday.**
-
-</div>
+Engineering fixes belong in selectors, retrieval, renderers, validation or conversation handling—not in card-specific prompt patches. Future strategic profiles will remain dependent on the Judge for every factual Magic claim.

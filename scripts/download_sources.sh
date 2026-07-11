@@ -1,33 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
-BASE="$HOME/MagicAI/sources"
+BASE="${MAGICAI_SOURCES_DIR:-$HOME/MagicAI/sources}"
+SCRYFALL_DIR="$BASE/scryfall"
 
-mkdir -p "$BASE/scryfall"
-mkdir -p "$BASE/rules"
-mkdir -p "$BASE/commander"
-mkdir -p "$BASE/strategy"
+mkdir -p "$SCRYFALL_DIR"
 
 download_bulk() {
-    TYPE="$1"
-    OUTPUT="$2"
+    local type="$1"
+    local output="$2"
 
-    echo "==> Descargando $TYPE..."
+    echo "==> Descargando $type..."
 
-    URL=$(curl -s https://api.scryfall.com/bulk-data \
-        | jq -r ".data[] | select(.type==\"$TYPE\") | .download_uri")
+    local url
+    url="$(
+        curl --fail --silent --show-error https://api.scryfall.com/bulk-data \
+            | jq -r ".data[] | select(.type==\"$type\") | .download_uri"
+    )"
 
-    wget -q --show-progress -O "$OUTPUT" "$URL"
+    if [[ -z "$url" || "$url" == "null" ]]; then
+        echo "ERROR: Scryfall no devolvió una URL para $type."
+        exit 1
+    fi
 
-    echo "OK"
+    wget --quiet --show-progress --output-document="$output.part" "$url"
+    mv "$output.part" "$output"
+
+    echo "OK: $output"
     echo
 }
 
-download_bulk "oracle_cards" \
-"$BASE/scryfall/oracle-cards.json"
+# El Juez actual trabaja con objetos Oracle únicos. default_cards ocupa mucho
+# más espacio y no tiene consumidores en el pipeline, así que no se descarga.
+download_bulk "oracle_cards" "$SCRYFALL_DIR/oracle-cards.json"
 
-download_bulk "default_cards" \
-"$BASE/scryfall/default-cards.json"
-
-echo "Todo descargado correctamente."
+echo "Fuentes Scryfall necesarias descargadas correctamente."
