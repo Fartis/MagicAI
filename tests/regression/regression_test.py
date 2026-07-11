@@ -38,20 +38,20 @@ from regression_cases import TESTS
 
 RUN_ID = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-OUTPUT_DIR = Path("tests") / "regression" / "output" / RUN_ID
+#OUTPUT_DIR = Path("tests") / "regression" / "output" / RUN_ID
 
-OUTPUT_DIR.mkdir(
-    parents=True,
-    exist_ok=True,
-)
+#OUTPUT_DIR.mkdir(
+#    parents=True,
+#    exist_ok=True,
+#)
 
-REGRESSION_FILE = OUTPUT_DIR / "regression.txt"
+#REGRESSION_FILE = OUTPUT_DIR / "regression.txt"
 
-RESPONSES_FILE = OUTPUT_DIR / "responses.txt"
+#RESPONSES_FILE = OUTPUT_DIR / "responses.txt"
 
-SUMMARY_FILE = OUTPUT_DIR / "summary.txt"
+#SUMMARY_FILE = OUTPUT_DIR / "summary.txt"
 
-ENVIRONMENT_FILE = OUTPUT_DIR / "environment.txt"
+#ENVIRONMENT_FILE = OUTPUT_DIR / "environment.txt"
 
 ###############################################################################
 #
@@ -456,23 +456,23 @@ for index, test in enumerate(TESTS, start=1):
 # De momento dejamos preparada la estructura.
 #
 
-KNOWLEDGE_FILE = OUTPUT_DIR / "knowledge.txt"
+#KNOWLEDGE_FILE = OUTPUT_DIR / "knowledge.txt"
 
-knowledge_lines = [
-    "=" * 80,
-    "MagicAI Knowledge Log",
-    "=" * 80,
-    "",
-    "Esta versión todavía no registra el conocimiento enviado al LLM.",
-    "",
-    "Se implementará cuando KnowledgeBuilder exponga el contexto generado.",
-    "",
-]
+#knowledge_lines = [
+#    "=" * 80,
+#    "MagicAI Knowledge Log",
+#    "=" * 80,
+#    "",
+#    "Esta versión todavía no registra el conocimiento enviado al LLM.",
+#    "",
+#    "Se implementará cuando KnowledgeBuilder exponga el contexto generado.",
+#    "",
+#]
 
-KNOWLEDGE_FILE.write_text(
-    "\n".join(knowledge_lines),
-    encoding="utf8",
-)
+#KNOWLEDGE_FILE.write_text(
+#    "\n".join(knowledge_lines),
+#    encoding="utf8",
+#)
 
 ###############################################################################
 #
@@ -504,18 +504,6 @@ if stats["questions"]:
           f"{stats['total_time']/stats['questions']:.2f}s")
 
 print()
-
-print("Generated files:")
-
-print(f"  {REGRESSION_FILE}")
-
-print(f"  {RESPONSES_FILE}")
-
-print(f"  {SUMMARY_FILE}")
-
-print(f"  {ENVIRONMENT_FILE}")
-
-print(f"  {KNOWLEDGE_FILE}")
 
 print()
 
