@@ -1,311 +1,230 @@
-# ❤️ Contributing
+# ❤️ Contribuir a MagicAI
 
-<table>
-<tr>
+> Las contribuciones deben mejorar la generalización, la trazabilidad y la seguridad factual del Juez.
 
-<td width="50%" valign="top">
-
-# 🇪🇸 Contribuir a MagicAI
-
-Antes de escribir una sola línea de código...
-
-Gracias.
-
-Si estás leyendo este documento, significa que has dedicado parte de tu tiempo a mejorar MagicAI.
-
-Eso ya merece un enorme agradecimiento.
-
-MagicAI nació como un proyecto personal, pero me encantaría que creciera gracias a personas que compartan la misma pasión por **Magic: The Gathering**, el desarrollo de software y el aprendizaje.
-
-Este documento explica cómo contribuir y, sobre todo, cómo mantener la filosofía del proyecto.
-
-</td>
-
-<td width="50%" valign="top">
-
-# 🇬🇧 Contributing to MagicAI
-
-Before writing your first line of code...
-
-Thank you.
-
-If you're reading this document, you've already decided to spend some of your time helping improve MagicAI.
-
-That alone deserves my gratitude.
-
-MagicAI started as a personal project, but I hope it can grow thanks to people who share the same passion for **Magic: The Gathering**, software engineering and learning.
-
-This document explains not only how to contribute, but how to preserve the project's philosophy.
-
-</td>
-
-</tr>
-</table>
+[Español](#-antes-de-empezar) · [English](#-contribution-summary)
 
 ---
 
-# 🧙 Before You Start
+## 🇪🇸 Antes de empezar
 
-<table>
-<tr>
+Lee:
 
-<td width="50%" valign="top">
+- [PHILOSOPHY.md](PHILOSOPHY.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [STATUS.md](STATUS.md)
+- [ROADMAP.md](ROADMAP.md)
 
-## 🇪🇸
-
-Antes de desarrollar una nueva funcionalidad, por favor lee:
-
-- 📖 philosophy.md
-- 🏗 architecture.md
-- 🗺 roadmap.md
-
-Estos tres documentos explican mejor el proyecto que cualquier comentario del código.
-
-Una buena contribución no es únicamente aquella que funciona.
-
-Es aquella que mantiene la identidad de MagicAI.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-Before implementing new features, please read:
-
-- 📖 philosophy.md
-- 🏗 architecture.md
-- 🗺 roadmap.md
-
-These three documents explain the project better than any code comment.
-
-A good contribution is not only one that works.
-
-It is one that preserves MagicAI's identity.
-
-</td>
-
-</tr>
-</table>
+MagicAI no es un chatbot generalista. El Juez es una autoridad factual source-grounded y la arquitectura protege esa frontera.
 
 ---
 
-# 🎯 What Makes a Good Contribution?
+## Qué hace buena una contribución
 
-<table>
-<tr>
+Una contribución debería cumplir varias de estas propiedades:
 
-<td width="50%" valign="top">
+- resuelve una categoría, no una carta concreta;
+- añade o mejora evidencia recuperada;
+- incluye una regresión reproducible;
+- distingue premisa, retrieval, renderer y contrato;
+- evita aumentar el prompt para ocultar un fallo de ingeniería;
+- mantiene compatibilidad con manifiestos y replays cuando proceda;
+- documenta cambios visibles para usuarios o colaboradores.
 
-Una buena contribución debería responder "sí" a la mayoría de estas preguntas.
+### Ejemplo correcto
 
-- ✅ ¿Reduce las alucinaciones?
-- ✅ ¿Utiliza información oficial?
-- ✅ ¿Mejora el razonamiento?
-- ✅ ¿Hace el código más sencillo?
-- ✅ ¿Es fácil de mantener?
-- ✅ ¿Incluye pruebas?
-- ✅ ¿Respeta la arquitectura?
+Un caso sobre una carta revela que una keyword aparece en el nombre de otra habilidad. La solución endurece el detector de keywords intrínsecas y añade fixtures positivos y negativos.
 
-Si la respuesta es sí...
+### Ejemplo incorrecto
 
-Probablemente sea una buena contribución.
-
-</td>
-
-<td width="50%" valign="top">
-
-A good contribution should answer "yes" to most of these questions.
-
-- ✅ Does it reduce hallucinations?
-- ✅ Does it rely on official knowledge?
-- ✅ Does it improve reasoning?
-- ✅ Does it simplify the code?
-- ✅ Is it maintainable?
-- ✅ Does it include tests?
-- ✅ Does it respect the architecture?
-
-If the answer is yes...
-
-You're probably moving MagicAI in the right direction.
-
-</td>
-
-</tr>
-</table>
+```python
+if card.name == "La carta del test":
+    return expected_answer
+```
 
 ---
 
-# 🧪 Testing
+## Autoridad y acceso a fuentes
 
-<table>
-<tr>
+Solo el Juez debe actuar como autoridad factual sobre:
 
-<td width="50%" valign="top">
+- cartas;
+- Oracle;
+- legalidad;
+- reglas;
+- rulings;
+- identidad de color.
 
-Toda funcionalidad importante debería estar acompañada por pruebas.
-
-Actualmente MagicAI dispone de:
-
-- 🧪 Regression Suite
-- 📈 Performance Suite
-
-Siempre que sea posible:
-
-- añade nuevos escenarios;
-- evita romper los existentes;
-- mejora la cobertura sin duplicar pruebas.
-
-</td>
-
-<td width="50%" valign="top">
-
-Every important feature should include automated tests.
-
-MagicAI currently provides:
-
-- 🧪 Regression Suite
-- 📈 Performance Suite
-
-Whenever possible:
-
-- add new scenarios;
-- avoid breaking existing ones;
-- improve coverage without duplicating tests.
-
-</td>
-
-</tr>
-</table>
+Los futuros perfiles no deben consultar esas fuentes directamente. Cualquier contribución a Deck Master o Deckbuilder deberá utilizar la interfaz del Juez.
 
 ---
 
-# 💡 Development Philosophy
+## Alcance de cartas
 
-<table>
-<tr>
+Los tests estándar deben utilizar cartas de papel jugables en formatos oficiales soportados.
 
-<td width="50%" valign="top">
+No añadas al catálogo normal:
 
-Cuando existan varias soluciones posibles...
+- cartas `funny`;
+- silver-border;
+- acorn;
+- playtest;
+- objetos sin legalidad soportada.
 
-MagicAI suele preferir:
-
-- claridad antes que complejidad;
-- ingeniería antes que prompts enormes;
-- conocimiento oficial antes que memoria del modelo;
-- componentes pequeños antes que clases gigantes;
-- evolución incremental antes que grandes reescrituras.
-
-</td>
-
-<td width="50%" valign="top">
-
-Whenever multiple solutions exist...
-
-MagicAI generally prefers:
-
-- clarity over complexity;
-- engineering over huge prompts;
-- official knowledge over model memory;
-- small components over giant classes;
-- incremental evolution over massive rewrites.
-
-</td>
-
-</tr>
-</table>
+Un modo experimental separado puede discutirse en el futuro, pero no debe contaminar las campañas principales.
 
 ---
 
-# 🚀 Pull Requests
+## Preparar el entorno
 
-<table>
-<tr>
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+```
 
-<td width="50%" valign="top">
+Descarga las fuentes necesarias:
 
-Los Pull Requests pequeños son mucho más fáciles de revisar.
-
-Si una mejora puede dividirse en varias contribuciones independientes...
-
-hazlo.
-
-Cada Pull Request debería intentar resolver un único problema.
-
-</td>
-
-<td width="50%" valign="top">
-
-Small Pull Requests are much easier to review.
-
-Whenever possible, split large ideas into smaller independent contributions.
-
-Each Pull Request should solve one problem well.
-
-</td>
-
-</tr>
-</table>
+```bash
+./scripts/download_sources.sh
+./scripts/download_rules.sh
+python scripts/update_scryfall_symbology.py
+```
 
 ---
 
-# ❤️ Thank You
+## Flujo de ramas
 
-<table>
-<tr>
+Parte de `develop` actualizado:
 
-<td width="50%" valign="top">
+```bash
+git switch develop
+git pull --ff-only origin develop
+git switch -c feature/descripcion-corta
+```
 
-MagicAI comenzó siendo un proyecto para resolver una necesidad muy personal.
+Antes de abrir una PR:
 
-Ver que otras personas quieran dedicar su tiempo a mejorarlo significa muchísimo para mí.
+```bash
+git status --short
+git diff --check
+python -m compileall -q magicai tests
+```
 
-No importa si tu contribución consiste en:
+Evita mezclar en el mismo commit:
 
-- corregir una errata;
-- mejorar una prueba;
-- optimizar una función;
-- añadir una nueva característica;
-- abrir una issue.
-
-Toda ayuda hace crecer el proyecto.
-
-Gracias por formar parte de este viaje.
-
-</td>
-
-<td width="50%" valign="top">
-
-MagicAI started as a project to solve a very personal need.
-
-Seeing other people willing to spend their time improving it means more than I can express.
-
-Whether you're:
-
-- fixing a typo;
-- improving a test;
-- optimizing a function;
-- adding a feature;
-- opening an issue.
-
-Every contribution helps MagicAI grow.
-
-Thank you for being part of this journey.
-
-</td>
-
-</tr>
-</table>
+- refactorizaciones masivas;
+- cambios de comportamiento;
+- actualización de fuentes;
+- artefactos generados.
 
 ---
 
-<div align="center">
+## Pruebas mínimas
 
-## 🧙
+Para cambios de retrieval o reglas:
 
-> **Great software is built by great communities.**
->
-> **Welcome to the Gathering.**
+```bash
+PYTHONPATH=. python -m tests.retrieval.rule_queries_test
+PYTHONPATH=. python -m tests.validation.rule_renderer_test
+PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
+```
 
-</div>
+Para cambios del generador o catálogo:
+
+```bash
+PYTHONPATH=. python -m tests.quality.dynamic_gauntlet_generator_test
+PYTHONPATH=. python -m tests.quality.dynamic_campaign_planner_test
+```
+
+Para cambios del pipeline:
+
+```bash
+PYTHONPATH=. python -m tests.quality.reddit_gauntlet_test
+PYTHONPATH=. python -m tests.quality.generalization_probe_test
+```
+
+Las suites que consultan Ollama requieren el servicio y las fuentes locales disponibles.
+
+---
+
+## Cómo clasificar un fallo
+
+Antes de modificar producción, identifica la categoría:
+
+```text
+false premise
+selector failure
+retrieval failure
+routing failure
+renderer failure
+validator failure
+contract mismatch
+LLM generation failure
+insufficient evidence handled correctly
+```
+
+No cambies el renderer para satisfacer una pregunta cuya premisa es falsa. No debilites un contrato correcto para convertir una respuesta incompleta en PASS.
+
+---
+
+## Tests dinámicos
+
+Todo escenario dinámico debe conservar suficiente información para reproducirlo:
+
+- seed;
+- concepto;
+- plantilla;
+- pregunta;
+- contrato;
+- tipo de fuente;
+- carta y Oracle cuando corresponda;
+- set y formatos legales;
+- fichero de fallo.
+
+Un nuevo concepto debe incluir al menos varias paráfrasis controladas y tests de cobertura de retrieval.
+
+---
+
+## Estilo de código
+
+- Python 3.12+.
+- Funciones pequeñas y con responsabilidad clara.
+- Nombres explícitos.
+- Evita dependencias nuevas sin necesidad.
+- No introduzcas acceso de red en el flujo normal de respuesta.
+- Mantén las fuentes descargables y versionables por separado.
+- Actualiza documentación y comandos cuando cambie una interfaz.
+
+---
+
+## Pull requests
+
+Incluye:
+
+1. problema observado;
+2. causa raíz;
+3. solución genérica;
+4. tests añadidos;
+5. resultados antes/después;
+6. riesgos y compatibilidad;
+7. documentación modificada.
+
+No incluyas:
+
+- bulk JSON de Scryfall;
+- bases de datos locales;
+- HTML/TXT/XML generados;
+- ZIP de campañas;
+- patches auxiliares;
+- secretos o configuración personal.
+
+---
+
+## 🇬🇧 Contribution summary
+
+Contributions should improve generalization, evidence quality and factual safety. Fix categories rather than individual cards, classify failures before changing production code and include reproducible tests.
+
+The Judge remains the sole factual authority. Future strategic profiles must call the Judge instead of querying card or rules sources directly.

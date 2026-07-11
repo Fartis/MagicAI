@@ -14,6 +14,19 @@ _MANA_SYMBOL_RE = re.compile(
 )
 _LOYALTY_PREFIX_RE = re.compile(r"^[+−-]?\d+\s*:")
 
+_SUPPORTED_PAPER_FORMATS = (
+    "standard",
+    "pioneer",
+    "modern",
+    "legacy",
+    "pauper",
+    "vintage",
+    "commander",
+    "standardbrawl",
+    "brawl",
+)
+_SUPPORTED_LEGALITY_STATUSES = {"legal", "restricted"}
+
 
 @dataclass(frozen=True)
 class CardCandidate:
@@ -21,6 +34,10 @@ class CardCandidate:
     oracle_text: str
     type_line: str
     keywords: tuple[str, ...]
+    set_code: str = ""
+    set_name: str = ""
+    set_type: str = ""
+    legal_formats: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -28,6 +45,10 @@ class CardCandidate:
             "oracle_text": self.oracle_text,
             "type_line": self.type_line,
             "keywords": list(self.keywords),
+            "set_code": self.set_code,
+            "set_name": self.set_name,
+            "set_type": self.set_type,
+            "legal_formats": list(self.legal_formats),
         }
 
 
@@ -84,6 +105,36 @@ class CardCatalog:
         return selected
 
 
+def _supported_legal_formats(raw_card: dict) -> tuple[str, ...]:
+    legalities = raw_card.get("legalities") or {}
+
+    return tuple(
+        format_name
+        for format_name in _SUPPORTED_PAPER_FORMATS
+        if str(legalities.get(format_name, "")).casefold()
+        in _SUPPORTED_LEGALITY_STATUSES
+    )
+
+
+def _is_funny_or_playtest_card(raw_card: dict) -> bool:
+    set_type = str(raw_card.get("set_type", "")).casefold()
+    border_color = str(raw_card.get("border_color", "")).casefold()
+    security_stamp = str(raw_card.get("security_stamp", "")).casefold()
+    set_name = str(raw_card.get("set_name", "")).casefold()
+    promo_types = {
+        str(item).casefold()
+        for item in (raw_card.get("promo_types") or [])
+    }
+
+    return (
+        set_type == "funny"
+        or border_color == "silver"
+        or security_stamp == "acorn"
+        or "playtest" in promo_types
+        or "playtest" in set_name
+    )
+
+
 def _to_candidate(raw_card: dict) -> CardCandidate | None:
     name = str(raw_card.get("name", "")).strip()
     oracle_text = str(raw_card.get("oracle_text", "")).strip()
@@ -103,6 +154,14 @@ def _to_candidate(raw_card: dict) -> CardCandidate | None:
     if raw_card.get("digital") is True:
         return None
 
+    if _is_funny_or_playtest_card(raw_card):
+        return None
+
+    legal_formats = _supported_legal_formats(raw_card)
+
+    if not legal_formats:
+        return None
+
     # Scryfall bulk data also contains supplemental game objects such as
     # sticker sheets. They are not cards/permanents and must never be used to
     # build premises such as "this card has Ward/Undying".
@@ -114,6 +173,10 @@ def _to_candidate(raw_card: dict) -> CardCandidate | None:
         oracle_text=oracle_text,
         type_line=type_line,
         keywords=tuple(str(item) for item in raw_card.get("keywords", [])),
+        set_code=str(raw_card.get("set", "")).strip(),
+        set_name=str(raw_card.get("set_name", "")).strip(),
+        set_type=str(raw_card.get("set_type", "")).strip(),
+        legal_formats=legal_formats,
     )
 
 
@@ -232,7 +295,8 @@ def _has_intrinsic_keyword_line(card: CardCandidate, keyword: str) -> bool:
     """
 
     pattern = re.compile(
-        rf"(?:^|,\s*){re.escape(keyword)}(?:\s|$|[—-]|\{{)",
+        rf"(?:^|,\s*){re.escape(keyword)}"
+        rf"(?=\s*(?:$|[,(—-]|\{{))",
         flags=re.IGNORECASE,
     )
 

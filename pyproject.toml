@@ -5,8 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "magicai"
 version = "0.1.0"
-description = "Magic: The Gathering AI Assistant"
+description = "Local, source-grounded Magic: The Gathering Judge assistant"
+readme = "README.md"
 requires-python = ">=3.12"
+license = "AGPL-3.0-or-later"
+dependencies = [
+    "fastapi>=0.139.0,<0.140.0",
+    "pydantic>=2.13.4,<3.0.0",
+    "requests>=2.34.2,<3.0.0",
+    "uvicorn>=0.50.2,<0.51.0",
+]
 
-[tool.setuptools]
-packages = ["magicai"]
+[tool.setuptools.packages.find]
+include = ["magicai*"]
+namespaces = true

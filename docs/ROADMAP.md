@@ -1,437 +1,277 @@
-# 🗺 Roadmap
+# 🗺️ Hoja de ruta de MagicAI
 
-<table>
-<tr>
+> La prioridad actual es finalizar el Juez antes de ampliar el producto con perfiles estratégicos.
 
-<td width="50%" valign="top">
-
-# 🇪🇸 Hoja de ruta
-
-MagicAI no evoluciona añadiendo funcionalidades.
-
-Evoluciona cambiando la forma en la que comprende el juego.
-
-Cada fase representa un cambio de capacidad.
-
-No solo una nueva versión.
-
-No solo nuevas características.
-
-Cada fase acerca a MagicAI un paso más a su verdadero objetivo:
-
-> **Enseñar a pensar Magic.**
-
-</td>
-
-<td width="50%" valign="top">
-
-# 🇬🇧 Roadmap
-
-MagicAI doesn't evolve by adding features.
-
-It evolves by changing the way it understands the game.
-
-Each phase represents a new capability.
-
-Not simply a new version.
-
-Not simply more features.
-
-Every phase brings MagicAI one step closer to its ultimate goal:
-
-> **Teaching players how to think about Magic.**
-
-</td>
-
-</tr>
-</table>
+[Español](#-estado-de-la-hoja-de-ruta) · [English](#-roadmap-summary)
 
 ---
 
-# 🧭 Evolution
+## 🇪🇸 Estado de la hoja de ruta
 
-```
-Remember
-    │
-    ▼
-Reason
-    │
-    ▼
-Build
-    │
-    ▼
-Teach
-    │
-    ▼
-Community
+```text
+Fuentes y pipeline base              ✅
+Renderizadores y validación          ✅
+Gauntlet dinámico                    ✅
+Campañas multisemilla                ✅
+Filtro de cartas oficiales           ✅
+Open Judge Gauntlet                  ⏭️
+JudgeResult estructurado             ⏳
+Cobertura guiada por fallos          ⏳
+Judge Release Candidate              ⏳
+UI modular                           ⏳
+Deck Master                          ⏳
+Deckbuilder                          ⏳
 ```
 
 ---
 
-# 📖 Phase I — Foundations
+## Fase 1 — Fundamentos del Juez ✅
 
-<table>
-<tr>
+Completado:
 
-<td width="50%" valign="top">
+- arquitectura modular;
+- Oracle local;
+- Comprehensive Rules locales;
+- API REST;
+- conversación y desambiguación;
+- recuperación de cartas y reglas;
+- integración con Ollama;
+- validación y fallbacks;
+- suites de regresión y rendimiento.
 
-## 🇪🇸
-
-**Estado:** ✅ Completado
-
-MagicAI aprende a recuperar información oficial.
-
-Durante esta fase se construyen los pilares del proyecto.
-
-### Objetivos
-
-- Arquitectura modular
-- Oracle oficial
-- Comprehensive Rules
-- Contexto conversacional
-- Context Builder
-- Context Enricher
-- Knowledge Builder
-- API REST
-- Regression Suite
-- Performance Suite
-
-### Resultado
-
-MagicAI ya no responde utilizando únicamente el conocimiento del modelo.
-
-Ahora responde utilizando conocimiento oficial.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-**Status:** ✅ Completed
-
-MagicAI learns how to retrieve official knowledge.
-
-This phase builds the foundations of the project.
-
-### Goals
-
-- Modular architecture
-- Official Oracle
-- Comprehensive Rules
-- Conversation memory
-- Context Builder
-- Context Enricher
-- Knowledge Builder
-- REST API
-- Regression Suite
-- Performance Suite
-
-### Outcome
-
-MagicAI no longer answers from model memory alone.
-
-It answers using official knowledge.
-
-</td>
-
-</tr>
-</table>
+Resultado: MagicAI dejó de depender exclusivamente de la memoria del modelo.
 
 ---
 
-# 🧠 Phase II — Mastery
+## Fase 2 — Hardening determinista ✅
 
-<table>
-<tr>
+Completado:
 
-<td width="50%" valign="top">
+- routing de preguntas de reglas;
+- renderizadores deterministas;
+- queries semánticas y numéricas;
+- validación de Oracle y lenguaje;
+- Gauntlet fijo;
+- Generalization Probe;
+- Gauntlet dinámico reproducible;
+- replay de fallos;
+- escenarios `rules-only`;
+- campañas multisemilla;
+- auditoría de premisas;
+- exclusión de cartas funny, silver-border, acorn y playtest;
+- routing de sacrificios pagados como coste y disparos de muerte;
+- detección de Commander mediante referencias a la zona de mando;
+- cobertura determinista inicial de capas, continuidad y dependencias.
 
-## 🇪🇸
+Últimos checkpoints validados:
 
-**Estado:** 🚧 En desarrollo
-
-Ahora MagicAI debe aprender a razonar.
-
-No basta con conocer las reglas.
-
-Debe comprender cómo interactúan.
-
-### Objetivos
-
-- Índice de cartas
-- Caché inteligente
-- Recuperación más rápida
-- Resolución de ambigüedades
-- Mejor comprensión del contexto
-- Comparación entre cartas
-- Optimización del rendimiento
-
-### Resultado esperado
-
-MagicAI será capaz de explicar interacciones complejas de forma consistente y rápida.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-**Status:** 🚧 In Progress
-
-MagicAI now learns how to reason.
-
-Knowing the rules is no longer enough.
-
-It must understand how they interact.
-
-### Goals
-
-- Card Index
-- Smart cache
-- Faster retrieval
-- Ambiguity resolution
-- Better context understanding
-- Card comparison
-- Performance improvements
-
-### Expected outcome
-
-MagicAI will consistently explain complex interactions while remaining fast and reliable.
-
-</td>
-
-</tr>
-</table>
+```text
+Dynamic Campaign: 3 seeds · 126/126 PASS · 14 concepts · 42 templates
+Matriz completa: 216/216 ejecuciones · 0 WARN · 0 FAIL
+```
 
 ---
 
-# 🃏 Phase III — IABuilding
+## Sprint 10.14 — Open Judge Gauntlet ⏭️
 
-<table>
-<tr>
+Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas.
 
-<td width="50%" valign="top">
+El conjunto incluirá preguntas heterogéneas sobre:
 
-## 🇪🇸
+- lanzamiento y costes;
+- objetivos y modos;
+- combate;
+- acciones basadas en estado;
+- fichas;
+- cambios de control;
+- disparos y disparos retrasados;
+- reemplazo y prevención;
+- copias;
+- Commander;
+- cartas multiface;
+- capas;
+- preguntas ambiguas;
+- premisas falsas.
 
-MagicAI deja de limitarse a responder preguntas.
+Clasificación prevista:
 
-Empieza a ayudar al jugador.
+```text
+correct
+correct_but_incomplete
+needs_clarification
+insufficient_evidence
+false_premise
+retrieval_failure
+incorrect
+hallucination
+```
 
-### Objetivos
-
-- Análisis de mazos
-- Curva de maná
-- Sinergias
-- Cartas redundantes
-- Sustituciones inteligentes
-- Explicación de recomendaciones
-- Análisis de Commander
-
-### Resultado esperado
-
-MagicAI será capaz de colaborar en el proceso creativo del deckbuilding.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-MagicAI stops answering isolated questions.
-
-It starts helping players build better decks.
-
-### Goals
-
-- Deck analysis
-- Mana curve
-- Synergy detection
-- Redundant cards
-- Smart replacements
-- Recommendation explanations
-- Commander analysis
-
-### Expected outcome
-
-MagicAI becomes an active deckbuilding assistant.
-
-</td>
-
-</tr>
-</table>
+El resultado determinará la prioridad real de los siguientes sprints.
 
 ---
 
-# 🎓 Phase IV — Teaching
+## Sprint 10.15 — Contrato `JudgeResult` ⏳
 
-<table>
-<tr>
+Crear una salida estructurada estable:
 
-<td width="50%" valign="top">
+```json
+{
+  "status": "answered",
+  "answer": "...",
+  "cards": [],
+  "rules": [],
+  "rulings": [],
+  "assumptions": [],
+  "warnings": [],
+  "confidence": "high",
+  "source_versions": {}
+}
+```
 
-## 🇪🇸
+Objetivos:
 
-Esta es la verdadera meta del proyecto.
-
-MagicAI ya no se limitará a responder correctamente.
-
-También explicará por qué.
-
-### Objetivos
-
-- Explicaciones paso a paso
-- Referencias automáticas a reglas
-- Árboles de resolución
-- Razonamiento estructurado
-- Explicaciones visuales
-
-### Resultado esperado
-
-El jugador comprenderá el razonamiento detrás de cada interacción.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-This is the real goal.
-
-MagicAI will no longer focus only on correct answers.
-
-It will explain why.
-
-### Goals
-
-- Step-by-step explanations
-- Automatic rules references
-- Resolution trees
-- Structured reasoning
-- Visual explanations
-
-### Expected outcome
-
-Players understand the reasoning behind every interaction.
-
-</td>
-
-</tr>
-</table>
+- separar hechos, explicación y supuestos;
+- permitir aclaraciones formales;
+- exponer evidencia en la UI;
+- ofrecer una API interna estable a otros perfiles;
+- hacer los tests menos dependientes de coincidencias puramente léxicas.
 
 ---
 
-# 🌍 Phase V — Community
+## Sprints 10.16–10.18 — Cobertura guiada por fallos ⏳
 
-<table>
-<tr>
+La prioridad se decidirá con el Open Judge Gauntlet, pero las familias candidatas son:
 
-<td width="50%" valign="top">
+### Lanzamiento y costes
 
-## 🇪🇸
+- costes adicionales y alternativos;
+- reducciones e incrementos;
+- X;
+- modos y elecciones;
+- objetivos legales.
 
-Una vez alcanzada la visión principal, el proyecto podrá crecer gracias a la comunidad.
+### Estado y temporalidad
 
-### Objetivos
+- acciones basadas en estado;
+- Last Known Information;
+- disparos retrasados;
+- cambio de control;
+- fichas que dejan de existir.
 
-- Docker
-- Frontend web
-- Documentación completa
-- Guías para colaboradores
-- Integraciones
-- Benchmarks públicos
-- Nuevos modelos LLM
+### Cartas complejas
 
-### Resultado esperado
+- transform y double-faced cards;
+- modal DFC;
+- split, aftermath y Adventure;
+- Prototype;
+- habilidades concedidas;
+- rulings específicos.
 
-MagicAI se convierte en una plataforma abierta para aprender Magic.
+### Efectos continuos
 
-</td>
+- capas;
+- timestamps;
+- dependencias;
+- CDA;
+- copias y valores copiables;
+- cambios de texto y tipo.
 
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-Once the core vision is achieved, the community becomes the driving force.
-
-### Goals
-
-- Docker
-- Web frontend
-- Complete documentation
-- Contributor guides
-- Integrations
-- Public benchmarks
-- Multiple LLMs
-
-### Expected outcome
-
-MagicAI becomes an open platform for learning Magic.
-
-</td>
-
-</tr>
-</table>
+No se creará un renderer para cada regla. Se priorizarán patrones frecuentes, de alto impacto o propensos a alucinación.
 
 ---
 
-# 🧙 The Journey
+## Sprint 10.19 — Judge Release Candidate ⏳
 
-<table>
-<tr>
+Criterios de cierre:
 
-<td width="50%" valign="top">
+- Open Judge Gauntlet con umbrales definidos;
+- campañas dinámicas estables;
+- `JudgeResult` documentado;
+- estados de aclaración y evidencia insuficiente;
+- fuentes versionadas;
+- actualización reproducible de Oracle, reglas y símbolos;
+- API interna estable;
+- documentación y comandos actualizados;
+- ausencia de regresiones críticas conocidas.
 
-## 🇪🇸
-
-Cada nueva versión de MagicAI busca responder una única pregunta.
-
-No:
-
-> "¿Qué funcionalidad añadimos ahora?"
-
-Sino:
-
-> **"¿Qué nueva capacidad queremos que aprenda?"**
-
-Porque construir una IA no consiste en añadir más código.
-
-Consiste en enseñarle una nueva forma de comprender el mundo.
-
-</td>
-
-<td width="50%" valign="top">
-
-## 🇬🇧
-
-Every new MagicAI release should answer one question.
-
-Not:
-
-> "What feature should we add next?"
-
-Instead:
-
-> **"What new capability should MagicAI learn?"**
-
-Building an AI isn't about writing more code.
-
-It's about teaching it a new way of understanding the world.
-
-</td>
-
-</tr>
-</table>
+A partir de este punto, los bugs descubiertos por perfiles posteriores se tratarán como mantenimiento del Juez, no como rediseño arquitectónico.
 
 ---
 
-<div align="center">
+## Fase 3 — UI modular del Juez ⏳
 
-## ✨
+Primera interfaz de usuario real:
 
-> **The roadmap is not a list of features.**
->
-> **It is the story of how MagicAI learns to understand Magic.**
+- conversación con el Juez;
+- historial de sesiones;
+- panel de cartas recuperadas;
+- reglas y rulings utilizados;
+- estado de la respuesta;
+- supuestos y advertencias;
+- versión de fuentes;
+- exportación de consultas.
 
-</div>
+La UI se diseñará desde el principio para incorporar nuevos perfiles sin rehacer la aplicación.
+
+Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia conversacional.
+
+---
+
+## Fase 4 — Deck Master ⏳
+
+Responsabilidad:
+
+- valorar un mazo;
+- explicar cómo jugarlo;
+- plan de juego por fases;
+- mulligans;
+- fortalezas y debilidades;
+- matchups;
+- nivel de potencia y consistencia.
+
+Restricción:
+
+> Para reglas, Oracle, legalidad, identidad de color y funcionamiento de cartas, Deck Master solo podrá consultar al Juez.
+
+---
+
+## Fase 5 — Deckbuilder ⏳
+
+Responsabilidad:
+
+- crear un mazo desde cero;
+- mejorar una lista existente;
+- proponer paquetes y redundancia;
+- ajustar curva, tierras y proporciones;
+- respetar presupuesto, formato y nivel objetivo;
+- explicar cada cambio.
+
+Restricción:
+
+> Deckbuilder no tendrá acceso factual directo a Internet ni a fuentes de cartas. Sus verificaciones pasarán por el Juez.
+
+En fases posteriores podrá consumir estadísticas o metajuego mediante servicios separados y explícitos, sin convertir esas fuentes en autoridad de reglas.
+
+---
+
+## Fase 6 — Colección, proyectos y enseñanza ⏳
+
+Posibles extensiones:
+
+- colección local del usuario;
+- comparación de versiones de un mazo;
+- seguimiento de cambios;
+- modo enseñanza;
+- ejercicios de reglas;
+- análisis de partidas;
+- exportación a formatos de decklist.
+
+Estas funciones no deben retrasar el cierre del Juez ni debilitar su frontera factual.
+
+---
+
+## 🇬🇧 Roadmap summary
+
+The immediate goal is to finish the Judge. The next milestones are an open-question Gauntlet, a structured `JudgeResult`, coverage driven by observed failures and a Judge Release Candidate.
+
+Only after that will MagicAI ship its modular UI, followed by Deck Master and Deckbuilder. Both strategic profiles will be required to use the Judge as their sole factual authority for rules, Oracle text, rulings and legality.

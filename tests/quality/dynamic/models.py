@@ -55,7 +55,7 @@ class QuestionTemplate:
     id: str
     text: str
 
-    def render(self, card_name: str) -> str:
+    def render(self, card_name: str = "") -> str:
         return self.text.format(card=card_name)
 
 
@@ -63,7 +63,7 @@ class QuestionTemplate:
 class DynamicConcept:
     id: str
     name: str
-    selector: str
+    selector: str | None
     tags: tuple[str, ...]
     templates: tuple[QuestionTemplate, ...]
     contract: EvaluationContract
@@ -83,11 +83,21 @@ class DynamicScenario:
     oracle_evidence: str = ""
     card_type_line: str = ""
     card_keywords: tuple[str, ...] = ()
+    card_set_code: str = ""
+    card_set_name: str = ""
+    card_set_type: str = ""
+    card_legal_formats: tuple[str, ...] = ()
+    source_kind: str = "card"
 
     def to_case(self) -> dict[str, Any]:
+        case_name = self.concept_name
+
+        if self.card_name:
+            case_name += f" · {self.card_name}"
+
         return {
             "id": self.id,
-            "name": f"{self.concept_name} · {self.card_name}",
+            "name": case_name,
             "tags": list(self.tags),
             "steps": [self.contract.to_step(self.question)],
         }
@@ -107,6 +117,11 @@ class DynamicScenario:
             "oracle_evidence": self.oracle_evidence,
             "card_type_line": self.card_type_line,
             "card_keywords": list(self.card_keywords),
+            "card_set_code": self.card_set_code,
+            "card_set_name": self.card_set_name,
+            "card_set_type": self.card_set_type,
+            "card_legal_formats": list(self.card_legal_formats),
+            "source_kind": self.source_kind,
         }
 
     @classmethod
@@ -132,4 +147,14 @@ class DynamicScenario:
             oracle_evidence=str(payload.get("oracle_evidence", "")),
             card_type_line=str(payload.get("card_type_line", "")),
             card_keywords=tuple(payload.get("card_keywords", [])),
+            card_set_code=str(payload.get("card_set_code", "")),
+            card_set_name=str(payload.get("card_set_name", "")),
+            card_set_type=str(payload.get("card_set_type", "")),
+            card_legal_formats=tuple(payload.get("card_legal_formats", [])),
+            source_kind=str(
+                payload.get(
+                    "source_kind",
+                    "card" if payload.get("card_name") else "rules",
+                )
+            ),
         )

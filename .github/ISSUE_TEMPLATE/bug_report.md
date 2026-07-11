@@ -1,38 +1,79 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+name: Bug report / Informe de error
+about: Report a reproducible MagicAI problem
+labels: bug
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Summary / Resumen
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Describe what happened and why it is incorrect.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Area / Área
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+- [ ] Card selection / Selección de carta
+- [ ] Rule retrieval / Recuperación de reglas
+- [ ] Renderer
+- [ ] Validation / Validación
+- [ ] Conversation / Conversación
+- [ ] API
+- [ ] Dynamic Gauntlet or campaign
+- [ ] Documentation
+- [ ] Other / Otro
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## Question or scenario / Pregunta o escenario
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+```text
+Paste the exact question.
+```
 
-**Additional context**
-Add any other context about the problem here.
+## Actual result / Resultado actual
+
+```text
+Paste the answer, traceback or report excerpt.
+```
+
+## Expected result / Resultado esperado
+
+Explain the correct behavior and, when possible, the supporting Oracle text or rule.
+
+## Reproduction / Reproducción
+
+```bash
+# Exact command, seed or replay command
+```
+
+Include when available:
+
+- seed;
+- concept and template;
+- manifest entry;
+- failure JSON;
+- card name and Oracle evidence;
+- rules source version;
+- model and Ollama version.
+
+## Failure classification / Clasificación
+
+- [ ] False premise
+- [ ] Selector failure
+- [ ] Retrieval failure
+- [ ] Routing failure
+- [ ] Renderer failure
+- [ ] Validator failure
+- [ ] Contract mismatch
+- [ ] LLM generation issue
+- [ ] Unknown
+
+## Environment / Entorno
+
+```text
+OS:
+Python:
+MagicAI commit:
+Model:
+Ollama:
+```
+
+## Additional context / Contexto adicional
+
+Do not attach Scryfall bulk files, local databases or private conversations.
