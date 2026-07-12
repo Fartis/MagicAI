@@ -65,6 +65,34 @@ def assert_not_contains(text: str, forbidden: list[str], label: str):
         )
 
 
+
+
+def assert_judge_result(payload: dict, label: str) -> None:
+    required = [
+        "answer",
+        "session_id",
+        "question",
+        "status",
+        "origin",
+        "confidence",
+        "authority",
+        "cards",
+        "rules",
+        "rulings",
+        "retrieval_queries",
+        "assumptions",
+        "warnings",
+        "source_versions",
+        "validation_attempts",
+    ]
+    missing = [key for key in required if key not in payload]
+    if missing:
+        raise AssertionError(f"{label}: missing JudgeResult fields {missing!r}")
+
+    if payload.get("authority") != "judge":
+        raise AssertionError(f"{label}: unexpected authority {payload.get('authority')!r}")
+
+
 def main():
 
     started = time.perf_counter()
@@ -87,6 +115,8 @@ def main():
             "question": "¿Qué hace Young Wolf?",
         },
     )
+
+    assert_judge_result(response_1, "Young Wolf initial response")
 
     session_young_wolf = response_1.get("session_id")
     answer_1 = response_1.get("answer", "")
@@ -188,6 +218,8 @@ def main():
         },
     )
 
+    assert_judge_result(response_4, "Sol Ring strategy response")
+
     answer_4 = response_4.get("answer", "")
     session_4 = response_4.get("session_id")
 
@@ -206,6 +238,11 @@ def main():
         "Sol Ring follow-up answer",
     )
     
+    if response_4.get("status") != "strategy_required":
+        raise AssertionError(
+            f"Sol Ring follow-up: expected strategy_required, got {response_4.get('status')!r}"
+        )
+
     assert_not_contains(
         answer_4,
         [

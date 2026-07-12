@@ -3,13 +3,20 @@ import time
 from magicai.context_builder import build_context
 from magicai.context_enricher import enrich
 from magicai.knowledge_builder import build_knowledge
-from magicai.answer_generator import generate_answer
+from magicai.answer_generator import generate_judge_result
+from magicai.judge_result import build_clarification_result
 from magicai.conversation.disambiguation import handle_card_disambiguation
 
 
 class MagicAI:
 
     def ask(self, conversation, question: str) -> str:
+        """Backward-compatible text-only entrypoint."""
+
+        return self.ask_result(conversation, question).answer
+
+    def ask_result(self, conversation, question: str):
+        """Return the structured Judge result used by the API and future UI."""
 
         total = time.perf_counter()
 
@@ -20,10 +27,15 @@ class MagicAI:
 
         if disambiguation_answer:
 
+            candidates = list(conversation.pending_card_candidates)
             conversation.add_user_message(question)
             conversation.add_assistant_message(disambiguation_answer)
 
-            return disambiguation_answer
+            return build_clarification_result(
+                question=question,
+                answer=disambiguation_answer,
+                candidates=candidates,
+            )
 
         if resolved_question:
 
@@ -89,17 +101,20 @@ class MagicAI:
 
         t = time.perf_counter()
 
-        answer = generate_answer(knowledge)
+        result = generate_judge_result(
+            knowledge,
+            context=context,
+        )
 
         print(
-            f"LLM              : {time.perf_counter()-t:.3f}s"
+            f"Answer Generator : {time.perf_counter()-t:.3f}s"
         )
 
         #
         # Historial
         #
 
-        conversation.add_assistant_message(answer)
+        conversation.add_assistant_message(result.answer)
 
         print(
             f"TOTAL            : {time.perf_counter()-total:.3f}s"
@@ -107,7 +122,7 @@ class MagicAI:
 
         print()
 
-        return answer
+        return result
 
 def _update_conversation_state(conversation, context) -> None:
     """Persist only source identifiers and resolved entities in the session."""

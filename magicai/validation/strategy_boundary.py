@@ -49,20 +49,31 @@ def render_strategy_boundary_answer(knowledge: str) -> str | None:
 
     cards = _parse_card_blocks(_extract_cards_block(knowledge))
     spanish = _is_spanish_question(question)
+    named_format = _detect_named_format(question)
 
     if spanish:
-        return _render_spanish(cards)
+        return _render_spanish(cards, named_format=named_format)
 
-    return _render_english(cards)
+    return _render_english(cards, named_format=named_format)
 
 
-def _render_spanish(cards: list[CardBlock]) -> str:
+def _render_spanish(
+    cards: list[CardBlock],
+    named_format: str | None = None,
+) -> str:
+    format_context = (
+        f" Has indicado {named_format} como formato."
+        if named_format
+        else ""
+    )
+
     if not cards:
         return (
             "Esa consulta requiere una valoración estratégica. El Juez puede "
             "validar reglas, Oracle y legalidad, pero la recomendación sobre "
             "qué conviene jugar corresponde a Deck Master y depende del "
             "formato, la lista y el plan de juego."
+            + format_context
         )
 
     summaries = [_summarize_card_spanish(card) for card in cards[:3]]
@@ -74,6 +85,7 @@ def _render_spanish(cards: list[CardBlock]) -> str:
             "Decidir si merece la pena jugar esa carta o en qué mazo encaja mejor es "
             "una recomendación estratégica: depende del formato, la lista, "
             "el plan de juego y el nivel de la mesa, y corresponde a Deck Master."
+            + format_context
         )
 
     names = " y ".join(card["name"] for card in cards[:2])
@@ -82,15 +94,26 @@ def _render_spanish(cards: list[CardBlock]) -> str:
         "depende del formato, la lista y el plan de juego, y esa recomendación "
         "estratégica corresponde a Deck Master. El Juez sí puede confirmar los "
         f"hechos recuperados: {factual}."
+        + format_context
     )
 
 
-def _render_english(cards: list[CardBlock]) -> str:
+def _render_english(
+    cards: list[CardBlock],
+    named_format: str | None = None,
+) -> str:
+    format_context = (
+        f" You specified {named_format} as the format."
+        if named_format
+        else ""
+    )
+
     if not cards:
         return (
             "This requires a strategic evaluation. The Judge can validate rules, "
             "Oracle text, and legality, but the recommendation belongs to Deck "
             "Master and depends on the format, deck list, and game plan."
+            + format_context
         )
 
     summaries = [_summarize_card_english(card) for card in cards[:3]]
@@ -101,6 +124,7 @@ def _render_english(cards: list[CardBlock]) -> str:
             f"The Judge can confirm these facts: {factual}. Whether it is worth "
             "playing or where it fits best is a strategic recommendation for "
             "Deck Master and depends on the format, list, and game plan."
+            + format_context
         )
 
     names = " and ".join(card["name"] for card in cards[:2])
@@ -108,6 +132,7 @@ def _render_english(cards: list[CardBlock]) -> str:
         f"There is no universal answer about which is better between {names}; "
         "that depends on the format, list, and game plan and belongs to Deck "
         f"Master. The Judge can confirm these recovered facts: {factual}."
+        + format_context
     )
 
 
@@ -240,6 +265,32 @@ def _has_variable_token_creation(lines: list[str]) -> bool:
         re.search(r"\bcreate\s+X\b.+\btoken", line, flags=re.IGNORECASE)
         for line in lines
     )
+
+
+_FORMAT_NAMES: tuple[tuple[str, str], ...] = (
+    ("commander", "Commander"),
+    ("cedh", "cEDH"),
+    ("modern", "Modern"),
+    ("pioneer", "Pioneer"),
+    ("standard", "Standard"),
+    ("legacy", "Legacy"),
+    ("vintage", "Vintage"),
+    ("pauper", "Pauper"),
+    ("brawl", "Brawl"),
+    ("historic", "Historic"),
+    ("explorer", "Explorer"),
+    ("alchemy", "Alchemy"),
+)
+
+
+def _detect_named_format(question: str) -> str | None:
+    normalized = _normalize(question)
+
+    for marker, display_name in _FORMAT_NAMES:
+        if re.search(r"(?<!\w)" + re.escape(marker) + r"(?!\w)", normalized):
+            return display_name
+
+    return None
 
 
 def _looks_like_strategy_question(question: str) -> bool:

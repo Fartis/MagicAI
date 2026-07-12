@@ -67,10 +67,36 @@ Sacrifice another creature: Prossh gets +1/+0 until end of turn.
     )
 
 
+
+def test_named_format_is_preserved() -> None:
+    knowledge = """
+QUESTION
+
+¿Merece la pena jugar Sol Ring en Commander?
+
+============================================================
+CARDS
+
+Sol Ring
+Mana Cost: {1}
+Artifact
+
+{T}: Add {C}{C}.
+"""
+
+    answer = render_strategy_boundary_answer(knowledge)
+    assert answer
+    assert_contains(
+        answer,
+        ["Sol Ring", "Commander", "Deck Master"],
+        "Named format strategy boundary",
+    )
+
 def main() -> int:
     tests = [
         test_sol_ring_strategy_boundary,
         test_two_card_strategy_boundary_uses_recovered_facts,
+        test_named_format_is_preserved,
     ]
     for test in tests:
         test()

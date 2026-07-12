@@ -7,12 +7,20 @@ from tests.quality.open_judge.models import (
 )
 
 
-def assert_outcome(expected, contract, answer, snapshot=None, exception=""):
+def assert_outcome(
+    expected,
+    contract,
+    answer,
+    snapshot=None,
+    exception="",
+    judge_status="",
+):
     outcome, findings = evaluate_turn(
         contract=contract,
         answer=answer,
         snapshot=snapshot,
         exception=exception,
+        judge_status=judge_status,
     )
     assert outcome == expected, (outcome, findings)
 
@@ -169,6 +177,28 @@ def main() -> int:
         "La recomendación estratégica corresponde a Deck Master.",
     )
 
+
+    assert_outcome(
+        OpenJudgeOutcome.STRATEGY_REQUIRED,
+        strategy,
+        "La recomendación estratégica corresponde a Deck Master.",
+        judge_status="strategy_required",
+    )
+
+    assert_outcome(
+        OpenJudgeOutcome.CONTEXT_FAILURE,
+        strategy,
+        "La recomendación estratégica corresponde a Deck Master.",
+        judge_status="answered",
+    )
+
+    assert_outcome(
+        OpenJudgeOutcome.INSUFFICIENT_EVIDENCE,
+        base,
+        "Undying hace que vuelve desde el cementerio.",
+        snapshot,
+        judge_status="insufficient_evidence",
+    )
     assert_outcome(
         OpenJudgeOutcome.EXECUTION_ERROR,
         base,

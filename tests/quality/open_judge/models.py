@@ -103,6 +103,10 @@ class OpenJudgeTurnResult:
     elapsed: float
     findings: list[EvaluationFinding] = field(default_factory=list)
     snapshot: ConversationSnapshot = field(default_factory=ConversationSnapshot)
+    judge_status: str = ""
+    judge_origin: str = ""
+    judge_confidence: str = ""
+    judge_authority: str = ""
     exception: str = ""
     internal_log: str = ""
 

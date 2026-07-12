@@ -98,6 +98,11 @@ def write_txt_report(
                     f"  rules={list(turn.snapshot.rules)}",
                     f"  intent={turn.snapshot.intent!r}",
                     f"  history={turn.snapshot.history_size}",
+                    "JUDGE RESULT:",
+                    f"  status={turn.judge_status!r}",
+                    f"  origin={turn.judge_origin!r}",
+                    f"  confidence={turn.judge_confidence!r}",
+                    f"  authority={turn.judge_authority!r}",
                 ]
             )
 
@@ -159,7 +164,12 @@ def write_xml_report(
                     "time": f"{turn.elapsed:.6f}",
                 },
             )
-            ET.SubElement(testcase, "system-out").text = turn.answer
+            ET.SubElement(testcase, "system-out").text = (
+                turn.answer
+                + "\n\nJudgeResult: "
+                + f"status={turn.judge_status}; origin={turn.judge_origin}; "
+                + f"confidence={turn.judge_confidence}; authority={turn.judge_authority}"
+            )
 
             if turn.outcome not in ACCEPTABLE_OUTCOMES:
                 failure = ET.SubElement(
@@ -251,6 +261,7 @@ def write_html_report(
                   <p><strong>User:</strong> {escape(turn.question)}</p>
                   <p><strong>Assistant:</strong> {escape(turn.answer)}</p>
                   <p><strong>Cards:</strong> {escape(', '.join(turn.snapshot.cards))}</p>
+                  <p><strong>JudgeResult:</strong> status={escape(turn.judge_status)}, origin={escape(turn.judge_origin)}, confidence={escape(turn.judge_confidence)}, authority={escape(turn.judge_authority)}</p>
                   <p><strong>Elapsed:</strong> {turn.elapsed:.2f}s</p>
                   <details><summary>Findings</summary><ul>{findings}</ul></details>
                 </article>

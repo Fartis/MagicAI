@@ -28,12 +28,12 @@ def ask(request: AskRequest):
         request.session_id
     )
 
-    answer = assistant.ask(
+    result = assistant.ask_result(
         conversation,
         request.question,
     )
 
     return AskResponse(
-        answer=answer,
         session_id=session_id,
+        **result.to_dict(),
     )

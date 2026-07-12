@@ -11,7 +11,7 @@
 
 MagicAI se encuentra en una **alpha funcional del Juez**. El pipeline principal ya recupera conocimiento local, resuelve referencias conversacionales, genera consultas de reglas, utiliza respuestas deterministas para familias cubiertas y valida la salida del LLM.
 
-No se considera finalizado porque todavía falta medir y ampliar su comportamiento ante preguntas abiertas, estabilizar una respuesta estructurada y cubrir familias de reglas complejas de alta frecuencia.
+No se considera finalizado porque todavía falta repetir la baseline abierta tras cada hardening, estabilizar completamente el contrato estructurado y cubrir familias de reglas complejas de alta frecuencia.
 
 ### Capacidades implementadas
 
@@ -26,12 +26,14 @@ No se considera finalizado porque todavía falta medir y ampliar su comportamien
 - Renderizadores deterministas de reglas y Oracle.
 - Ollama local con temperatura cero.
 - Validación de respuestas, reintento y fallback seguro.
-- API REST con sesiones en memoria.
+- API REST con sesiones en memoria y salida `JudgeResult` retrocompatible.
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
 - Open Judge Gauntlet con 9 conversaciones, 25 turnos y contratos semánticos.
 - Clasificación separada de fallos de contexto, retrieval, contradicción y alucinación.
+- `JudgeResult` con estado, origen, confianza, autoridad y evidencia de cartas y reglas.
+- Trazabilidad del origen de respuesta en informes Open Judge.
 
 ### Conceptos dinámicos cubiertos
 
@@ -160,7 +162,7 @@ brawl
 
 ### Limitaciones conocidas
 
-- La salida pública sigue siendo texto, no un objeto `JudgeResult` estructurado.
+- `JudgeResult` ya existe, pero rulings, premisas falsas y supuestos todavía necesitan integración completa.
 - Las sesiones de la API viven en memoria y no persisten tras reiniciar el proceso.
 - La cobertura determinista todavía no abarca todas las familias de reglas.
 - La cobertura de capas y dependencias ya tiene casos iniciales, pero todavía no es general; CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
@@ -188,6 +190,6 @@ MagicAI is currently a **functional Judge alpha**. Its main pipeline retrieves l
 
 The latest validated dynamic campaign completed **126/126 cases**, covering **14 concepts** and **42 templates** across three seeds with no warnings or failures.
 
-The Judge is not considered complete yet. The next milestones are an open-question evaluation suite, a structured `JudgeResult` contract, evidence-aware ambiguity handling and coverage driven by real failures.
+The Judge is not considered complete yet. The API now exposes an initial structured `JudgeResult`; the next milestones are stabilizing that contract, integrating rulings and false-premise handling, and completing coverage driven by real failures.
 
 The future UI will start with the Judge and later host Deck Master and Deckbuilder. Those profiles will use the Judge as their sole factual authority for card text, rules, rulings and legality.

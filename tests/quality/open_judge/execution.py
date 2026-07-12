@@ -56,12 +56,27 @@ def run_open_judge_case(
     for turn_index, contract in enumerate(case.turns, start=1):
         start = time.perf_counter()
         answer = ""
+        judge_status = ""
+        judge_origin = ""
+        judge_confidence = ""
+        judge_authority = ""
         exception = ""
         internal_output = io.StringIO()
 
         try:
             with contextlib.redirect_stdout(internal_output):
-                answer = assistant.ask(conversation, contract.question)
+                if hasattr(assistant, "ask_result"):
+                    judge_result = assistant.ask_result(
+                        conversation,
+                        contract.question,
+                    )
+                    answer = judge_result.answer
+                    judge_status = judge_result.status.value
+                    judge_origin = judge_result.origin.value
+                    judge_confidence = judge_result.confidence.value
+                    judge_authority = judge_result.authority
+                else:
+                    answer = assistant.ask(conversation, contract.question)
         except Exception:
             exception = traceback.format_exc()
 
@@ -72,6 +87,7 @@ def run_open_judge_case(
             answer=answer,
             snapshot=snapshot,
             exception=exception,
+            judge_status=judge_status,
         )
 
         turn_results.append(
@@ -86,6 +102,10 @@ def run_open_judge_case(
                 elapsed=elapsed,
                 findings=findings,
                 snapshot=snapshot,
+                judge_status=judge_status,
+                judge_origin=judge_origin,
+                judge_confidence=judge_confidence,
+                judge_authority=judge_authority,
                 exception=exception,
                 internal_log=internal_output.getvalue().strip(),
             )

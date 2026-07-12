@@ -129,11 +129,36 @@ def _highest_outcome(findings: list[EvaluationFinding]) -> OpenJudgeOutcome:
     )
 
 
+
+def _expected_judge_status(contract: OpenJudgeTurn) -> str:
+    mapping = {
+        OpenJudgeOutcome.NEEDS_CLARIFICATION: "needs_clarification",
+        OpenJudgeOutcome.STRATEGY_REQUIRED: "strategy_required",
+        OpenJudgeOutcome.INSUFFICIENT_EVIDENCE: "insufficient_evidence",
+        OpenJudgeOutcome.FALSE_PREMISE_HANDLED: "false_premise",
+    }
+    return mapping.get(contract.success_outcome, "answered")
+
+
+def _status_mismatch_outcome(expected: str, actual: str) -> OpenJudgeOutcome:
+    if actual == "insufficient_evidence":
+        return OpenJudgeOutcome.INSUFFICIENT_EVIDENCE
+
+    if expected in {
+        "needs_clarification",
+        "strategy_required",
+        "false_premise",
+    }:
+        return OpenJudgeOutcome.CONTEXT_FAILURE
+
+    return OpenJudgeOutcome.RETRIEVAL_FAILURE
+
 def evaluate_turn(
     contract: OpenJudgeTurn,
     answer: str,
     snapshot: ConversationSnapshot | None = None,
     exception: str = "",
+    judge_status: str = "",
 ) -> tuple[OpenJudgeOutcome, list[EvaluationFinding]]:
     """Evaluate one answer against its semantic and conversational contract."""
 
@@ -148,6 +173,22 @@ def evaluate_turn(
             )
         )
         return OpenJudgeOutcome.EXECUTION_ERROR, findings
+
+    if judge_status:
+        expected_status = _expected_judge_status(contract)
+        if judge_status != expected_status:
+            findings.append(
+                EvaluationFinding(
+                    outcome=_status_mismatch_outcome(
+                        expected_status,
+                        judge_status,
+                    ),
+                    message=(
+                        "JudgeResult status mismatch: "
+                        f"expected {expected_status!r}, got {judge_status!r}."
+                    ),
+                )
+            )
 
     for claim in contract.forbidden:
         if contains_claim(answer, claim.text):

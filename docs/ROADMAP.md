@@ -15,7 +15,7 @@ Gauntlet dinámico                    ✅
 Campañas multisemilla                ✅
 Filtro de cartas oficiales           ✅
 Open Judge Gauntlet                  ✅
-JudgeResult estructurado             ⏳
+JudgeResult estructurado             🚧
 Cobertura guiada por fallos          ⏳
 Judge Release Candidate              ⏳
 UI modular                           ⏳
@@ -146,7 +146,7 @@ Cierre: repetir el Open Judge Gauntlet y comprobar que todos los turnos son `PAS
 
 ---
 
-## Sprint 10.15 — Contrato `JudgeResult` ⏳
+## Sprint 10.15 — Contrato `JudgeResult` 🚧
 
 Crear una salida estructurada estable:
 
@@ -164,13 +164,23 @@ Crear una salida estructurada estable:
 }
 ```
 
-Objetivos:
+Primera entrega implementada:
 
-- separar hechos, explicación y supuestos;
-- permitir aclaraciones formales;
-- exponer evidencia en la UI;
-- ofrecer una API interna estable a otros perfiles;
-- hacer los tests menos dependientes de coincidencias puramente léxicas.
+- `MagicAI.ask_result()` y compatibilidad de `MagicAI.ask()`;
+- estados `answered`, `needs_clarification`, `insufficient_evidence`, `strategy_required` y `false_premise`;
+- origen de respuesta determinista, LLM validado, fallback, estrategia o desambiguación;
+- evidencia estructurada de cartas y reglas;
+- autoridad, confianza, consultas de recuperación, advertencias y versiones locales de fuentes;
+- respuesta `/ask` ampliada sin eliminar `answer` ni `session_id`;
+- metadata `JudgeResult` incluida en los informes Open Judge.
+
+Pendiente para cerrar el sprint:
+
+- integrar rulings recuperados;
+- poblar supuestos de forma explícita y verificable;
+- emitir `false_premise` desde el pipeline;
+- estabilizar el contrato con una baseline completa y pruebas de API en ejecución;
+- documentar política de compatibilidad antes de la UI beta.
 
 ---
 

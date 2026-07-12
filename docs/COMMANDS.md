@@ -200,6 +200,25 @@ curl -X POST http://127.0.0.1:8000/ask \
   }'
 ```
 
+La respuesta mantiene `answer` y `session_id`, y añade el contrato `JudgeResult`. Para inspeccionarlo:
+
+```bash
+curl -sS http://127.0.0.1:8000/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"¿Puedo responder durante la resolución?"}' |
+  jq '{answer, status, origin, confidence, authority, cards, rules, warnings, source_versions}'
+```
+
+Estados actuales:
+
+```text
+answered
+needs_clarification
+insufficient_evidence
+strategy_required
+false_premise
+```
+
 ---
 
 ## 🔎 Herramientas de diagnóstico
@@ -254,6 +273,9 @@ PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
 PYTHONPATH=. python -m tests.validation.strategy_boundary_test
+PYTHONPATH=. python -m tests.validation.judge_result_test
+PYTHONPATH=. python -m tests.api.judge_result_schema_test
+PYTHONPATH=. python -m tests.retrieval.source_versions_test
 ```
 
 ### API
@@ -284,6 +306,9 @@ PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
 PYTHONPATH=. python -m tests.validation.strategy_boundary_test
+PYTHONPATH=. python -m tests.validation.judge_result_test
+PYTHONPATH=. python -m tests.api.judge_result_schema_test
+PYTHONPATH=. python -m tests.retrieval.source_versions_test
 ```
 
 Listar conversaciones:

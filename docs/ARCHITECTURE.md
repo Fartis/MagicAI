@@ -19,7 +19,7 @@ HTTP /ask or test harness
 ConversationManager
           │
           ▼
-MagicAI.ask
+MagicAI.ask / MagicAI.ask_result
           │
           ├── card disambiguation
           ├── conversation history
@@ -235,21 +235,25 @@ La sesión futura será compartida entre perfiles y conservará un `authority_tr
 
 ---
 
-## Contrato futuro `JudgeResult`
+## Contrato `JudgeResult`
 
-La API actual devuelve `answer` y `session_id`. La siguiente frontera estable será un objeto parecido a:
+La API conserva `answer` y `session_id`, pero ya expone una primera versión estructurada del resultado factual del Juez:
 
 ```json
 {
   "status": "answered",
+  "origin": "deterministic_rule",
+  "confidence": "high",
+  "authority": "judge",
   "answer": "...",
   "cards": [],
   "rules": [],
   "rulings": [],
+  "retrieval_queries": [],
   "assumptions": [],
   "warnings": [],
-  "confidence": "high",
-  "source_versions": {}
+  "source_versions": {},
+  "validation_attempts": 0
 }
 ```
 
@@ -259,10 +263,11 @@ Estados previstos:
 answered
 needs_clarification
 insufficient_evidence
+strategy_required
 false_premise
 ```
 
-Este contrato será utilizado por:
+`origin` distingue desambiguación, renderizadores deterministas, LLM validado, frontera estratégica y fallback seguro. El contrato será utilizado por:
 
 - la UI;
 - Deck Master;

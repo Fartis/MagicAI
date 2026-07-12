@@ -235,7 +235,28 @@ curl -X POST http://127.0.0.1:8000/ask \
   -d '{"question":"¿Puedo responder a Ward?"}'
 ```
 
-La API actual devuelve texto y `session_id`. El contrato estructurado `JudgeResult`, con evidencia, estado, confianza y supuestos, forma parte de la siguiente etapa de desarrollo.
+La API mantiene `answer` y `session_id` por compatibilidad, pero ya devuelve un `JudgeResult` estructurado con estado, origen, confianza, autoridad, cartas, reglas, consultas de recuperación, advertencias y versiones locales de fuentes.
+
+Ejemplo abreviado:
+
+```json
+{
+  "answer": "No puedes responder durante la resolución.",
+  "session_id": "...",
+  "status": "answered",
+  "origin": "deterministic_rule",
+  "confidence": "high",
+  "authority": "judge",
+  "cards": [],
+  "rules": [{"number": "117.2e", "title": "..."}],
+  "warnings": [],
+  "source_versions": {
+    "comprehensive_rules": "2026-06-19"
+  }
+}
+```
+
+Consulta [docs/JUDGE_RESULT.md](docs/JUDGE_RESULT.md) para el contrato completo.
 
 ---
 
@@ -252,6 +273,8 @@ PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
 PYTHONPATH=. python -m tests.validation.strategy_boundary_test
+PYTHONPATH=. python -m tests.validation.judge_result_test
+PYTHONPATH=. python -m tests.api.judge_result_schema_test
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
@@ -323,10 +346,10 @@ MagicAI/
 
 1. Repetir el Open Judge Gauntlet tras cada hardening y estabilizar sus contratos.
 2. Corregir por familias los fallos de contexto, retrieval y atribución.
-3. Crear `JudgeResult` como contrato factual estable.
+3. Estabilizar y ampliar `JudgeResult` como contrato factual público.
 4. Completar cobertura guiada por fallos reales.
 5. Cerrar un Judge Release Candidate.
-6. Construir una UI modular para conversar con el Juez.
+6. Construir una UI beta modular para conversar con el Juez.
 7. Añadir Deck Master y Deckbuilder sobre la misma UI.
 
 Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracle ni reglas**. Para cartas, legalidad, rulings e interacciones deberán consultar al Juez mediante su API interna.
@@ -338,6 +361,7 @@ Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracl
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Comandos](docs/COMMANDS.md)
 - [Estado actual](docs/STATUS.md)
+- [Contrato JudgeResult](docs/JUDGE_RESULT.md)
 - [Hoja de ruta](docs/ROADMAP.md)
 - [Filosofía](docs/PHILOSOPHY.md)
 - [Contribuir](docs/CONTRIBUTING.md)
