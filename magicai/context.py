@@ -16,6 +16,8 @@ class AssistantContext:
 
     rules: list[str] = field(default_factory=list)
 
+    rulings: list[dict] = field(default_factory=list)
+
     rule_queries: list[str] = field(default_factory=list)
 
     facts: list[str] = field(default_factory=list)

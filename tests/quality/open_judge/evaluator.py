@@ -34,7 +34,8 @@ def normalize(text: str) -> str:
         for character in text
         if not unicodedata.combining(character)
     )
-    text = text.replace("*", "").replace("_", "").replace("`", "")
+    for character in ("*", "_", "`", "\"", "'", "“", "”", "‘", "’"):
+        text = text.replace(character, " ")
     text = re.sub(r"\s+", " ", text.lower()).strip()
     return _canonicalize_semantic_variants(text)
 
@@ -56,6 +57,14 @@ def _canonicalize_semantic_variants(text: str) -> str:
             r"\b(?:se\s+)?(?:activa|activar|activan|activara|activaras|"
             r"dispara|disparar|disparan|disparara|dispararas)\b",
             "activa",
+        ),
+        (
+            r"\bmana(?:\s+[a-z]+){0,3}\s+gastado\b",
+            "mana gastado",
+        ),
+        (
+            r"\bla condicion(?:\s+[a-z]+){0,3}\s+no se cumple\b",
+            "no se cumple la condicion",
         ),
     )
 

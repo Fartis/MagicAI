@@ -78,7 +78,7 @@ Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas y sep
 
 Infraestructura implementada:
 
-- corpus ampliado a 10 conversaciones y 26 turnos;
+- corpus ampliado a 11 conversaciones y 27 turnos;
 - contratos semánticos por turno;
 - reutilización del mismo corpus por la Regression Suite legacy;
 - captura del estado conversacional después de cada respuesta;
@@ -103,7 +103,7 @@ HALLUCINATION
 EXECUTION_ERROR
 ```
 
-Primera baseline fijada el 12 de julio de 2026: 9 conversaciones, 25 turnos y 0 errores de ejecución. Tras 10.14c alcanzó 23/25 PASS; 10.14e amplía el corpus con desambiguación de Squee y resultados estratégicos explícitos. La revisión manual separó fallos reales del Juez de falsos negativos del evaluador.
+Primera baseline fijada el 12 de julio de 2026: 9 conversaciones, 25 turnos y 0 errores de ejecución. Tras 10.14c alcanzó 23/25 PASS; 10.14e amplió el corpus con desambiguación de Squee y resultados estratégicos explícitos; 10.15b añade un caso de premisa falsa y lleva el total a 11 conversaciones y 27 turnos. La revisión manual separó fallos reales del Juez de falsos negativos del evaluador.
 
 La primera ronda cubre especialmente:
 
@@ -176,9 +176,9 @@ Primera entrega implementada:
 
 Pendiente para cerrar el sprint:
 
-- integrar rulings recuperados;
-- poblar supuestos de forma explícita y verificable;
-- emitir `false_premise` desde el pipeline;
+- ampliar recuperación contextual de rulings más allá de peticiones explícitas;
+- ampliar supuestos únicamente cuando puedan demostrarse desde la respuesta;
+- extender `false_premise` con nuevas familias guiadas por fallos reales;
 - estabilizar el contrato con una baseline completa y pruebas de API en ejecución;
 - documentar política de compatibilidad antes de la UI beta.
 

@@ -27,7 +27,7 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 
 ### Alcance actual
 
-- Oracle local descargado desde Scryfall.
+- Oracle y rulings locales descargados desde los bulk de Scryfall.
 - Magic Comprehensive Rules locales.
 - Recuperación de cartas, keywords, símbolos y reglas relacionadas.
 - Memoria conversacional y resolución de referencias ambiguas.
@@ -124,6 +124,7 @@ Context Builder
 Context Enricher
     │
     ├── local Oracle
+    ├── local Scryfall rulings
     ├── Comprehensive Rules
     └── Scryfall symbology
     │
@@ -249,6 +250,7 @@ Ejemplo abreviado:
   "authority": "judge",
   "cards": [],
   "rules": [{"number": "117.2e", "title": "..."}],
+  "assumptions": [],
   "warnings": [],
   "source_versions": {
     "comprehensive_rules": "2026-06-19"
@@ -286,7 +288,7 @@ Open Judge Gauntlet:
 PYTHONPATH=. python -m tests.quality.open_judge_test
 ```
 
-Genera una baseline semántica de 10 conversaciones y 26 turnos, con informes TXT, JSON, XML y HTML.
+Genera una baseline semántica de 11 conversaciones y 27 turnos, con informes TXT, JSON, XML y HTML.
 
 Gauntlet dinámico reproducible:
 

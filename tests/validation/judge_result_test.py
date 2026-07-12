@@ -29,6 +29,15 @@ def _context(question: str):
                 scryfall_uri="https://scryfall.com/card/example/young-wolf",
             )
         ],
+        rulings=[
+            {
+                "card_name": "Young Wolf",
+                "oracle_id": "oracle-young-wolf",
+                "source": "wotc",
+                "published_at": "2024-01-01",
+                "comment": "Example ruling.",
+            }
+        ],
         rules=[
             {
                 "number": "117.2e",
@@ -60,6 +69,9 @@ No player has priority while a spell or ability is resolving.
     assert result.authority == "judge"
     assert result.cards[0].name == "Young Wolf"
     assert result.rules[0].number == "117.2e"
+    assert result.rulings[0].card_name == "Young Wolf"
+    assert result.rulings[0].source == "wotc"
+    assert result.rulings[0].comment == "Example ruling."
     assert result.retrieval_queries == ["priority during resolution"]
     assert result.source_versions.get("comprehensive_rules") == "2026-06-19"
 
@@ -92,6 +104,7 @@ Artifact
             )
         ],
         rules=[],
+        rulings=[],
         rule_queries=[],
     )
     result = generate_judge_result(knowledge, context=context)
@@ -114,6 +127,7 @@ def test_safe_fallback_reports_insufficient_evidence() -> None:
                 intent="rules",
                 cards=[],
                 rules=[],
+                rulings=[],
                 rule_queries=[],
             ),
         )

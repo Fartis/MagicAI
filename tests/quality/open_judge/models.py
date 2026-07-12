@@ -107,6 +107,9 @@ class OpenJudgeTurnResult:
     judge_origin: str = ""
     judge_confidence: str = ""
     judge_authority: str = ""
+    judge_assumptions: tuple[str, ...] = ()
+    judge_warnings: tuple[str, ...] = ()
+    judge_rulings: tuple[str, ...] = ()
     exception: str = ""
     internal_log: str = ""
 

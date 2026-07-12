@@ -1,4 +1,4 @@
-from tests.quality.open_judge.evaluator import evaluate_turn
+from tests.quality.open_judge.evaluator import contains_term, evaluate_turn
 from tests.quality.open_judge.models import (
     ConversationSnapshot,
     ForbiddenClaim,
@@ -25,7 +25,30 @@ def assert_outcome(
     assert outcome == expected, (outcome, findings)
 
 
+
+def test_semantic_modifiers_do_not_create_false_negatives() -> None:
+    assert contains_term(
+        "X es la cantidad de maná realmente gastado para lanzarlo.",
+        "maná gastado",
+    )
+    assert contains_term(
+        "La condición de muerte no se cumple.",
+        "no se cumple la condición",
+    )
+
+
+
+def test_condition_with_quoted_insert_is_normalized() -> None:
+    answer = (
+        'Exiliarla la mueve directamente al exilio, no al cementerio, '
+        'por lo que la condición de "muerte" no se cumple.'
+    )
+    assert contains_term(answer, "no se cumple la condición")
+
 def main() -> int:
+    test_semantic_modifiers_do_not_create_false_negatives()
+    test_condition_with_quoted_insert_is_normalized()
+
     base = OpenJudgeTurn(
         id="TEST-01",
         question="¿Qué ocurre?",

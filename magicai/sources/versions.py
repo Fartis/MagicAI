@@ -39,6 +39,11 @@ def get_source_versions(source_root: str | Path | None = None) -> dict[str, str]
         key="scryfall_symbology_file_mtime",
         path=root / "scryfall" / "symbology.json",
     )
+    _add_file_timestamp(
+        versions,
+        key="scryfall_rulings_file_mtime",
+        path=root / "scryfall" / "rulings.json",
+    )
 
     return versions
 

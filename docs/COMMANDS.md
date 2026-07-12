@@ -87,7 +87,7 @@ deactivate
 
 ## 📚 Fuentes locales
 
-Descargar el bulk Oracle utilizado por el Juez:
+Descargar los bulk Oracle y rulings utilizados por el Juez:
 
 ```bash
 ./scripts/download_sources.sh
@@ -109,6 +109,7 @@ Comprobar ficheros:
 
 ```bash
 ls -lh sources/scryfall/oracle-cards.json
+ls -lh sources/scryfall/rulings.json
 ls -lh sources/scryfall/symbology.json
 ls -lh sources/rules/MagicCompRules.txt
 ```
@@ -276,6 +277,10 @@ PYTHONPATH=. python -m tests.validation.strategy_boundary_test
 PYTHONPATH=. python -m tests.validation.judge_result_test
 PYTHONPATH=. python -m tests.api.judge_result_schema_test
 PYTHONPATH=. python -m tests.retrieval.source_versions_test
+PYTHONPATH=. python -m tests.retrieval.rulings_source_test
+PYTHONPATH=. python -m tests.retrieval.rulings_pipeline_test
+PYTHONPATH=. python -m tests.validation.premise_guard_test
+PYTHONPATH=. python -m tests.validation.assumptions_test
 ```
 
 ### API
@@ -309,6 +314,10 @@ PYTHONPATH=. python -m tests.validation.strategy_boundary_test
 PYTHONPATH=. python -m tests.validation.judge_result_test
 PYTHONPATH=. python -m tests.api.judge_result_schema_test
 PYTHONPATH=. python -m tests.retrieval.source_versions_test
+PYTHONPATH=. python -m tests.retrieval.rulings_source_test
+PYTHONPATH=. python -m tests.retrieval.rulings_pipeline_test
+PYTHONPATH=. python -m tests.validation.premise_guard_test
+PYTHONPATH=. python -m tests.validation.assumptions_test
 ```
 
 Listar conversaciones:

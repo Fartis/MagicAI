@@ -15,7 +15,7 @@ No se considera finalizado porque todavía falta repetir la baseline abierta tra
 
 ### Capacidades implementadas
 
-- Oracle local de Scryfall.
+- Oracle y rulings locales de Scryfall.
 - Comprehensive Rules locales y búsqueda por secciones.
 - Índice de cartas en memoria.
 - Detección de cartas, aliases, keywords, acciones y reglas explícitas.
@@ -30,7 +30,7 @@ No se considera finalizado porque todavía falta repetir la baseline abierta tra
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
-- Open Judge Gauntlet con 9 conversaciones, 25 turnos y contratos semánticos.
+- Open Judge Gauntlet con 11 conversaciones, 27 turnos y contratos semánticos.
 - Clasificación separada de fallos de contexto, retrieval, contradicción y alucinación.
 - `JudgeResult` con estado, origen, confianza, autoridad y evidencia de cartas y reglas.
 - Trazabilidad del origen de respuesta en informes Open Judge.
@@ -98,7 +98,7 @@ Errores de ejecución             0
 Alucinaciones                     0
 ```
 
-El Sprint 10.14e amplía el corpus a 10 conversaciones y 26 turnos e incorpora:
+El Sprint 10.15b amplía el corpus a 11 conversaciones y 27 turnos e incorpora:
 
 - cantidades variables derivadas de Oracle, como `create X ... where X is ...`;
 - separación explícita entre autoridad factual del Juez y recomendaciones de Deck Master;
@@ -162,7 +162,7 @@ brawl
 
 ### Limitaciones conocidas
 
-- `JudgeResult` ya existe, pero rulings, premisas falsas y supuestos todavía necesitan integración completa.
+- `JudgeResult` ya integra rulings locales bajo petición explícita, supuestos conservadores y corrección inicial de premisas falsas; falta ampliar estas familias según fallos reales.
 - Las sesiones de la API viven en memoria y no persisten tras reiniciar el proceso.
 - La cobertura determinista todavía no abarca todas las familias de reglas.
 - La cobertura de capas y dependencias ya tiene casos iniciales, pero todavía no es general; CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
@@ -190,6 +190,6 @@ MagicAI is currently a **functional Judge alpha**. Its main pipeline retrieves l
 
 The latest validated dynamic campaign completed **126/126 cases**, covering **14 concepts** and **42 templates** across three seeds with no warnings or failures.
 
-The Judge is not considered complete yet. The API now exposes an initial structured `JudgeResult`; the next milestones are stabilizing that contract, integrating rulings and false-premise handling, and completing coverage driven by real failures.
+The Judge is not considered complete yet. The API now exposes a structured `JudgeResult` with local rulings, conservative assumptions and initial false-premise handling; the next milestones are stabilizing the contract and completing coverage driven by real failures.
 
 The future UI will start with the Judge and later host Deck Master and Deckbuilder. Those profiles will use the Judge as their sole factual authority for card text, rules, rulings and legality.

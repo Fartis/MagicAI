@@ -20,7 +20,9 @@ class RuleEvidenceResponse(BaseModel):
 
 
 class RulingEvidenceResponse(BaseModel):
+    card_name: str | None = None
     oracle_id: str | None = None
+    source: str | None = None
     published_at: str | None = None
     comment: str | None = None
 

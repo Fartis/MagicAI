@@ -4,6 +4,8 @@ from magicai.validation import build_fallback_answer, validate_answer
 from magicai.validation.rule_renderer import render_rule_answer
 from magicai.validation.oracle_renderer import render_oracle_relation_answer
 from magicai.validation.strategy_boundary import render_strategy_boundary_answer
+from magicai.validation.premise_guard import render_false_premise_answer
+from magicai.validation.rulings_renderer import render_rulings_answer
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -31,6 +33,35 @@ def generate_judge_result(knowledge: str, context=None):
     print("=" * 80)
 
     question = getattr(context, "question", None) or _extract_question(knowledge)
+
+    premise_correction = render_false_premise_answer(
+        knowledge,
+        context=context,
+    )
+
+    if premise_correction:
+        return build_judge_result(
+            question=question,
+            answer=premise_correction.answer,
+            status=JudgeStatus.FALSE_PREMISE,
+            origin=JudgeOrigin.PREMISE_GUARD,
+            confidence=JudgeConfidence.HIGH,
+            context=context,
+            assumptions=premise_correction.assumptions,
+            warnings=premise_correction.warnings,
+        )
+
+    rendered_rulings = render_rulings_answer(knowledge)
+
+    if rendered_rulings:
+        return build_judge_result(
+            question=question,
+            answer=rendered_rulings,
+            status=JudgeStatus.ANSWERED,
+            origin=JudgeOrigin.DETERMINISTIC_RULINGS,
+            confidence=JudgeConfidence.HIGH,
+            context=context,
+        )
 
     rendered_rule_answer = render_rule_answer(knowledge)
 

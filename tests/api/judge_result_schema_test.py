@@ -30,7 +30,13 @@ def _payload() -> dict:
             }
         ],
         rules=[{"number": "702.93a", "title": "Undying"}],
-        rulings=[],
+        rulings=[{
+            "card_name": "Young Wolf",
+            "oracle_id": "oracle-young-wolf",
+            "source": "wotc",
+            "published_at": "2024-01-01",
+            "comment": "Example ruling.",
+        }],
         retrieval_queries=["undying"],
         assumptions=[],
         warnings=[],
@@ -48,6 +54,7 @@ def test_schema_keeps_legacy_and_structured_fields() -> None:
     assert payload["status"] == "answered"
     assert payload["cards"][0]["name"] == "Young Wolf"
     assert payload["rules"][0]["number"] == "702.93a"
+    assert payload["rulings"][0]["source"] == "wotc"
 
 
 def test_route_serializes_judge_result() -> None:
@@ -58,6 +65,7 @@ def test_route_serializes_judge_result() -> None:
                 intent="rules",
                 cards=[],
                 rules=[{"number": "117.2e", "title": "Priority"}],
+                rulings=[],
                 rule_queries=["priority"],
             )
             return build_judge_result(

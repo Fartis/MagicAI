@@ -482,4 +482,31 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
             ),
         ),
     ),
+    OpenJudgeCase(
+        id="OJ-011",
+        name="False premise: cast trigger treated as enters trigger",
+        tags=("false-premise", "oracle", "cast-trigger", "zones"),
+        turns=(
+            OpenJudgeTurn(
+                id="OJ-011-01",
+                question=(
+                    "Como Prossh crea Kobolds cuando entra al campo de batalla, "
+                    "¿cuántos crea si lo reanimo?"
+                ),
+                required_all=("premisa no es correcta", "Prossh"),
+                required_any=(
+                    ("cuando lanzas", "cuando lo lanzas", "lanzas el hechizo"),
+                    ("entrar", "entra al campo"),
+                ),
+                forbidden=(
+                    ForbiddenClaim("crea Kobolds cuando entra"),
+                    ForbiddenClaim("al reanimarlo crea"),
+                ),
+                expected_cards=("Prossh, Skyraider of Kher",),
+                missing_outcome=OpenJudgeOutcome.FACTUAL_CONTRADICTION,
+                success_outcome=OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
+            ),
+        ),
+    ),
+
 )

@@ -103,6 +103,9 @@ def write_txt_report(
                     f"  origin={turn.judge_origin!r}",
                     f"  confidence={turn.judge_confidence!r}",
                     f"  authority={turn.judge_authority!r}",
+                    f"  assumptions={list(turn.judge_assumptions)!r}",
+                    f"  warnings={list(turn.judge_warnings)!r}",
+                    f"  rulings={list(turn.judge_rulings)!r}",
                 ]
             )
 
@@ -168,7 +171,10 @@ def write_xml_report(
                 turn.answer
                 + "\n\nJudgeResult: "
                 + f"status={turn.judge_status}; origin={turn.judge_origin}; "
-                + f"confidence={turn.judge_confidence}; authority={turn.judge_authority}"
+                + f"confidence={turn.judge_confidence}; authority={turn.judge_authority}; "
+                + f"assumptions={list(turn.judge_assumptions)}; "
+                + f"warnings={list(turn.judge_warnings)}; "
+                + f"rulings={list(turn.judge_rulings)}"
             )
 
             if turn.outcome not in ACCEPTABLE_OUTCOMES:
@@ -262,6 +268,9 @@ def write_html_report(
                   <p><strong>Assistant:</strong> {escape(turn.answer)}</p>
                   <p><strong>Cards:</strong> {escape(', '.join(turn.snapshot.cards))}</p>
                   <p><strong>JudgeResult:</strong> status={escape(turn.judge_status)}, origin={escape(turn.judge_origin)}, confidence={escape(turn.judge_confidence)}, authority={escape(turn.judge_authority)}</p>
+                  <p><strong>Assumptions:</strong> {escape(', '.join(turn.judge_assumptions) or 'None')}</p>
+                  <p><strong>Warnings:</strong> {escape(', '.join(turn.judge_warnings) or 'None')}</p>
+                  <p><strong>Rulings:</strong> {escape(' | '.join(turn.judge_rulings) or 'None')}</p>
                   <p><strong>Elapsed:</strong> {turn.elapsed:.2f}s</p>
                   <details><summary>Findings</summary><ul>{findings}</ul></details>
                 </article>

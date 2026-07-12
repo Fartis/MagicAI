@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any
 
 from magicai.sources.versions import get_source_versions
+from magicai.validation.assumptions import derive_assumptions
 
 
 class JudgeStatus(str, Enum):
@@ -19,9 +20,11 @@ class JudgeOrigin(str, Enum):
     DISAMBIGUATION = "disambiguation"
     DETERMINISTIC_RULE = "deterministic_rule"
     DETERMINISTIC_ORACLE = "deterministic_oracle"
+    DETERMINISTIC_RULINGS = "deterministic_rulings"
     STRATEGY_BOUNDARY = "strategy_boundary"
     LLM_VALIDATED = "llm_validated"
     SAFE_FALLBACK = "safe_fallback"
+    PREMISE_GUARD = "premise_guard"
 
 
 class JudgeConfidence(str, Enum):
@@ -62,13 +65,17 @@ class RuleEvidence:
 
 @dataclass(frozen=True, slots=True)
 class RulingEvidence:
+    card_name: str | None = None
     oracle_id: str | None = None
+    source: str | None = None
     published_at: str | None = None
     comment: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "card_name": self.card_name,
             "oracle_id": self.oracle_id,
+            "source": self.source,
             "published_at": self.published_at,
             "comment": self.comment,
         }
@@ -133,12 +140,20 @@ def build_judge_result(
         intent=str(getattr(context, "intent", "") or ""),
         cards=_card_evidence(getattr(context, "cards", [])),
         rules=_rule_evidence(getattr(context, "rules", [])),
+        rulings=_ruling_evidence(getattr(context, "rulings", [])),
         retrieval_queries=[
             str(query)
             for query in getattr(context, "rule_queries", [])
             if query
         ],
-        assumptions=list(assumptions or []),
+        assumptions=_merge_unique(
+            list(assumptions or []),
+            derive_assumptions(
+                question=question,
+                answer=answer,
+                context=context,
+            ),
+        ),
         warnings=list(warnings or []),
         source_versions=get_source_versions(),
         validation_attempts=validation_attempts,
@@ -212,6 +227,46 @@ def _rule_evidence(rules: list[Any]) -> list[RuleEvidence]:
         evidence.append(RuleEvidence(number=number, title=title))
 
     return evidence
+
+
+def _ruling_evidence(rulings: list[Any]) -> list[RulingEvidence]:
+    evidence: list[RulingEvidence] = []
+    seen: set[tuple[str | None, str | None, str | None]] = set()
+
+    for ruling in rulings:
+        if isinstance(ruling, dict):
+            getter = ruling.get
+        else:
+            getter = lambda name, default=None, item=ruling: getattr(item, name, default)
+
+        oracle_id = _optional_string(getter("oracle_id"))
+        published_at = _optional_string(getter("published_at"))
+        comment = _optional_string(getter("comment"))
+        key = (oracle_id, published_at, comment)
+
+        if comment is None or key in seen:
+            continue
+
+        seen.add(key)
+        evidence.append(
+            RulingEvidence(
+                card_name=_optional_string(getter("card_name")),
+                oracle_id=oracle_id,
+                source=_optional_string(getter("source")),
+                published_at=published_at,
+                comment=comment,
+            )
+        )
+
+    return evidence
+
+
+def _merge_unique(primary: list[str], secondary: list[str]) -> list[str]:
+    merged: list[str] = []
+    for item in primary + secondary:
+        if item and item not in merged:
+            merged.append(item)
+    return merged
 
 
 def _optional_string(value: Any) -> str | None:

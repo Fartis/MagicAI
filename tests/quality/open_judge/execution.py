@@ -60,6 +60,9 @@ def run_open_judge_case(
         judge_origin = ""
         judge_confidence = ""
         judge_authority = ""
+        judge_assumptions: tuple[str, ...] = ()
+        judge_warnings: tuple[str, ...] = ()
+        judge_rulings: tuple[str, ...] = ()
         exception = ""
         internal_output = io.StringIO()
 
@@ -75,6 +78,13 @@ def run_open_judge_case(
                     judge_origin = judge_result.origin.value
                     judge_confidence = judge_result.confidence.value
                     judge_authority = judge_result.authority
+                    judge_assumptions = tuple(judge_result.assumptions)
+                    judge_warnings = tuple(judge_result.warnings)
+                    judge_rulings = tuple(
+                        ruling.comment or ""
+                        for ruling in judge_result.rulings
+                        if ruling.comment
+                    )
                 else:
                     answer = assistant.ask(conversation, contract.question)
         except Exception:
@@ -106,6 +116,9 @@ def run_open_judge_case(
                 judge_origin=judge_origin,
                 judge_confidence=judge_confidence,
                 judge_authority=judge_authority,
+                judge_assumptions=judge_assumptions,
+                judge_warnings=judge_warnings,
+                judge_rulings=judge_rulings,
                 exception=exception,
                 internal_log=internal_output.getvalue().strip(),
             )

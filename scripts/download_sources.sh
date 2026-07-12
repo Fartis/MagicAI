@@ -34,5 +34,6 @@ download_bulk() {
 # El Juez actual trabaja con objetos Oracle únicos. default_cards ocupa mucho
 # más espacio y no tiene consumidores en el pipeline, así que no se descarga.
 download_bulk "oracle_cards" "$SCRYFALL_DIR/oracle-cards.json"
+download_bulk "rulings" "$SCRYFALL_DIR/rulings.json"
 
 echo "Fuentes Scryfall necesarias descargadas correctamente."

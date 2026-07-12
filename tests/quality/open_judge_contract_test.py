@@ -2,13 +2,13 @@ from tests.quality.open_judge.cases import OPEN_JUDGE_CASES
 
 
 def main() -> int:
-    assert len(OPEN_JUDGE_CASES) == 10
+    assert len(OPEN_JUDGE_CASES) == 11
 
     case_ids = [case.id for case in OPEN_JUDGE_CASES]
     assert len(case_ids) == len(set(case_ids))
 
     turns = [turn for case in OPEN_JUDGE_CASES for turn in case.turns]
-    assert len(turns) == 26
+    assert len(turns) == 27
 
     turn_ids = [turn.id for turn in turns]
     assert len(turn_ids) == len(set(turn_ids))
@@ -28,7 +28,7 @@ def main() -> int:
                 or turn.expected_cards
             ), turn.id
 
-    print("Open Judge contract test: 10 cases, 26 turns, all contracts valid.")
+    print("Open Judge contract test: 11 cases, 27 turns, all contracts valid.")
     return 0
 
 

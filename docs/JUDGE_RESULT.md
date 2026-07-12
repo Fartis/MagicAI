@@ -51,7 +51,7 @@ Los clientes existentes pueden seguir leyendolos. Los campos nuevos son aditivos
 - `needs_clarification`: hay varias interpretaciones compatibles y el usuario debe elegir.
 - `insufficient_evidence`: las fuentes recuperadas no permiten una respuesta completa segura.
 - `strategy_required`: la parte factual está disponible, pero la recomendación pertenece a Deck Master.
-- `false_premise`: reservado para premisas falsas detectadas explícitamente.
+- `false_premise`: el Juez detectó y corrigió una premisa falsa de alta confianza antes de responder.
 
 ### `origin`
 
@@ -61,6 +61,7 @@ Los clientes existentes pueden seguir leyendolos. Los campos nuevos son aditivos
 - `strategy_boundary`
 - `llm_validated`
 - `safe_fallback`
+- `premise_guard`
 
 ### `confidence`
 
@@ -72,7 +73,7 @@ La confianza describe la ruta de producción y validación; no es una probabilid
 
 ## Evidencia
 
-`cards` expone el Oracle local recuperado y `rules` identifica las reglas utilizadas. `rulings` forma parte del contrato estable, pero permanecerá vacío hasta que el pipeline de rulings esté integrado.
+`cards` expone el Oracle local recuperado, `rules` identifica las reglas utilizadas y `rulings` contiene aclaraciones oficiales recuperadas del bulk local de Scryfall cuando la pregunta las solicita explícitamente. El Juez no consulta la red durante una respuesta.
 
 `source_versions` solo publica versiones que pueden establecerse honestamente desde archivos locales. Para Comprehensive Rules se usa la fecha efectiva del documento. Para los bulk de Scryfall se publica, cuando existe, la marca temporal del archivo y se etiqueta expresamente como `file_mtime`.
 
@@ -83,10 +84,13 @@ La confianza describe la ruta de producción y validación; no es una probabilid
 - La API utiliza `ask_result()`.
 - Open Judge registra `status`, `origin`, `confidence` y `authority` en sus informes.
 
+## Implementado en 10.15b
+
+- rulings oficiales desde un bulk local indexado por `oracle_id`;
+- supuestos conservadores derivados de condiciones explícitas de la respuesta;
+- corrección de premisas falsas de alta confianza mediante `premise_guard`;
+
 ## Pendiente
 
-- poblar rulings oficiales;
-- emitir supuestos explícitos;
-- activar `false_premise`;
 - añadir pruebas HTTP completas del contrato;
 - fijar política de versionado antes de la UI beta.
