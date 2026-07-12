@@ -146,7 +146,7 @@ Cierre: repetir el Open Judge Gauntlet y comprobar que todos los turnos son `PAS
 
 ---
 
-## Sprint 10.15 — Contrato `JudgeResult` 🚧
+## Sprint 10.15 — Contrato `JudgeResult` ✅
 
 Crear una salida estructurada estable:
 
@@ -183,11 +183,13 @@ Cierre del sprint:
 - errores HTTP estructurados;
 - puerta para tres baselines Open Judge consecutivas.
 
-Pendiente antes del Judge Release Candidate:
+Cierre validado:
 
-- ejecutar tres baselines completas consecutivas en la máquina objetivo;
-- ejecutar smoke tests HTTP con Ollama activo y simular Ollama no disponible;
-- congelar el schema `1.0` durante la primera UI beta.
+- tres baselines completas consecutivas e idénticas en la máquina objetivo;
+- 27/27 resultados aceptables por ejecución y cero fallos críticos;
+- schema `1.0` congelado con política de compatibilidad aditiva para la UI beta.
+
+Pendiente del Release Candidate formal: repetir la matriz controlada completa y los smoke tests finales del entorno objetivo.
 
 ---
 
@@ -251,7 +253,7 @@ A partir de este punto, los bugs descubiertos por perfiles posteriores se tratar
 
 ---
 
-## Fase 3 — UI modular del Juez ⏳
+## Fase 3 — UI modular del Juez 🚧
 
 Primera interfaz de usuario real:
 
@@ -328,3 +330,22 @@ Estas funciones no deben retrasar el cierre del Juez ni debilitar su frontera fa
 The immediate goal is to finish the Judge. The next milestones are an open-question Gauntlet, a structured `JudgeResult`, coverage driven by observed failures and a Judge Release Candidate.
 
 Only after that will MagicAI ship its modular UI, followed by Deck Master and Deckbuilder. Both strategic profiles will be required to use the Judge as their sole factual authority for rules, Oracle text, rulings and legality.
+
+### Sprint 11.0 — UI beta foundation 🚧
+
+- shell web local servida por FastAPI;
+- chat con sesiones;
+- panel de evidencia de `JudgeResult 1.0`;
+- estado de fuentes y Ollama;
+- tratamiento visual de aclaración, estrategia, premisas falsas y evidencia insuficiente;
+- persistencia visual en `localStorage`;
+- layout responsive y accesible.
+
+Criterio de cierre:
+
+- `/ui` se sirve sin recursos externos;
+- el flujo `pregunta → /ask → respuesta + evidencia` funciona en navegador;
+- nueva conversación reinicia `session_id`;
+- errores HTTP se presentan al usuario;
+- tests de rutas y assets pasan;
+- API y Gauntlets anteriores no sufren regresiones.

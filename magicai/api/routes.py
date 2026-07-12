@@ -35,6 +35,7 @@ def root():
         "project_version": get_project_version(),
         "api_contract_version": API_CONTRACT_VERSION,
         "judge_result_schema_version": JUDGE_RESULT_SCHEMA_VERSION,
+        "ui": "/ui",
     }
 
 

@@ -35,6 +35,7 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 - Ollama como motor local para explicaciones no cubiertas por renderizadores.
 - Validación, reintento y fallback source-grounded.
 - API REST de desarrollo.
+- UI beta local servida por FastAPI, sin Node ni servicios externos.
 - Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
 - Open Judge Gauntlet con contratos semánticos para conversaciones reales.
 
@@ -223,10 +224,13 @@ python -m uvicorn magicai.api:app --reload
 Endpoints útiles:
 
 ```text
+UI   http://127.0.0.1:8000/ui
 GET  http://127.0.0.1:8000/
 POST http://127.0.0.1:8000/ask
 DOCS http://127.0.0.1:8000/docs
 ```
+
+La UI beta muestra la conversación, el estado de `JudgeResult`, cartas, reglas, rulings, supuestos, advertencias y salud de las fuentes. Consulta [docs/UI.md](docs/UI.md).
 
 Ejemplo:
 
@@ -372,6 +376,7 @@ Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracl
 
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Comandos](docs/COMMANDS.md)
+- [UI beta](docs/UI.md)
 - [Estado actual](docs/STATUS.md)
 - [Contrato JudgeResult](docs/JUDGE_RESULT.md)
 - [Contrato HTTP y compatibilidad](docs/API_CONTRACT.md)

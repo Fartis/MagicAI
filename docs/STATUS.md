@@ -27,6 +27,7 @@ No se considera finalizado porque todavía falta repetir la baseline abierta tra
 - Ollama local con temperatura cero.
 - Validación de respuestas, reintento y fallback seguro.
 - API REST con sesiones en memoria y salida `JudgeResult` retrocompatible.
+- UI beta local con chat, evidencia, estados y salud del servicio.
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
@@ -206,4 +207,18 @@ The future UI will start with the Judge and later host Deck Master and Deckbuild
 - compatibilidad aditiva documentada;
 - puerta de estabilidad para tres baselines Open Judge.
 
-Pendiente inmediato: ejecutar tres baselines consecutivas y cerrar el Judge Release Candidate inicial.
+Puerta Open Judge completada: tres baselines consecutivas con 27/27 resultados aceptables, sin fallos críticos. Pendiente del Release Candidate formal: repetir la matriz controlada completa y los smoke tests finales del entorno objetivo.
+
+## Sprint 11.0 — UI beta foundation 🚧
+
+Primera shell de usuario servida por FastAPI:
+
+- ruta `/ui` y assets locales sin dependencias frontend adicionales;
+- conversación con el Juez y continuidad mediante `session_id`;
+- historial visual persistido localmente en el navegador;
+- panel de cartas, reglas, rulings, supuestos y advertencias;
+- estados, origen, confianza, schema y versiones de fuentes;
+- indicador `/health`, errores estructurados y diseño responsive;
+- construcción segura del DOM sin insertar respuestas mediante `innerHTML`.
+
+La primera entrega no incluye cuentas, base de datos de conversaciones, acceso remoto endurecido ni Deck Master.
