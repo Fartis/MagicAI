@@ -238,6 +238,16 @@ curl -X POST http://127.0.0.1:8000/ask \
 
 La API mantiene `answer` y `session_id` por compatibilidad, pero ya devuelve un `JudgeResult` estructurado con estado, origen, confianza, autoridad, cartas, reglas, consultas de recuperación, advertencias y versiones locales de fuentes.
 
+El contrato HTTP está versionado y preparado para la UI beta:
+
+```text
+GET  /meta    versiones y valores admitidos por el contrato
+GET  /health  disponibilidad de fuentes locales y Ollama
+POST /ask     JudgeResult estructurado y compatible con clientes legacy
+```
+
+Los errores HTTP utilizan un sobre estructurado y versionado. Consulta [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
+
 Ejemplo abreviado:
 
 ```json
@@ -364,6 +374,7 @@ Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracl
 - [Comandos](docs/COMMANDS.md)
 - [Estado actual](docs/STATUS.md)
 - [Contrato JudgeResult](docs/JUDGE_RESULT.md)
+- [Contrato HTTP y compatibilidad](docs/API_CONTRACT.md)
 - [Hoja de ruta](docs/ROADMAP.md)
 - [Filosofía](docs/PHILOSOPHY.md)
 - [Contribuir](docs/CONTRIBUTING.md)

@@ -51,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Return non-zero unless every turn is PASS or FALSE_PREMISE_HANDLED.",
+        help="Return non-zero unless every turn has an acceptable outcome.",
     )
     parser.add_argument(
         "--fail-on-critical",

@@ -12,6 +12,7 @@ from magicai.judge_result import (
 
 def _payload() -> dict:
     response = AskResponse(
+        schema_version="1.0",
         answer="Respuesta validada.",
         session_id="session-test",
         question="¿Qué ocurre?",
@@ -41,6 +42,7 @@ def _payload() -> dict:
         assumptions=[],
         warnings=[],
         source_versions={"comprehensive_rules": "2026-06-19"},
+        source_health={"status": "ready", "ready": True, "sources": {}},
         validation_attempts=0,
     )
     return response.model_dump()
@@ -49,6 +51,7 @@ def _payload() -> dict:
 def test_schema_keeps_legacy_and_structured_fields() -> None:
     payload = _payload()
 
+    assert payload["schema_version"] == "1.0"
     assert payload["answer"] == "Respuesta validada."
     assert payload["session_id"] == "session-test"
     assert payload["status"] == "answered"
@@ -94,6 +97,7 @@ def test_route_serializes_judge_result() -> None:
     assert payload["session_id"]
     assert payload["status"] == "answered"
     assert payload["origin"] == "deterministic_rule"
+    assert payload["schema_version"] == "1.0"
     assert payload["rules"][0]["number"] == "117.2e"
 
 

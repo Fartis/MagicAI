@@ -178,6 +178,8 @@ Rutas:
 
 ```text
 http://127.0.0.1:8000/
+http://127.0.0.1:8000/meta
+http://127.0.0.1:8000/health
 http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/redoc
 ```
@@ -218,6 +220,27 @@ needs_clarification
 insufficient_evidence
 strategy_required
 false_premise
+```
+
+Consultar versiones y enums admitidos:
+
+```bash
+curl -sS http://127.0.0.1:8000/meta | jq
+```
+
+Comprobar fuentes y Ollama:
+
+```bash
+curl -sS http://127.0.0.1:8000/health | jq
+```
+
+`ready=true` indica que Oracle y Comprehensive Rules están disponibles.
+`full_service=true` indica además que Ollama y el modelo configurado responden.
+
+Comprobar el error estructurado para una pregunta vacía:
+
+```bash
+curl -sS -i http://127.0.0.1:8000/ask   -H 'Content-Type: application/json'   -d '{"question":"   "}'
 ```
 
 ---
@@ -373,6 +396,23 @@ PYTHONPATH=. python -m tests.test_performance
 
 ```bash
 PYTHONPATH=. python -m tests.quality.reddit_gauntlet_test
+```
+
+### Estabilidad Open Judge para Release Candidate
+
+Después de generar tres baselines completas:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_stability_test   resultado_open_judge/RUN_1   resultado_open_judge/RUN_2   resultado_open_judge/RUN_3
+```
+
+La puerta exige el mismo número de casos y turnos y rechaza cualquier resultado fuera de:
+
+```text
+PASS
+FALSE_PREMISE_HANDLED
+NEEDS_CLARIFICATION
+STRATEGY_REQUIRED
 ```
 
 ### Generalization Probe

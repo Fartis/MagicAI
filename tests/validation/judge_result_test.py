@@ -66,6 +66,7 @@ No player has priority while a spell or ability is resolving.
     assert result.status is JudgeStatus.ANSWERED
     assert result.origin is JudgeOrigin.DETERMINISTIC_RULE
     assert result.confidence is JudgeConfidence.HIGH
+    assert result.schema_version == "1.0"
     assert result.authority == "judge"
     assert result.cards[0].name == "Young Wolf"
     assert result.rules[0].number == "117.2e"
@@ -74,6 +75,7 @@ No player has priority while a spell or ability is resolving.
     assert result.rulings[0].comment == "Example ruling."
     assert result.retrieval_queries == ["priority during resolution"]
     assert result.source_versions.get("comprehensive_rules") == "2026-06-19"
+    assert "sources" in result.source_health
 
 
 def test_strategy_result_is_explicit() -> None:
@@ -148,6 +150,7 @@ def test_clarification_result_serializes_legacy_and_structured_fields() -> None:
     )
     payload = result.to_dict()
 
+    assert payload["schema_version"] == "1.0"
     assert payload["answer"] == "¿A cuál te refieres?"
     assert payload["status"] == "needs_clarification"
     assert payload["origin"] == "disambiguation"

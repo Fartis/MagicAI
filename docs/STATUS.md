@@ -87,15 +87,17 @@ FAIL                           0
 
 ### Open Judge Gauntlet
 
-El Sprint 10.14 dispone de infraestructura y una baseline conversacional reproducible. Tras los hardenings 10.14b–10.14d, la última ejecución completa previa a 10.14e alcanzó:
+El Sprint 10.14 dispone de infraestructura y una baseline conversacional reproducible. La baseline completa validada tras 10.15b.1 alcanzó:
 
 ```text
-Conversaciones ejecutadas        9
-Turnos ejecutados               25
-PASS                            23
-Fallos semánticos                2
+Conversaciones ejecutadas       11
+Turnos ejecutados               27
+PASS                            21
+STRATEGY_REQUIRED                4
+NEEDS_CLARIFICATION              1
+FALSE_PREMISE_HANDLED            1
+Fallos críticos                  0
 Errores de ejecución             0
-Alucinaciones                     0
 ```
 
 El Sprint 10.15b amplía el corpus a 11 conversaciones y 27 turnos e incorpora:
@@ -193,3 +195,15 @@ The latest validated dynamic campaign completed **126/126 cases**, covering **14
 The Judge is not considered complete yet. The API now exposes a structured `JudgeResult` with local rulings, conservative assumptions and initial false-premise handling; the next milestones are stabilizing the contract and completing coverage driven by real failures.
 
 The future UI will start with the Judge and later host Deck Master and Deckbuilder. Those profiles will use the Judge as their sole factual authority for card text, rules, rulings and legality.
+
+
+### Preparación de API para UI beta — Sprint 10.15c
+
+- `JudgeResult` versionado como schema `1.0`;
+- `GET /meta` para descubrir versiones y enums;
+- `GET /health` para fuentes locales y Ollama;
+- errores HTTP estructurados y versionados;
+- compatibilidad aditiva documentada;
+- puerta de estabilidad para tres baselines Open Judge.
+
+Pendiente inmediato: ejecutar tres baselines consecutivas y cerrar el Judge Release Candidate inicial.

@@ -15,7 +15,7 @@ Gauntlet dinámico                    ✅
 Campañas multisemilla                ✅
 Filtro de cartas oficiales           ✅
 Open Judge Gauntlet                  ✅
-JudgeResult estructurado             🚧
+JudgeResult estructurado             ✅
 Cobertura guiada por fallos          ⏳
 Judge Release Candidate              ⏳
 UI modular                           ⏳
@@ -174,13 +174,20 @@ Primera entrega implementada:
 - respuesta `/ask` ampliada sin eliminar `answer` ni `session_id`;
 - metadata `JudgeResult` incluida en los informes Open Judge.
 
-Pendiente para cerrar el sprint:
+Cierre del sprint:
 
-- ampliar recuperación contextual de rulings más allá de peticiones explícitas;
-- ampliar supuestos únicamente cuando puedan demostrarse desde la respuesta;
-- extender `false_premise` con nuevas familias guiadas por fallos reales;
-- estabilizar el contrato con una baseline completa y pruebas de API en ejecución;
-- documentar política de compatibilidad antes de la UI beta.
+- rulings locales y renderer literal determinista;
+- supuestos conservadores y premisas falsas de alta confianza;
+- `schema_version=1.0` y política de compatibilidad aditiva;
+- endpoints `/meta` y `/health`;
+- errores HTTP estructurados;
+- puerta para tres baselines Open Judge consecutivas.
+
+Pendiente antes del Judge Release Candidate:
+
+- ejecutar tres baselines completas consecutivas en la máquina objetivo;
+- ejecutar smoke tests HTTP con Ollama activo y simular Ollama no disponible;
+- congelar el schema `1.0` durante la primera UI beta.
 
 ---
 

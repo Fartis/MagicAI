@@ -13,12 +13,13 @@
 }
 ```
 
-Los clientes existentes pueden seguir leyendolos. Los campos nuevos son aditivos.
+Los clientes existentes pueden seguir leyéndolos. Los campos nuevos son aditivos. `schema_version` identifica la política de compatibilidad del contrato.
 
 ## Campos
 
 ```json
 {
+  "schema_version": "1.0",
   "question": "¿Puedo responder durante la resolución?",
   "answer": "No. Ningún jugador recibe prioridad mientras se resuelve...",
   "session_id": "...",
@@ -41,9 +42,19 @@ Los clientes existentes pueden seguir leyendolos. Los campos nuevos son aditivos
   "source_versions": {
     "comprehensive_rules": "2026-06-19"
   },
+  "source_health": {
+    "status": "ready",
+    "ready": true,
+    "complete": true,
+    "sources": {}
+  },
   "validation_attempts": 0
 }
 ```
+
+### `schema_version`
+
+La versión inicial pública es `1.0`. Dentro de `1.x` no se eliminarán ni renombrarán campos existentes; pueden añadirse campos opcionales. Consulta [API_CONTRACT.md](API_CONTRACT.md).
 
 ### `status`
 
@@ -77,6 +88,8 @@ La confianza describe la ruta de producción y validación; no es una probabilid
 
 `source_versions` solo publica versiones que pueden establecerse honestamente desde archivos locales. Para Comprehensive Rules se usa la fecha efectiva del documento. Para los bulk de Scryfall se publica, cuando existe, la marca temporal del archivo y se etiqueta expresamente como `file_mtime`.
 
+`source_health` expone si Oracle y Comprehensive Rules están disponibles y si las fuentes opcionales —símbolos y rulings— están completas. No sustituye al endpoint `/health`, que también comprueba Ollama.
+
 ## Compatibilidad interna
 
 - `MagicAI.ask()` continúa devolviendo solo texto.
@@ -90,7 +103,16 @@ La confianza describe la ruta de producción y validación; no es una probabilid
 - supuestos conservadores derivados de condiciones explícitas de la respuesta;
 - corrección de premisas falsas de alta confianza mediante `premise_guard`;
 
+## Implementado en 10.15c
+
+- versión pública `schema_version=1.0`;
+- política de compatibilidad aditiva;
+- salud de fuentes en `JudgeResult` y `GET /health`;
+- metadata del contrato en `GET /meta`;
+- errores HTTP estructurados;
+- puerta de estabilidad para tres baselines Open Judge.
+
 ## Pendiente
 
-- añadir pruebas HTTP completas del contrato;
-- fijar política de versionado antes de la UI beta.
+- validar tres baselines consecutivas en la máquina objetivo;
+- cerrar el Judge Release Candidate y congelar el contrato durante la primera UI beta.

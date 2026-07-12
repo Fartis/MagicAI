@@ -32,6 +32,31 @@ def post_json(path: str, payload: dict) -> dict:
         )
 
 
+
+def get_json(path: str) -> dict:
+    with urllib.request.urlopen(API_URL + path, timeout=10) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def post_json_error(path: str, payload: dict) -> tuple[int, dict]:
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        API_URL + path,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        urllib.request.urlopen(request, timeout=10)
+    except urllib.error.HTTPError as error:
+        return (
+            error.code,
+            json.loads(error.read().decode("utf-8")),
+        )
+
+    raise AssertionError("Expected an HTTP error response.")
+
 def assert_contains(text: str, expected: list[str], label: str):
 
     lower = text.lower()
@@ -69,6 +94,7 @@ def assert_not_contains(text: str, forbidden: list[str], label: str):
 
 def assert_judge_result(payload: dict, label: str) -> None:
     required = [
+        "schema_version",
         "answer",
         "session_id",
         "question",
@@ -83,6 +109,7 @@ def assert_judge_result(payload: dict, label: str) -> None:
         "assumptions",
         "warnings",
         "source_versions",
+        "source_health",
         "validation_attempts",
     ]
     missing = [key for key in required if key not in payload]
@@ -102,6 +129,23 @@ def main():
     print("=" * 80)
     print(f"API URL: {API_URL}")
     print()
+
+    metadata = get_json("/meta")
+    if metadata.get("judge_result_schema_version") != "1.0":
+        raise AssertionError(f"Unexpected schema version: {metadata!r}")
+
+    health = get_json("/health")
+    if "ready" not in health or "sources" not in health:
+        raise AssertionError(f"Invalid health payload: {health!r}")
+
+    error_status, error_payload = post_json_error(
+        "/ask",
+        {"question": "   "},
+    )
+    if error_status != 422:
+        raise AssertionError(f"Expected 422, got {error_status}")
+    if error_payload.get("error", {}).get("code") != "invalid_request":
+        raise AssertionError(f"Invalid structured error: {error_payload!r}")
 
     #
     # Session A: Young Wolf

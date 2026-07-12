@@ -1,0 +1,69 @@
+# API contract
+
+MagicAI exposes a versioned additive HTTP contract for the Judge beta UI.
+
+## Versions
+
+- Project version: package release version.
+- API contract version: compatibility policy for HTTP endpoints.
+- JudgeResult schema version: shape and semantics of structured Judge answers.
+
+`GET /meta` exposes all three values. Every successful `/ask` response and every structured error includes `schema_version`.
+
+## Compatibility policy
+
+Within JudgeResult schema `1.x`:
+
+- existing fields will not be removed or renamed;
+- new optional fields may be added;
+- enum values may only be added when clients can safely treat unknown values as informational;
+- `answer` and `session_id` remain available for legacy clients.
+
+A future incompatible change requires schema `2.0`.
+
+## Endpoints
+
+### `GET /meta`
+
+Returns contract versions, supported Judge statuses, origins and confidence values.
+
+### `GET /health`
+
+Returns:
+
+- whether required factual sources are ready;
+- whether all optional sources are available;
+- whether Ollama and the configured model are available;
+- whether the service has full functionality or is operating in degraded deterministic mode.
+
+`ready=true` means the required local factual sources are usable.
+`full_service=true` additionally requires Ollama and the configured model.
+
+### `POST /ask`
+
+Returns a versioned `JudgeResult` plus `session_id`.
+
+### Errors
+
+Errors use this envelope:
+
+```json
+{
+  "schema_version": "1.0",
+  "error": {
+    "code": "invalid_request",
+    "message": "The request payload is not valid.",
+    "retryable": false,
+    "details": []
+  }
+}
+```
+
+Known codes include:
+
+- `invalid_request`
+- `llm_unavailable`
+- `http_error`
+- `internal_error`
+
+The UI should use `code` for behavior and `message` for display.

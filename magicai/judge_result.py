@@ -4,7 +4,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from magicai.sources.health import get_source_health
 from magicai.sources.versions import get_source_versions
+from magicai.versioning import JUDGE_RESULT_SCHEMA_VERSION
 from magicai.validation.assumptions import derive_assumptions
 
 
@@ -88,6 +90,7 @@ class JudgeResult:
     status: JudgeStatus
     origin: JudgeOrigin
     confidence: JudgeConfidence
+    schema_version: str = JUDGE_RESULT_SCHEMA_VERSION
     authority: str = "judge"
     intent: str = ""
     cards: list[CardEvidence] = field(default_factory=list)
@@ -97,10 +100,12 @@ class JudgeResult:
     assumptions: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     source_versions: dict[str, str] = field(default_factory=dict)
+    source_health: dict[str, Any] = field(default_factory=dict)
     validation_attempts: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "schema_version": self.schema_version,
             "question": self.question,
             "answer": self.answer,
             "status": self.status.value,
@@ -115,6 +120,7 @@ class JudgeResult:
             "assumptions": list(self.assumptions),
             "warnings": list(self.warnings),
             "source_versions": dict(self.source_versions),
+            "source_health": dict(self.source_health),
             "validation_attempts": self.validation_attempts,
         }
 
@@ -156,6 +162,7 @@ def build_judge_result(
         ),
         warnings=list(warnings or []),
         source_versions=get_source_versions(),
+        source_health=get_source_health().to_dict(),
         validation_attempts=validation_attempts,
     )
 
@@ -175,6 +182,7 @@ def build_clarification_result(
         cards=[CardEvidence(name=name) for name in candidates],
         warnings=["Multiple supported cards match the current reference."],
         source_versions=get_source_versions(),
+        source_health=get_source_health().to_dict(),
     )
 
 
