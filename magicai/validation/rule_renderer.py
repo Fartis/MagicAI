@@ -32,7 +32,7 @@ _RULE_MARKERS = {
     "dies": ["700.4"],
     "sacrifice": ["701.21", "701.21a"],
     "destroy": ["701.8", "701.8a"],
-    "exile": ["701.11", "701.11a"],
+    "exile": ["701.13", "701.13a"],
     "commander_designation": ["903.3"],
     "commander_graveyard_exile": ["903.9a"],
     "commander_hand_library": ["903.9b"],

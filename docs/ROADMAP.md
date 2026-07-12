@@ -78,7 +78,7 @@ Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas y sep
 
 Infraestructura implementada:
 
-- corpus inicial de 9 conversaciones y 25 turnos;
+- corpus ampliado a 10 conversaciones y 26 turnos;
 - contratos semánticos por turno;
 - reutilización del mismo corpus por la Regression Suite legacy;
 - captura del estado conversacional después de cada respuesta;
@@ -93,6 +93,7 @@ Clasificación disponible:
 PASS
 CORRECT_BUT_INCOMPLETE
 NEEDS_CLARIFICATION
+STRATEGY_REQUIRED
 INSUFFICIENT_EVIDENCE
 FALSE_PREMISE_HANDLED
 RETRIEVAL_FAILURE
@@ -102,7 +103,7 @@ HALLUCINATION
 EXECUTION_ERROR
 ```
 
-Primera baseline fijada el 12 de julio de 2026: 9 conversaciones, 25 turnos y 0 errores de ejecución. La revisión manual separó fallos reales del Juez de falsos negativos del evaluador.
+Primera baseline fijada el 12 de julio de 2026: 9 conversaciones, 25 turnos y 0 errores de ejecución. Tras 10.14c alcanzó 23/25 PASS; 10.14e amplía el corpus con desambiguación de Squee y resultados estratégicos explícitos. La revisión manual separó fallos reales del Juez de falsos negativos del evaluador.
 
 La primera ronda cubre especialmente:
 
@@ -123,9 +124,9 @@ Criterio de cierre del sprint:
 - cada fallo relevante clasificado;
 - prioridades de hardening ordenadas por familia genérica.
 
-### Sprint 10.14b — Continuidad y relaciones Oracle 🚧
+### Sprint 10.14b–e — Hardening guiado por Open Judge 🚧
 
-Primer hardening guiado por la baseline:
+Hardening acumulado guiado por la baseline:
 
 - estado compartido para cartas, keywords, reglas y búsquedas conceptuales;
 - conservación de dos cartas en comparaciones;
@@ -135,9 +136,13 @@ Primer hardening guiado por la baseline:
 - respuestas deterministas para definiciones de Undying/Persist y sus diferencias;
 - relación genérica entre disparos «when you cast» y preguntas de entrada;
 - interpretación genérica de costes «Sacrifice another ...»;
-- normalización semántica del evaluador.
+- normalización semántica del evaluador;
+- cantidades variables basadas en expresiones Oracle con `X`;
+- frontera factual/estratégica mediante `STRATEGY_REQUIRED`;
+- exclusión de objetos suplementarios y caso abierto de Squee;
+- corrección de la referencia de exilio a la regla 701.13.
 
-Cierre: repetir el Open Judge Gauntlet y comparar la nueva distribución con la baseline inicial.
+Cierre: repetir el Open Judge Gauntlet y comprobar que todos los turnos son `PASS`, `NEEDS_CLARIFICATION` o `STRATEGY_REQUIRED`, sin contradicciones factuales.
 
 ---
 

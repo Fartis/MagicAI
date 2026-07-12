@@ -3,6 +3,7 @@ from magicai.prompts.answer import SYSTEM_PROMPT
 from magicai.validation import build_fallback_answer, validate_answer
 from magicai.validation.rule_renderer import render_rule_answer
 from magicai.validation.oracle_renderer import render_oracle_relation_answer
+from magicai.validation.strategy_boundary import render_strategy_boundary_answer
 
 
 MAX_ATTEMPTS = 2
@@ -37,6 +38,12 @@ def generate_answer(knowledge: str) -> str:
     if rendered_oracle_relation:
 
         return rendered_oracle_relation
+
+    strategy_boundary = render_strategy_boundary_answer(knowledge)
+
+    if strategy_boundary:
+
+        return strategy_boundary
 
     last_answer = ""
     last_violations = []

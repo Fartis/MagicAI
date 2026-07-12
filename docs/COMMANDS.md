@@ -253,6 +253,7 @@ PYTHONPATH=. python -m tests.quality.gauntlet_matcher_test
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+PYTHONPATH=. python -m tests.validation.strategy_boundary_test
 ```
 
 ### API
@@ -282,6 +283,7 @@ Validar contratos y evaluador sin Ollama:
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+PYTHONPATH=. python -m tests.validation.strategy_boundary_test
 ```
 
 Listar conversaciones:
@@ -307,7 +309,7 @@ PYTHONPATH=. python -m tests.quality.open_judge_test \
   --case OJ-008
 ```
 
-Estos casos concentran el hardening de continuidad, keywords, reglas referenciadas, comparaciones y procedimientos.
+Estos casos concentran el hardening de continuidad, keywords, reglas referenciadas, comparaciones y procedimientos. `OJ-010` valida que Squee pida desambiguación solo entre cartas jugables.
 
 Por defecto, la baseline genera informes aunque existan fallos semánticos. Para usarla como puerta de calidad:
 

@@ -7,7 +7,7 @@ from html import escape
 from pathlib import Path
 from typing import Iterable
 
-from .models import OpenJudgeCaseResult, OpenJudgeOutcome
+from .models import ACCEPTABLE_OUTCOMES, OpenJudgeCaseResult, OpenJudgeOutcome
 
 
 def collect_turns(results: Iterable[OpenJudgeCaseResult]):
@@ -133,11 +133,7 @@ def write_xml_report(
             "tests": str(len(turns)),
             "failures": str(
                 sum(
-                    turn.outcome
-                    not in {
-                        OpenJudgeOutcome.PASS,
-                        OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
-                    }
+                    turn.outcome not in ACCEPTABLE_OUTCOMES
                     for turn in turns
                 )
             ),
@@ -165,10 +161,7 @@ def write_xml_report(
             )
             ET.SubElement(testcase, "system-out").text = turn.answer
 
-            if turn.outcome not in {
-                OpenJudgeOutcome.PASS,
-                OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
-            }:
+            if turn.outcome not in ACCEPTABLE_OUTCOMES:
                 failure = ET.SubElement(
                     testcase,
                     "failure",
@@ -201,10 +194,7 @@ def write_failure_artifacts(
 
     for result in results:
         for turn in result.turns:
-            if turn.outcome in {
-                OpenJudgeOutcome.PASS,
-                OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
-            }:
+            if turn.outcome in ACCEPTABLE_OUTCOMES:
                 continue
 
             failures_dir.mkdir(parents=True, exist_ok=True)

@@ -403,7 +403,7 @@ def test_undying_exile_queries_include_exile_and_dies_rules():
 
     assert_contains(
         queries,
-        ["701.11", "702.93", "700.4"],
+        ["701.13", "702.93", "700.4"],
         "undying exile rules",
     )
 

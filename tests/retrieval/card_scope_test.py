@@ -6,6 +6,8 @@ from pathlib import Path
 
 import magicai.extractors.cards as card_extractor
 import magicai.scryfall as scryfall
+from magicai.conversation import Conversation
+from magicai.conversation.disambiguation import handle_card_disambiguation
 from magicai.sources.card_scope import is_supported_judge_card
 
 
@@ -162,6 +164,19 @@ def test_squee_vanguard_cannot_override_playable_squee_cards():
                     "Squee, the Immortal",
                     "Squee, Dubious Monarch",
                 }
+
+                conversation = Conversation()
+                clarification, resolved = handle_card_disambiguation(
+                    conversation,
+                    "¿Qué hace la criatura goblin Squee?",
+                )
+
+                assert resolved is None
+                assert clarification is not None
+                assert "Vanguard" not in clarification
+                assert "Squee, Goblin Nabob" in clarification
+                assert "Squee, the Immortal" in clarification
+                assert "Squee, Dubious Monarch" in clarification
             finally:
                 card_extractor.load_cards = old_loader
                 _reset_extractor()

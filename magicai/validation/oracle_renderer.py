@@ -129,6 +129,15 @@ def _render_oracle_relation_from_cards(
 
     card = cards[0]
 
+    quantity_answer = _render_variable_quantity_answer(
+        card=card,
+        question=question,
+        spanish=spanish,
+    )
+
+    if quantity_answer:
+        return quantity_answer
+
     another_cost = _find_sacrifice_another_cost(card)
 
     if action == "sacrifice" and another_cost:
@@ -138,8 +147,8 @@ def _render_oracle_relation_from_cards(
                 f"No puedes sacrificar {card['name']} para pagar su propia "
                 f"habilidad, porque el coste dice «sacrifica otra "
                 f"{translated_cost}». Debes elegir otro objeto que cumpla "
-                "ese requisito; si otro efecto te permite sacrificar esta carta, "
-                "sacrificio separado."
+                "ese requisito. Si otro efecto te permite sacrificar esta carta, "
+                "ese sería un sacrificio distinto."
             )
 
         return (
@@ -182,6 +191,145 @@ def _render_oracle_relation_from_cards(
 
     return None
 
+
+
+def _render_variable_quantity_answer(
+    card: CardBlock,
+    question: str,
+    spanish: bool,
+) -> str | None:
+    """Render variable Oracle quantities such as ``create X ... where X is``."""
+
+    if not _looks_like_quantity_question(question):
+        return None
+
+    for line in card.get("oracle_lines", []):
+        match = re.search(
+            r"\bcreate\s+X\s+(?P<object>.+?),\s*where\s+X\s+is\s+"
+            r"(?P<basis>.+?)\.?$",
+            line.strip(),
+            flags=re.IGNORECASE,
+        )
+
+        if not match:
+            continue
+
+        subject = _render_created_object_spanish(match.group("object"))
+        basis = match.group("basis").strip()
+        printed_total = _printed_mana_total(card.get("mana_cost", ""))
+
+        if spanish:
+            basis_text = _render_quantity_basis_spanish(basis)
+            example = ""
+
+            if printed_total is not None and card.get("mana_cost"):
+                example = (
+                    f" Si pagas únicamente su coste impreso "
+                    f"{card['mana_cost']}, gastas {printed_total} manás y crea "
+                    f"{printed_total}; si cambia el maná realmente gastado, "
+                    "X cambia con él."
+                )
+
+            return (
+                f"{card['name']} no crea una cantidad fija: crea X {subject}, "
+                f"donde X es {basis_text}.{example}"
+            )
+
+        example = ""
+        if printed_total is not None and card.get("mana_cost"):
+            example = (
+                f" If only its printed cost {card['mana_cost']} is paid, "
+                f"{printed_total} mana is spent and it creates {printed_total}; "
+                "if the mana actually spent changes, X changes with it."
+            )
+
+        return (
+            f"{card['name']} does not create a fixed number. It creates X "
+            f"{match.group('object').strip()}, where X is {basis}.{example}"
+        )
+
+    return None
+
+
+def _looks_like_quantity_question(question: str) -> bool:
+    q = question.casefold()
+    return any(
+        marker in q
+        for marker in (
+            "cuantos",
+            "cuántos",
+            "cuantas",
+            "cuántas",
+            "cantidad",
+            "how many",
+        )
+    )
+
+
+def _render_created_object_spanish(value: str) -> str:
+    lower = value.casefold()
+
+    creature_type = re.search(
+        r"(?:\d+/\d+\s+)?(?:[a-z]+\s+)*"
+        r"(?P<type>[A-Z][A-Za-z'’-]*)\s+creature tokens",
+        value,
+    )
+
+    if creature_type:
+        return f"fichas {creature_type.group('type')}"
+
+    if "creature token" in lower:
+        return "fichas de criatura"
+
+    if "token" in lower:
+        return "fichas"
+
+    return "objetos indicados por su habilidad"
+
+
+def _render_quantity_basis_spanish(value: str) -> str:
+    lower = value.casefold().rstrip(".")
+
+    if lower == "the amount of mana spent to cast it":
+        return "la cantidad de maná realmente gastado para lanzarlo"
+
+    return f"la cantidad descrita por Oracle: «{value.rstrip('.')}»"
+
+
+def _printed_mana_total(mana_cost: str) -> int | None:
+    symbols = re.findall(r"\{([^}]+)\}", mana_cost or "")
+
+    if not symbols:
+        return None
+
+    total = 0
+
+    for symbol in symbols:
+        if symbol.isdigit():
+            total += int(symbol)
+            continue
+
+        upper = symbol.upper()
+
+        if upper in {"X", "Y", "Z"}:
+            return None
+
+        if "/" in upper:
+            parts = upper.split("/")
+
+            # Numeric hybrid and Phyrexian symbols can be paid with different
+            # amounts of mana, so Oracle alone does not provide one fixed
+            # amount actually spent.
+            if any(part.isdigit() or part == "P" for part in parts):
+                return None
+
+            total += 1
+            continue
+
+        # Colored, snow and colorless symbols require one mana.
+        total += 1
+
+    return total
 
 def _find_sacrifice_another_cost(card: CardBlock) -> str | None:
     for line in card.get("oracle_lines", []):

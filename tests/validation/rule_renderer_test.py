@@ -921,7 +921,7 @@ RULES
 700.4
 The term dies means “is put into a graveyard from the battlefield.”
 
-701.11a
+701.13a
 To exile an object, move it to the exile zone from wherever it is.
 
 702.93a

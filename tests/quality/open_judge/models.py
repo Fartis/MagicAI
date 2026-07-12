@@ -11,6 +11,7 @@ class OpenJudgeOutcome(str, Enum):
     PASS = "PASS"
     CORRECT_BUT_INCOMPLETE = "CORRECT_BUT_INCOMPLETE"
     NEEDS_CLARIFICATION = "NEEDS_CLARIFICATION"
+    STRATEGY_REQUIRED = "STRATEGY_REQUIRED"
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
     FALSE_PREMISE_HANDLED = "FALSE_PREMISE_HANDLED"
     RETRIEVAL_FAILURE = "RETRIEVAL_FAILURE"
@@ -25,6 +26,7 @@ OUTCOME_SEVERITY: dict[OpenJudgeOutcome, int] = {
     OpenJudgeOutcome.FALSE_PREMISE_HANDLED: 0,
     OpenJudgeOutcome.CORRECT_BUT_INCOMPLETE: 1,
     OpenJudgeOutcome.NEEDS_CLARIFICATION: 1,
+    OpenJudgeOutcome.STRATEGY_REQUIRED: 1,
     OpenJudgeOutcome.INSUFFICIENT_EVIDENCE: 2,
     OpenJudgeOutcome.RETRIEVAL_FAILURE: 3,
     OpenJudgeOutcome.CONTEXT_FAILURE: 4,
@@ -32,6 +34,16 @@ OUTCOME_SEVERITY: dict[OpenJudgeOutcome, int] = {
     OpenJudgeOutcome.HALLUCINATION: 6,
     OpenJudgeOutcome.EXECUTION_ERROR: 7,
 }
+
+
+ACCEPTABLE_OUTCOMES: frozenset[OpenJudgeOutcome] = frozenset(
+    {
+        OpenJudgeOutcome.PASS,
+        OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
+        OpenJudgeOutcome.NEEDS_CLARIFICATION,
+        OpenJudgeOutcome.STRATEGY_REQUIRED,
+    }
+)
 
 
 @dataclass(frozen=True)

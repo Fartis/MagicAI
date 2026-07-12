@@ -29,11 +29,33 @@ def main() -> int:
         elapsed=0.1,
         snapshot=ConversationSnapshot(cards=("Young Wolf",), history_size=2),
     )
+    clarification_turn = OpenJudgeTurnResult(
+        case_id="OJ-TEST",
+        case_name="Report test",
+        turn_id="OJ-TEST-CLARIFICATION",
+        turn_index=2,
+        question="¿Qué hace Squee?",
+        answer="¿A cuál Squee te refieres?",
+        outcome=OpenJudgeOutcome.NEEDS_CLARIFICATION,
+        elapsed=0.12,
+        snapshot=ConversationSnapshot(history_size=4),
+    )
+    strategy_turn = OpenJudgeTurnResult(
+        case_id="OJ-TEST",
+        case_name="Report test",
+        turn_id="OJ-TEST-STRATEGY",
+        turn_index=3,
+        question="¿Es mejor?",
+        answer="La recomendación corresponde a Deck Master.",
+        outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
+        elapsed=0.15,
+        snapshot=ConversationSnapshot(history_size=4),
+    )
     failing_turn = OpenJudgeTurnResult(
         case_id="OJ-TEST",
         case_name="Report test",
         turn_id="OJ-TEST-02",
-        turn_index=2,
+        turn_index=4,
         question="Seguimiento",
         answer="No lo sé",
         outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
@@ -52,7 +74,7 @@ def main() -> int:
         tags=("test",),
         outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
         elapsed=0.3,
-        turns=[passing_turn, failing_turn],
+        turns=[passing_turn, clarification_turn, strategy_turn, failing_turn],
     )
 
     with TemporaryDirectory() as directory:

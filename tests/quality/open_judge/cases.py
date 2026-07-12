@@ -114,11 +114,15 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                     ForbiddenClaim("siempre crea seis"),
                     ForbiddenClaim("por lo tanto, crea 6 kobolds"),
                     ForbiddenClaim("por lo tanto crea 6 kobolds"),
+                    ForbiddenClaim("equivale a 3 maná genérico"),
+                    ForbiddenClaim("equivale a 3 mana generico"),
+                    ForbiddenClaim("crea 3 kobolds"),
+                    ForbiddenClaim("crea tres kobolds"),
                     ForbiddenClaim("igual a su valor de maná"),
                     ForbiddenClaim("igual a su valor de mana"),
                 ),
                 expected_cards=("Prossh, Skyraider of Kher",),
-                missing_outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
+                missing_outcome=OpenJudgeOutcome.RETRIEVAL_FAILURE,
             ),
             OpenJudgeTurn(
                 id="OJ-002-03",
@@ -232,7 +236,8 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_any=(
                     ("Undying", "persistencia"),
                     ("Strangleroot Geist tiene prisa", "Geist tiene prisa", "prisa"),
-                    ("depende", "según", "en función", "si necesitas"),
+                    ("Deck Master", "estratégica", "estrategica"),
+                    ("depende", "según", "en función"),
                 ),
                 recommended_any=(
                     ("{G}", "un maná", "un mana"),
@@ -245,17 +250,19 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                     ForbiddenClaim("Strangleroot Geist no tiene Haste"),
                 ),
                 expected_cards=("Young Wolf", "Strangleroot Geist"),
+                success_outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
             ),
             OpenJudgeTurn(
                 id="OJ-004-02",
                 question="¿En qué mazos jugarías cada uno?",
                 required_all=("Young Wolf", "Strangleroot Geist"),
                 required_any=(
-                    ("sacrificio", "recursión", "cementerio"),
-                    ("agresivo", "aggro", "prisa"),
+                    ("Deck Master", "estratégica", "estrategica"),
+                    ("depende", "formato", "plan de juego"),
                 ),
                 expected_cards=("Young Wolf", "Strangleroot Geist"),
-                missing_outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
+                missing_outcome=OpenJudgeOutcome.RETRIEVAL_FAILURE,
+                success_outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
             ),
         ),
     ),
@@ -287,16 +294,19 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_all=("Sol Ring",),
                 required_any=(
                     ("aceleración", "acelera", "maná rápidamente", "mana rapidamente"),
+                    ("Deck Master", "estratégica", "estrategica"),
+                    ("depende", "formato", "plan de juego"),
                 ),
                 recommended_any=(
-                    ("Commander", "formato"),
+                    ("Commander", "lista", "nivel de la mesa"),
                 ),
                 forbidden=(
                     ForbiddenClaim("es legal en todos los formatos"),
                 ),
                 expected_cards=("Sol Ring",),
                 forbidden_cards=("Young Wolf",),
-                missing_outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
+                missing_outcome=OpenJudgeOutcome.RETRIEVAL_FAILURE,
+                success_outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
             ),
         ),
     ),
@@ -356,11 +366,13 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_all=("Korvold", "Prossh"),
                 required_any=(
                     ("depende", "según", "en función"),
-                    ("roba", "ventaja de cartas"),
+                    ("Deck Master", "estratégica", "estrategica"),
+                    ("roba", "carta", "ventaja de cartas"),
                     ("Kobold", "fichas", "tokens"),
                 ),
                 expected_cards=("Korvold, Fae-Cursed King", "Prossh, Skyraider of Kher"),
-                missing_outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
+                missing_outcome=OpenJudgeOutcome.RETRIEVAL_FAILURE,
+                success_outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
             ),
             OpenJudgeTurn(
                 id="OJ-007-03",
@@ -438,6 +450,35 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 ),
                 expected_cards=("Young Wolf",),
                 missing_outcome=OpenJudgeOutcome.CONTEXT_FAILURE,
+            ),
+        ),
+    ),
+    OpenJudgeCase(
+        id="OJ-010",
+        name="Ambiguous playable Squee lookup",
+        tags=("conversation", "disambiguation", "card-scope", "squee"),
+        turns=(
+            OpenJudgeTurn(
+                id="OJ-010-01",
+                question="¿Qué hace la criatura goblin Squee?",
+                required_all=(
+                    "Squee, Goblin Nabob",
+                    "Squee, the Immortal",
+                    "Squee, Dubious Monarch",
+                ),
+                required_any=(
+                    ("varias cartas", "a cuál te refieres", "a cual te refieres"),
+                    ("número", "nombre de la carta"),
+                ),
+                forbidden=(
+                    ForbiddenClaim("Vanguard", OpenJudgeOutcome.HALLUCINATION),
+                    ForbiddenClaim("Squee es una carta Vanguard", OpenJudgeOutcome.HALLUCINATION),
+                ),
+                success_outcome=OpenJudgeOutcome.NEEDS_CLARIFICATION,
+                notes=(
+                    "La búsqueda normal debe excluir el objeto Vanguard y pedir "
+                    "desambiguar solo entre cartas de criatura jugables."
+                ),
             ),
         ),
     ),

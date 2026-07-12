@@ -144,6 +144,31 @@ def main() -> int:
         "Se dispara siempre que no tuviera contadores +1/+1.",
     )
 
+
+    clarification = OpenJudgeTurn(
+        id="TEST-CLARIFICATION",
+        question="¿Qué hace Squee?",
+        required_all=("Squee, Goblin Nabob",),
+        success_outcome=OpenJudgeOutcome.NEEDS_CLARIFICATION,
+    )
+    assert_outcome(
+        OpenJudgeOutcome.NEEDS_CLARIFICATION,
+        clarification,
+        "¿Te refieres a Squee, Goblin Nabob?",
+    )
+
+    strategy = OpenJudgeTurn(
+        id="TEST-STRATEGY",
+        question="¿Merece la pena jugarla?",
+        required_all=("Deck Master",),
+        success_outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
+    )
+    assert_outcome(
+        OpenJudgeOutcome.STRATEGY_REQUIRED,
+        strategy,
+        "La recomendación estratégica corresponde a Deck Master.",
+    )
+
     assert_outcome(
         OpenJudgeOutcome.EXECUTION_ERROR,
         base,

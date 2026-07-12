@@ -251,6 +251,7 @@ PYTHONPATH=. python -m tests.retrieval.rule_queries_test
 PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
+PYTHONPATH=. python -m tests.validation.strategy_boundary_test
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
@@ -262,7 +263,7 @@ Open Judge Gauntlet:
 PYTHONPATH=. python -m tests.quality.open_judge_test
 ```
 
-Genera una baseline semántica de 9 conversaciones y 25 turnos, con informes TXT, JSON, XML y HTML.
+Genera una baseline semántica de 10 conversaciones y 26 turnos, con informes TXT, JSON, XML y HTML.
 
 Gauntlet dinámico reproducible:
 

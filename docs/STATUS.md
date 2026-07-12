@@ -85,30 +85,25 @@ FAIL                           0
 
 ### Open Judge Gauntlet
 
-El Sprint 10.14 ya dispone de infraestructura y una primera baseline completa:
+El Sprint 10.14 dispone de infraestructura y una baseline conversacional reproducible. Tras los hardenings 10.14b–10.14d, la última ejecución completa previa a 10.14e alcanzó:
 
 ```text
 Conversaciones ejecutadas        9
 Turnos ejecutados               25
-PASS                            10
-CORRECT_BUT_INCOMPLETE           2
-INSUFFICIENT_EVIDENCE            1
-RETRIEVAL_FAILURE                3
-CONTEXT_FAILURE                  9
+PASS                            23
+Fallos semánticos                2
 Errores de ejecución             0
+Alucinaciones                     0
 ```
 
-La auditoría manual detectó además falsos negativos del evaluador por variantes válidas como `Haste`/«prisa», «dibuja»/«roba» y «no se activa»/«no activa». El evaluador ya normaliza estas variantes y ahora detecta también afirmaciones demasiado absolutas, como fijar en seis el número de Kobolds de Prossh sin considerar el maná realmente gastado.
+El Sprint 10.14e amplía el corpus a 10 conversaciones y 26 turnos e incorpora:
 
-El hardening 10.14b añade continuidad conversacional genérica para:
-
-- comparaciones que introducen una segunda carta;
-- preguntas implícitas sobre la carta activa;
-- keywords que comparten nombre con una carta;
-- reglas numeradas referenciadas mediante pronombres;
-- procedimientos sin carta, como London Mulligan;
-- diferencias entre «al lanzar» y «al entrar»;
-- costes de Oracle que exigen sacrificar «otra» criatura o permanente.
+- cantidades variables derivadas de Oracle, como `create X ... where X is ...`;
+- separación explícita entre autoridad factual del Juez y recomendaciones de Deck Master;
+- la categoría aceptable `STRATEGY_REQUIRED`;
+- desambiguación abierta de Squee restringida a cartas jugables;
+- actualización de la regla de exilio a 701.13 para evitar recuperar `Triple`;
+- clasificación de cantidades numéricas incorrectas como contradicción factual.
 
 La Regression Suite y el Open Judge Gauntlet comparten el mismo corpus de preguntas. La primera sigue siendo útil para inspección humana; el segundo añade evaluación automática y estado conversacional.
 

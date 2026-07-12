@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .cases import OPEN_JUDGE_CASES
 from .execution import run_open_judge_case
-from .models import OpenJudgeOutcome
+from .models import ACCEPTABLE_OUTCOMES, OpenJudgeOutcome
 from .reports import (
     collect_turns,
     outcome_counts,
@@ -96,11 +96,7 @@ def main() -> int:
         print(f"  {result.outcome.value} ({result.elapsed:.2f}s)")
 
         if args.fail_fast and any(
-            turn.outcome
-            not in {
-                OpenJudgeOutcome.PASS,
-                OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
-            }
+            turn.outcome not in ACCEPTABLE_OUTCOMES
             for turn in result.turns
         ):
             break
@@ -134,10 +130,7 @@ def main() -> int:
     print(f"Failures: {failure_artifacts} artifacts")
     print(f"Reports : {output_dir}")
 
-    passing = {
-        OpenJudgeOutcome.PASS,
-        OpenJudgeOutcome.FALSE_PREMISE_HANDLED,
-    }
+    passing = ACCEPTABLE_OUTCOMES
     critical = {
         OpenJudgeOutcome.FACTUAL_CONTRADICTION,
         OpenJudgeOutcome.HALLUCINATION,
