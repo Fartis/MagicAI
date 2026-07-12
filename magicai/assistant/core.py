@@ -66,9 +66,10 @@ class MagicAI:
         # Conversación
         #
 
-        if context.cards:
-
-            conversation.active_cards = context.cards.copy()
+        _update_conversation_state(
+            conversation,
+            context,
+        )
 
         #
         # Knowledge Builder
@@ -107,3 +108,27 @@ class MagicAI:
         print()
 
         return answer
+
+def _update_conversation_state(conversation, context) -> None:
+    """Persist only source identifiers and resolved entities in the session."""
+
+    conversation.active_cards = context.cards.copy()
+    conversation.active_keywords = list(context.keywords)
+    conversation.active_rules = _rule_identifiers(context.rules)
+    conversation.active_rule_queries = list(context.rule_queries)
+    conversation.last_intent = context.intent
+
+
+def _rule_identifiers(rules: list) -> list[str]:
+    identifiers: list[str] = []
+
+    for rule in rules:
+        if isinstance(rule, str):
+            identifier = rule
+        else:
+            identifier = rule.get("number") or rule.get("title")
+
+        if identifier and identifier not in identifiers:
+            identifiers.append(str(identifier))
+
+    return identifiers

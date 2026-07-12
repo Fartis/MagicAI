@@ -91,6 +91,17 @@ def enrich(context):
             _add_unique_rule(enriched_rules, rule)
 
     #
+    # Una consulta directa de definición o comparación entre keywords ya tiene
+    # su evidencia más específica en las reglas exactas recuperadas arriba.
+    # Evitamos añadir secciones completas de reglas relacionadas que pueden
+    # eclipsar la definición principal ante el LLM.
+    #
+
+    if _prefer_exact_keyword_rules(context):
+        context.rules = enriched_rules
+        return context
+
+    #
     # Keywords detectadas en el Oracle text de las cartas recuperadas.
     #
     # Esto es clave: si el texto oficial de una carta contiene Undying,
@@ -317,3 +328,43 @@ def _merge_unique_queries(
         )
 
     return merged
+
+
+def _prefer_exact_keyword_rules(context) -> bool:
+    if context.cards or not context.keywords:
+        return False
+
+    q = context.question.lower()
+
+    action_markers = [
+        "muere",
+        "morir",
+        "sacrific",
+        "exilio",
+        "exiliar",
+        "0/0",
+        "contador",
+        "contadores",
+        "pila",
+        "prioridad",
+        "entra al campo",
+        "campo de batalla",
+    ]
+
+    if any(marker in q for marker in action_markers):
+        return False
+
+    definition_markers = [
+        "como funciona",
+        "cómo funciona",
+        "que es",
+        "qué es",
+        "explicame",
+        "explícame",
+        "diferenc",
+    ]
+
+    return (
+        any(marker in q for marker in definition_markers)
+        or context.follow_up
+    )

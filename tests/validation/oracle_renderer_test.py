@@ -239,6 +239,75 @@ Lightning Bolt deals 3 damage to any target.
     )
 
 
+
+def test_cast_trigger_does_not_trigger_on_reentry():
+
+    knowledge = """
+QUESTION
+
+¿Qué ocurre si vuelve a entrar al campo de batalla?
+
+============================================================
+CARDS
+
+Prossh, Skyraider of Kher
+Mana Cost: {3}{B}{R}{G}
+Legendary Creature — Dragon
+
+When you cast this spell, create X 0/1 red Kobold creature tokens named Kobolds of Kher Keep, where X is the amount of mana spent to cast it.
+Flying
+Sacrifice another creature: Prossh gets +1/+0 until end of turn.
+"""
+
+    answer = build_fallback_answer(
+        knowledge,
+        ["test"],
+    )
+
+    assert_contains(
+        answer,
+        [
+            "no equivale a lanzar",
+            "no cuando entra",
+            "no se dispara",
+            "no crea las fichas",
+        ],
+        "cast trigger reentry fallback",
+    )
+
+
+def test_sacrifice_another_cost_cannot_use_source():
+
+    knowledge = """
+QUESTION
+
+¿Y si lo sacrifico?
+
+============================================================
+CARDS
+
+Prossh, Skyraider of Kher
+Mana Cost: {3}{B}{R}{G}
+Legendary Creature — Dragon
+
+Sacrifice another creature: Prossh gets +1/+0 until end of turn.
+"""
+
+    answer = build_fallback_answer(
+        knowledge,
+        ["test"],
+    )
+
+    assert_contains(
+        answer,
+        [
+            "no puedes sacrificar Prossh",
+            "otra criatura",
+            "otro objeto",
+        ],
+        "sacrifice another cost fallback",
+    )
+
 def main():
 
     tests = [
@@ -246,6 +315,8 @@ def main():
         test_persist_dies,
         test_sacrifice_permanent_counter_draw,
         test_damage_any_target,
+        test_cast_trigger_does_not_trigger_on_reentry,
+        test_sacrifice_another_cost_cannot_use_source,
     ]
 
     errors = []

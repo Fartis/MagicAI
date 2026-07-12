@@ -56,5 +56,8 @@ Answering rules:
 - Do not explain your internal process.
 - Return only the final answer.
 - Be concise but complete.
+- When several cards are present, keep every ability, cost and characteristic attributed to the card whose Oracle text contains it.
+- When the question compares cards, mention both cards and compare only facts present in their recovered Oracle text.
+- A trigger that says "when you cast" is not an enters-the-battlefield trigger.
 - If the provided knowledge is insufficient, say that the available context is not enough to answer safely.
 """

@@ -14,7 +14,7 @@ Renderizadores y validación          ✅
 Gauntlet dinámico                    ✅
 Campañas multisemilla                ✅
 Filtro de cartas oficiales           ✅
-Open Judge Gauntlet                  🚧
+Open Judge Gauntlet                  ✅
 JudgeResult estructurado             ⏳
 Cobertura guiada por fallos          ⏳
 Judge Release Candidate              ⏳
@@ -72,7 +72,7 @@ Matriz completa: 216/216 ejecuciones · 0 WARN · 0 FAIL
 
 ---
 
-## Sprint 10.14 — Open Judge Gauntlet 🚧
+## Sprint 10.14 — Open Judge Gauntlet ✅
 
 Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas y separar errores técnicos de fallos semánticos.
 
@@ -102,7 +102,7 @@ HALLUCINATION
 EXECUTION_ERROR
 ```
 
-Siguiente acción inmediata: ejecutar la primera baseline completa contra Ollama, revisar falsos positivos de los contratos y fijar los resultados iniciales antes de modificar el pipeline del Juez.
+Primera baseline fijada el 12 de julio de 2026: 9 conversaciones, 25 turnos y 0 errores de ejecución. La revisión manual separó fallos reales del Juez de falsos negativos del evaluador.
 
 La primera ronda cubre especialmente:
 
@@ -122,6 +122,22 @@ Criterio de cierre del sprint:
 - cero errores de ejecución del runner;
 - cada fallo relevante clasificado;
 - prioridades de hardening ordenadas por familia genérica.
+
+### Sprint 10.14b — Continuidad y relaciones Oracle 🚧
+
+Primer hardening guiado por la baseline:
+
+- estado compartido para cartas, keywords, reglas y búsquedas conceptuales;
+- conservación de dos cartas en comparaciones;
+- desambiguación contextual entre keyword y carta homónima;
+- seguimiento de reglas numeradas y procedimientos;
+- reducción de ruido en definiciones directas de keywords;
+- respuestas deterministas para definiciones de Undying/Persist y sus diferencias;
+- relación genérica entre disparos «when you cast» y preguntas de entrada;
+- interpretación genérica de costes «Sacrifice another ...»;
+- normalización semántica del evaluador.
+
+Cierre: repetir el Open Judge Gauntlet y comparar la nueva distribución con la baseline inicial.
 
 ---
 

@@ -2,6 +2,7 @@ from magicai.llm.ollama import generate
 from magicai.prompts.answer import SYSTEM_PROMPT
 from magicai.validation import build_fallback_answer, validate_answer
 from magicai.validation.rule_renderer import render_rule_answer
+from magicai.validation.oracle_renderer import render_oracle_relation_answer
 
 
 MAX_ATTEMPTS = 2
@@ -12,10 +13,11 @@ def generate_answer(knowledge: str) -> str:
     Genera una respuesta utilizando únicamente el conocimiento proporcionado.
 
     Flujo:
-    1. Genera respuesta con el LLM.
-    2. Valida la respuesta contra las fuentes recuperadas.
-    3. Si falla, reintenta con feedback de validación.
-    4. Si sigue fallando, devuelve fallback seguro basado en fuentes.
+    1. Intenta renderizadores deterministas de reglas y relaciones Oracle.
+    2. Si no aplican, genera respuesta con el LLM.
+    3. Valida la respuesta contra las fuentes recuperadas.
+    4. Si falla, reintenta con feedback de validación.
+    5. Si sigue fallando, devuelve fallback seguro basado en fuentes.
     """
 
     print("=" * 80)
@@ -29,6 +31,12 @@ def generate_answer(knowledge: str) -> str:
     if rendered_rule_answer:
 
         return rendered_rule_answer
+
+    rendered_oracle_relation = render_oracle_relation_answer(knowledge)
+
+    if rendered_oracle_relation:
+
+        return rendered_oracle_relation
 
     last_answer = ""
     last_violations = []

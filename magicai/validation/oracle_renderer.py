@@ -38,9 +38,21 @@ def render_oracle_fallback(knowledge: str) -> str | None:
         question
     )
 
+    cards = _parse_card_blocks(cards_block)
+
+    relation_answer = _render_oracle_relation_from_cards(
+        cards=cards,
+        question=question,
+        action=action,
+        spanish=spanish,
+    )
+
+    if relation_answer:
+        return relation_answer
+
     candidates: list[tuple[int, CardBlock, str]] = []
 
-    for card in _parse_card_blocks(cards_block):
+    for card in cards:
 
         for line in card["oracle_lines"]:
 
@@ -84,6 +96,137 @@ def render_oracle_fallback(knowledge: str) -> str | None:
 
     return None
 
+
+
+
+def render_oracle_relation_answer(knowledge: str) -> str | None:
+    """Render high-confidence Oracle relations before invoking the LLM."""
+
+    cards_block = _extract_cards_block(knowledge)
+
+    if not cards_block:
+        return None
+
+    question = _extract_question(knowledge)
+
+    return _render_oracle_relation_from_cards(
+        cards=_parse_card_blocks(cards_block),
+        question=question,
+        action=_question_action(question),
+        spanish=_is_spanish_question(question),
+    )
+
+def _render_oracle_relation_from_cards(
+    cards: list[CardBlock],
+    question: str,
+    action: str | None,
+    spanish: bool,
+) -> str | None:
+    """Render simple relations that are explicit in Oracle wording."""
+
+    if len(cards) != 1:
+        return None
+
+    card = cards[0]
+
+    another_cost = _find_sacrifice_another_cost(card)
+
+    if action == "sacrifice" and another_cost:
+        if spanish:
+            translated_cost = _translate_object_type_spanish(another_cost)
+            return (
+                f"No puedes sacrificar {card['name']} para pagar su propia "
+                f"habilidad, porque el coste dice «sacrifica otra "
+                f"{translated_cost}». Debes elegir otro objeto que cumpla "
+                "ese requisito; si otro efecto te permite sacrificar esta carta, "
+                "sacrificio separado."
+            )
+
+        return (
+            f"You cannot sacrifice {card['name']} to pay its own ability, "
+            f"because the cost says to sacrifice another {another_cost}. "
+            "A different permanent is required."
+        )
+
+    if action == "enters":
+        cast_trigger = _find_cast_trigger(card)
+        enters_trigger = _find_enters_trigger(card)
+
+        if cast_trigger and not enters_trigger:
+            creates_tokens = "create" in cast_trigger.lower() and "token" in cast_trigger.lower()
+
+            if spanish:
+                consequence = (
+                    " y no crea las fichas indicadas por esa habilidad"
+                    if creates_tokens
+                    else " y no produce el efecto de esa habilidad"
+                )
+                return (
+                    f"Volver a entrar al campo de batalla no equivale a lanzar "
+                    f"{card['name']}. Su habilidad se dispara cuando lanzas el "
+                    f"hechizo, no cuando entra; por tanto, si entra sin ser "
+                    f"lanzado, esa habilidad no se dispara{consequence}."
+                )
+
+            consequence = (
+                " and does not create the tokens described by that ability"
+                if creates_tokens
+                else " and does not produce that ability's effect"
+            )
+            return (
+                f"Entering the battlefield is not the same as casting "
+                f"{card['name']}. Its ability triggers when the spell is cast, "
+                f"not when it enters, so entering without being cast does not "
+                f"trigger it{consequence}."
+            )
+
+    return None
+
+
+def _find_sacrifice_another_cost(card: CardBlock) -> str | None:
+    for line in card.get("oracle_lines", []):
+        match = re.match(
+            r"^Sacrifice another (?P<object>[^:]+):",
+            line.strip(),
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+            return match.group("object").strip().lower()
+
+    return None
+
+
+
+def _translate_object_type_spanish(value: str) -> str:
+    translations = {
+        "creature": "criatura",
+        "permanent": "permanente",
+        "artifact": "artefacto",
+        "enchantment": "encantamiento",
+        "land": "tierra",
+    }
+
+    return translations.get(value.lower(), value)
+
+def _find_cast_trigger(card: CardBlock) -> str | None:
+    for line in card.get("oracle_lines", []):
+        condition = _extract_trigger_condition(line).lower()
+
+        if "you cast this spell" in condition:
+            return line
+
+    return None
+
+
+def _find_enters_trigger(card: CardBlock) -> str | None:
+    for line in card.get("oracle_lines", []):
+        condition = _extract_trigger_condition(line).lower()
+
+        if "enters" in condition:
+            return line
+
+    return None
 
 def _extract_question(knowledge: str) -> str:
 
