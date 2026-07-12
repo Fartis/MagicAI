@@ -68,6 +68,16 @@ def main():
         answer = first["answer"]
         session_id = first["session_id"]
 
+        if first.get("status") != "needs_clarification":
+            raise AssertionError(
+                f"Expected needs_clarification, got {first.get('status')!r}"
+            )
+
+        if first.get("origin") != "disambiguation":
+            raise AssertionError(
+                f"Expected disambiguation origin, got {first.get('origin')!r}"
+            )
+
         print()
         print("Initial ambiguous answer:")
         print(answer)

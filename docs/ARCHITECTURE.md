@@ -19,7 +19,7 @@ HTTP /ask or test harness
 ConversationManager
           │
           ▼
-MagicAI.ask
+MagicAI.ask / MagicAI.ask_result
           │
           ├── card disambiguation
           ├── conversation history
@@ -196,13 +196,25 @@ Profile Router
           └── budget and power targets
 ```
 
-### Frontera factual obligatoria
+### Jerarquía de autoridad futura
 
 ```text
-Deck Master ──┐
-              ├──► JudgeClient ──► Judge ──► Oracle / Rules / Rulings
-Deckbuilder ──┘
+Evidencia
+   │
+   ▼
+Juez
+   │  hechos, reglas, Oracle, legalidad e interacciones validadas
+   ▼
+Deck Master
+   │  criterio estratégico validado sobre jugadas y planes de mazo
+   ▼
+Deckbuilder
+      propuestas concretas de construcción y modificación
 ```
+
+- **Juez:** autoridad factual y reglamentaria absoluta.
+- **Deck Master:** autoridad estratégica, siempre subordinada a los hechos del Juez.
+- **Deckbuilder:** motor de propuestas; necesita validación factual del Juez y validación estratégica de Deck Master.
 
 Deck Master y Deckbuilder:
 
@@ -212,25 +224,36 @@ Deck Master y Deckbuilder:
 - no inventarán interacciones;
 - recibirán evidencia factual únicamente mediante el Juez.
 
-Podrán ser creativos en estrategia y construcción, pero sus afirmaciones factuales deberán estar respaldadas por `JudgeResult`.
+Una propuesta del Deckbuilder solo se presentará como validada cuando tenga las dos firmas:
+
+```text
+FACTUAL_VALIDATION   = Judge
+STRATEGIC_VALIDATION = Deck Master
+```
+
+La sesión futura será compartida entre perfiles y conservará un `authority_trace` para distinguir hechos, recomendaciones y propuestas.
 
 ---
 
-## Contrato futuro `JudgeResult`
+## Contrato `JudgeResult`
 
-La API actual devuelve `answer` y `session_id`. La siguiente frontera estable será un objeto parecido a:
+La API conserva `answer` y `session_id`, pero ya expone una primera versión estructurada del resultado factual del Juez:
 
 ```json
 {
   "status": "answered",
+  "origin": "deterministic_rule",
+  "confidence": "high",
+  "authority": "judge",
   "answer": "...",
   "cards": [],
   "rules": [],
   "rulings": [],
+  "retrieval_queries": [],
   "assumptions": [],
   "warnings": [],
-  "confidence": "high",
-  "source_versions": {}
+  "source_versions": {},
+  "validation_attempts": 0
 }
 ```
 
@@ -240,10 +263,11 @@ Estados previstos:
 answered
 needs_clarification
 insufficient_evidence
+strategy_required
 false_premise
 ```
 
-Este contrato será utilizado por:
+`origin` distingue desambiguación, renderizadores deterministas, LLM validado, frontera estratégica y fallback seguro. El contrato será utilizado por:
 
 - la UI;
 - Deck Master;

@@ -87,7 +87,7 @@ deactivate
 
 ## 📚 Fuentes locales
 
-Descargar el bulk Oracle utilizado por el Juez:
+Descargar los bulk Oracle y rulings utilizados por el Juez:
 
 ```bash
 ./scripts/download_sources.sh
@@ -109,6 +109,7 @@ Comprobar ficheros:
 
 ```bash
 ls -lh sources/scryfall/oracle-cards.json
+ls -lh sources/scryfall/rulings.json
 ls -lh sources/scryfall/symbology.json
 ls -lh sources/rules/MagicCompRules.txt
 ```
@@ -177,6 +178,8 @@ Rutas:
 
 ```text
 http://127.0.0.1:8000/
+http://127.0.0.1:8000/meta
+http://127.0.0.1:8000/health
 http://127.0.0.1:8000/docs
 http://127.0.0.1:8000/redoc
 ```
@@ -198,6 +201,46 @@ curl -X POST http://127.0.0.1:8000/ask \
     "session_id":"ID_DEVUELTO_POR_LA_PRIMERA_PREGUNTA",
     "question":"¿Y si destruyen la fuente?"
   }'
+```
+
+La respuesta mantiene `answer` y `session_id`, y añade el contrato `JudgeResult`. Para inspeccionarlo:
+
+```bash
+curl -sS http://127.0.0.1:8000/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"¿Puedo responder durante la resolución?"}' |
+  jq '{answer, status, origin, confidence, authority, cards, rules, warnings, source_versions}'
+```
+
+Estados actuales:
+
+```text
+answered
+needs_clarification
+insufficient_evidence
+strategy_required
+false_premise
+```
+
+Consultar versiones y enums admitidos:
+
+```bash
+curl -sS http://127.0.0.1:8000/meta | jq
+```
+
+Comprobar fuentes y Ollama:
+
+```bash
+curl -sS http://127.0.0.1:8000/health | jq
+```
+
+`ready=true` indica que Oracle y Comprehensive Rules están disponibles.
+`full_service=true` indica además que Ollama y el modelo configurado responden.
+
+Comprobar el error estructurado para una pregunta vacía:
+
+```bash
+curl -sS -i http://127.0.0.1:8000/ask   -H 'Content-Type: application/json'   -d '{"question":"   "}'
 ```
 
 ---
@@ -244,10 +287,23 @@ PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
 PYTHONPATH=. python -m tests.retrieval.rule_queries_test
 PYTHONPATH=. python -m tests.retrieval.rule_intent_test
 PYTHONPATH=. python -m tests.retrieval.card_extractor_test
+PYTHONPATH=. python -m tests.retrieval.card_scope_test
 PYTHONPATH=. python -m tests.retrieval.context_enricher_test
+PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
 PYTHONPATH=. python -m tests.quality.gauntlet_matcher_test
+PYTHONPATH=. python -m tests.quality.open_judge_contract_test
+PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
+PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+PYTHONPATH=. python -m tests.validation.strategy_boundary_test
+PYTHONPATH=. python -m tests.validation.judge_result_test
+PYTHONPATH=. python -m tests.api.judge_result_schema_test
+PYTHONPATH=. python -m tests.retrieval.source_versions_test
+PYTHONPATH=. python -m tests.retrieval.rulings_source_test
+PYTHONPATH=. python -m tests.retrieval.rulings_pipeline_test
+PYTHONPATH=. python -m tests.validation.premise_guard_test
+PYTHONPATH=. python -m tests.validation.assumptions_test
 ```
 
 ### API
@@ -269,6 +325,67 @@ Paralela:
 PYTHONPATH=. python -m tests.regression.regression_parallel
 ```
 
+### Open Judge Gauntlet
+
+Validar contratos y evaluador sin Ollama:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_contract_test
+PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
+PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+PYTHONPATH=. python -m tests.validation.strategy_boundary_test
+PYTHONPATH=. python -m tests.validation.judge_result_test
+PYTHONPATH=. python -m tests.api.judge_result_schema_test
+PYTHONPATH=. python -m tests.retrieval.source_versions_test
+PYTHONPATH=. python -m tests.retrieval.rulings_source_test
+PYTHONPATH=. python -m tests.retrieval.rulings_pipeline_test
+PYTHONPATH=. python -m tests.validation.premise_guard_test
+PYTHONPATH=. python -m tests.validation.assumptions_test
+```
+
+Listar conversaciones:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test --list-cases
+```
+
+Ejecutar la baseline completa:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test
+```
+
+Ejecutar solo casos concretos:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test \
+  --case OJ-002 \
+  --case OJ-003 \
+  --case OJ-006 \
+  --case OJ-007 \
+  --case OJ-008
+```
+
+Estos casos concentran el hardening de continuidad, keywords, reglas referenciadas, comparaciones y procedimientos. `OJ-010` valida que Squee pida desambiguación solo entre cartas jugables.
+
+Por defecto, la baseline genera informes aunque existan fallos semánticos. Para usarla como puerta de calidad:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test --fail-on-critical
+PYTHONPATH=. python -m tests.quality.open_judge_test --strict
+```
+
+Salida:
+
+```text
+resultado_open_judge/<run-id>/
+├── open_judge_summary.txt
+├── open_judge_summary.json
+├── open_judge_summary.xml
+├── open_judge_summary.html
+└── open_judge_failures/
+```
+
 ### Performance
 
 ```bash
@@ -279,6 +396,23 @@ PYTHONPATH=. python -m tests.test_performance
 
 ```bash
 PYTHONPATH=. python -m tests.quality.reddit_gauntlet_test
+```
+
+### Estabilidad Open Judge para Release Candidate
+
+Después de generar tres baselines completas:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_stability_test   resultado_open_judge/RUN_1   resultado_open_judge/RUN_2   resultado_open_judge/RUN_3
+```
+
+La puerta exige el mismo número de casos y turnos y rechaza cualquier resultado fuera de:
+
+```text
+PASS
+FALSE_PREMISE_HANDLED
+NEEDS_CLARIFICATION
+STRATEGY_REQUIRED
 ```
 
 ### Generalization Probe

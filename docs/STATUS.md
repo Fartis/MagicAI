@@ -1,7 +1,7 @@
 # 📊 Estado actual de MagicAI
 
 > Snapshot de desarrollo: **v0.1.0-alpha**
-> Última actualización documental: **11 de julio de 2026**
+> Última actualización documental: **12 de julio de 2026**
 
 [Español](#-estado-del-proyecto) · [English](#-project-status)
 
@@ -11,11 +11,11 @@
 
 MagicAI se encuentra en una **alpha funcional del Juez**. El pipeline principal ya recupera conocimiento local, resuelve referencias conversacionales, genera consultas de reglas, utiliza respuestas deterministas para familias cubiertas y valida la salida del LLM.
 
-No se considera finalizado porque todavía falta medir y ampliar su comportamiento ante preguntas abiertas, estabilizar una respuesta estructurada y cubrir familias de reglas complejas de alta frecuencia.
+No se considera finalizado porque todavía falta repetir la baseline abierta tras cada hardening, estabilizar completamente el contrato estructurado y cubrir familias de reglas complejas de alta frecuencia.
 
 ### Capacidades implementadas
 
-- Oracle local de Scryfall.
+- Oracle y rulings locales de Scryfall.
 - Comprehensive Rules locales y búsqueda por secciones.
 - Índice de cartas en memoria.
 - Detección de cartas, aliases, keywords, acciones y reglas explícitas.
@@ -26,10 +26,14 @@ No se considera finalizado porque todavía falta medir y ampliar su comportamien
 - Renderizadores deterministas de reglas y Oracle.
 - Ollama local con temperatura cero.
 - Validación de respuestas, reintento y fallback seguro.
-- API REST con sesiones en memoria.
+- API REST con sesiones en memoria y salida `JudgeResult` retrocompatible.
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
+- Open Judge Gauntlet con 11 conversaciones, 27 turnos y contratos semánticos.
+- Clasificación separada de fallos de contexto, retrieval, contradicción y alucinación.
+- `JudgeResult` con estado, origen, confianza, autoridad y evidencia de cartas y reglas.
+- Trazabilidad del origen de respuesta en informes Open Judge.
 
 ### Conceptos dinámicos cubiertos
 
@@ -80,6 +84,32 @@ Ejecuciones validadas   216/216
 WARN                           0
 FAIL                           0
 ```
+
+### Open Judge Gauntlet
+
+El Sprint 10.14 dispone de infraestructura y una baseline conversacional reproducible. La baseline completa validada tras 10.15b.1 alcanzó:
+
+```text
+Conversaciones ejecutadas       11
+Turnos ejecutados               27
+PASS                            21
+STRATEGY_REQUIRED                4
+NEEDS_CLARIFICATION              1
+FALSE_PREMISE_HANDLED            1
+Fallos críticos                  0
+Errores de ejecución             0
+```
+
+El Sprint 10.15b amplía el corpus a 11 conversaciones y 27 turnos e incorpora:
+
+- cantidades variables derivadas de Oracle, como `create X ... where X is ...`;
+- separación explícita entre autoridad factual del Juez y recomendaciones de Deck Master;
+- la categoría aceptable `STRATEGY_REQUIRED`;
+- desambiguación abierta de Squee restringida a cartas jugables;
+- actualización de la regla de exilio a 701.13 para evitar recuperar `Triple`;
+- clasificación de cantidades numéricas incorrectas como contradicción factual.
+
+La Regression Suite y el Open Judge Gauntlet comparten el mismo corpus de preguntas. La primera sigue siendo útil para inspección humana; el segundo añade evaluación automática y estado conversacional.
 
 Los últimos hardenings añadieron regresiones deterministas para:
 
@@ -134,13 +164,14 @@ brawl
 
 ### Limitaciones conocidas
 
-- La salida pública sigue siendo texto, no un objeto `JudgeResult` estructurado.
+- `JudgeResult` ya integra rulings locales bajo petición explícita, supuestos conservadores y corrección inicial de premisas falsas; falta ampliar estas familias según fallos reales.
 - Las sesiones de la API viven en memoria y no persisten tras reiniciar el proceso.
 - La cobertura determinista todavía no abarca todas las familias de reglas.
 - La cobertura de capas y dependencias ya tiene casos iniciales, pero todavía no es general; CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
 - El sistema no simula una partida completa como un motor de reglas digital.
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
 - La UI todavía no está implementada.
+- La baseline debe repetirse después de cada hardening conversacional para medir la mejora real y detectar regresiones.
 
 ### Definición de “Juez finalizado y funcional”
 
@@ -161,6 +192,18 @@ MagicAI is currently a **functional Judge alpha**. Its main pipeline retrieves l
 
 The latest validated dynamic campaign completed **126/126 cases**, covering **14 concepts** and **42 templates** across three seeds with no warnings or failures.
 
-The Judge is not considered complete yet. The next milestones are an open-question evaluation suite, a structured `JudgeResult` contract, evidence-aware ambiguity handling and coverage driven by real failures.
+The Judge is not considered complete yet. The API now exposes a structured `JudgeResult` with local rulings, conservative assumptions and initial false-premise handling; the next milestones are stabilizing the contract and completing coverage driven by real failures.
 
 The future UI will start with the Judge and later host Deck Master and Deckbuilder. Those profiles will use the Judge as their sole factual authority for card text, rules, rulings and legality.
+
+
+### Preparación de API para UI beta — Sprint 10.15c
+
+- `JudgeResult` versionado como schema `1.0`;
+- `GET /meta` para descubrir versiones y enums;
+- `GET /health` para fuentes locales y Ollama;
+- errores HTTP estructurados y versionados;
+- compatibilidad aditiva documentada;
+- puerta de estabilidad para tres baselines Open Judge.
+
+Pendiente inmediato: ejecutar tres baselines consecutivas y cerrar el Judge Release Candidate inicial.

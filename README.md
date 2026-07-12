@@ -27,7 +27,7 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 
 ### Alcance actual
 
-- Oracle local descargado desde Scryfall.
+- Oracle y rulings locales descargados desde los bulk de Scryfall.
 - Magic Comprehensive Rules locales.
 - Recuperación de cartas, keywords, símbolos y reglas relacionadas.
 - Memoria conversacional y resolución de referencias ambiguas.
@@ -36,10 +36,11 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 - Validación, reintento y fallback source-grounded.
 - API REST de desarrollo.
 - Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
+- Open Judge Gauntlet con contratos semánticos para conversaciones reales.
 
 ### Alcance de cartas
 
-Las campañas estándar se centran en **cartas de papel jugables en formatos oficiales soportados**. Se excluyen cartas de broma, silver-border, acorn y playtest, así como objetos sin legalidad relevante.
+El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. Se excluyen cartas de broma, silver-border, acorn y playtest, además de objetos suplementarios como Vanguard, tokens, emblemas, planos, fenómenos y esquemas. Las cartas ordinarias siguen siendo consultables aunque estén prohibidas actualmente.
 
 ### Estado
 
@@ -84,7 +85,7 @@ Its core principle is:
 
 MagicAI does not try to memorize every card or rule. It builds the context required for each question, uses deterministic renderers where a formal answer is available, validates LLM output and falls back safely when evidence is insufficient.
 
-The standard test catalog focuses on paper cards playable in supported official formats. Funny, silver-border, acorn and playtest cards are intentionally out of scope.
+The Judge and standard test catalog focus on ordinary paper cards. Funny, silver-border, acorn and playtest cards are out of scope, together with supplemental objects such as Vanguard cards, tokens, emblems, planes, phenomena and schemes.
 
 See [docs/STATUS.md](docs/STATUS.md) for the current state and [docs/ROADMAP.md](docs/ROADMAP.md) for the development plan.
 
@@ -123,6 +124,7 @@ Context Builder
 Context Enricher
     │
     ├── local Oracle
+    ├── local Scryfall rulings
     ├── Comprehensive Rules
     └── Scryfall symbology
     │
@@ -234,7 +236,39 @@ curl -X POST http://127.0.0.1:8000/ask \
   -d '{"question":"¿Puedo responder a Ward?"}'
 ```
 
-La API actual devuelve texto y `session_id`. El contrato estructurado `JudgeResult`, con evidencia, estado, confianza y supuestos, forma parte de la siguiente etapa de desarrollo.
+La API mantiene `answer` y `session_id` por compatibilidad, pero ya devuelve un `JudgeResult` estructurado con estado, origen, confianza, autoridad, cartas, reglas, consultas de recuperación, advertencias y versiones locales de fuentes.
+
+El contrato HTTP está versionado y preparado para la UI beta:
+
+```text
+GET  /meta    versiones y valores admitidos por el contrato
+GET  /health  disponibilidad de fuentes locales y Ollama
+POST /ask     JudgeResult estructurado y compatible con clientes legacy
+```
+
+Los errores HTTP utilizan un sobre estructurado y versionado. Consulta [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
+
+Ejemplo abreviado:
+
+```json
+{
+  "answer": "No puedes responder durante la resolución.",
+  "session_id": "...",
+  "status": "answered",
+  "origin": "deterministic_rule",
+  "confidence": "high",
+  "authority": "judge",
+  "cards": [],
+  "rules": [{"number": "117.2e", "title": "..."}],
+  "assumptions": [],
+  "warnings": [],
+  "source_versions": {
+    "comprehensive_rules": "2026-06-19"
+  }
+}
+```
+
+Consulta [docs/JUDGE_RESULT.md](docs/JUDGE_RESULT.md) para el contrato completo.
 
 ---
 
@@ -247,9 +281,24 @@ PYTHONPATH=. python -m tests.quality.dynamic_gauntlet_generator_test
 PYTHONPATH=. python -m tests.quality.dynamic_campaign_planner_test
 PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
 PYTHONPATH=. python -m tests.retrieval.rule_queries_test
+PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
+PYTHONPATH=. python -m tests.validation.strategy_boundary_test
+PYTHONPATH=. python -m tests.validation.judge_result_test
+PYTHONPATH=. python -m tests.api.judge_result_schema_test
+PYTHONPATH=. python -m tests.quality.open_judge_contract_test
+PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
+PYTHONPATH=. python -m tests.quality.open_judge_reports_test
 ```
+
+Open Judge Gauntlet:
+
+```bash
+PYTHONPATH=. python -m tests.quality.open_judge_test
+```
+
+Genera una baseline semántica de 11 conversaciones y 27 turnos, con informes TXT, JSON, XML y HTML.
 
 Gauntlet dinámico reproducible:
 
@@ -307,12 +356,13 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Medir al Juez con preguntas abiertas y heterogéneas.
-2. Crear `JudgeResult` como contrato factual estable.
-3. Completar cobertura guiada por fallos reales.
-4. Cerrar un Judge Release Candidate.
-5. Construir una UI modular para conversar con el Juez.
-6. Añadir Deck Master y Deckbuilder sobre la misma UI.
+1. Repetir el Open Judge Gauntlet tras cada hardening y estabilizar sus contratos.
+2. Corregir por familias los fallos de contexto, retrieval y atribución.
+3. Estabilizar y ampliar `JudgeResult` como contrato factual público.
+4. Completar cobertura guiada por fallos reales.
+5. Cerrar un Judge Release Candidate.
+6. Construir una UI beta modular para conversar con el Juez.
+7. Añadir Deck Master y Deckbuilder sobre la misma UI.
 
 Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracle ni reglas**. Para cartas, legalidad, rulings e interacciones deberán consultar al Juez mediante su API interna.
 
@@ -323,6 +373,8 @@ Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracl
 - [Arquitectura](docs/ARCHITECTURE.md)
 - [Comandos](docs/COMMANDS.md)
 - [Estado actual](docs/STATUS.md)
+- [Contrato JudgeResult](docs/JUDGE_RESULT.md)
+- [Contrato HTTP y compatibilidad](docs/API_CONTRACT.md)
 - [Hoja de ruta](docs/ROADMAP.md)
 - [Filosofía](docs/PHILOSOPHY.md)
 - [Contribuir](docs/CONTRIBUTING.md)

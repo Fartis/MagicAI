@@ -14,8 +14,8 @@ Renderizadores y validación          ✅
 Gauntlet dinámico                    ✅
 Campañas multisemilla                ✅
 Filtro de cartas oficiales           ✅
-Open Judge Gauntlet                  ⏭️
-JudgeResult estructurado             ⏳
+Open Judge Gauntlet                  ✅
+JudgeResult estructurado             ✅
 Cobertura guiada por fallos          ⏳
 Judge Release Candidate              ⏳
 UI modular                           ⏳
@@ -72,45 +72,81 @@ Matriz completa: 216/216 ejecuciones · 0 WARN · 0 FAIL
 
 ---
 
-## Sprint 10.14 — Open Judge Gauntlet ⏭️
+## Sprint 10.14 — Open Judge Gauntlet ✅
 
-Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas.
+Objetivo: medir lo que el Juez ya puede resolver fuera de rutas preparadas y separar errores técnicos de fallos semánticos.
 
-El conjunto incluirá preguntas heterogéneas sobre:
+Infraestructura implementada:
 
-- lanzamiento y costes;
-- objetivos y modos;
-- combate;
-- acciones basadas en estado;
-- fichas;
-- cambios de control;
-- disparos y disparos retrasados;
-- reemplazo y prevención;
-- copias;
-- Commander;
-- cartas multiface;
-- capas;
-- preguntas ambiguas;
-- premisas falsas.
+- corpus ampliado a 11 conversaciones y 27 turnos;
+- contratos semánticos por turno;
+- reutilización del mismo corpus por la Regression Suite legacy;
+- captura del estado conversacional después de cada respuesta;
+- clasificación de fallos por categoría;
+- informes TXT, JSON, XML y HTML;
+- artefactos JSON individuales para cada turno no satisfactorio;
+- modo baseline por defecto y modos estrictos opcionales.
 
-Clasificación prevista:
+Clasificación disponible:
 
 ```text
-correct
-correct_but_incomplete
-needs_clarification
-insufficient_evidence
-false_premise
-retrieval_failure
-incorrect
-hallucination
+PASS
+CORRECT_BUT_INCOMPLETE
+NEEDS_CLARIFICATION
+STRATEGY_REQUIRED
+INSUFFICIENT_EVIDENCE
+FALSE_PREMISE_HANDLED
+RETRIEVAL_FAILURE
+CONTEXT_FAILURE
+FACTUAL_CONTRADICTION
+HALLUCINATION
+EXECUTION_ERROR
 ```
 
-El resultado determinará la prioridad real de los siguientes sprints.
+Primera baseline fijada el 12 de julio de 2026: 9 conversaciones, 25 turnos y 0 errores de ejecución. Tras 10.14c alcanzó 23/25 PASS; 10.14e amplió el corpus con desambiguación de Squee y resultados estratégicos explícitos; 10.15b añade un caso de premisa falsa y lleva el total a 11 conversaciones y 27 turnos. La revisión manual separó fallos reales del Juez de falsos negativos del evaluador.
+
+La primera ronda cubre especialmente:
+
+- continuidad de una carta entre turnos;
+- diferencias entre lanzar y entrar al campo de batalla;
+- keyword frente a carta homónima;
+- comparación de dos cartas y atribución correcta de habilidades;
+- seguimiento de una regla explícita;
+- cambio de tema;
+- continuidad de procedimientos como London Mulligan;
+- Undying con y sin contador +1/+1.
+
+Criterio de cierre del sprint:
+
+- baseline reproducible guardada;
+- contratos ajustados tras revisión manual;
+- cero errores de ejecución del runner;
+- cada fallo relevante clasificado;
+- prioridades de hardening ordenadas por familia genérica.
+
+### Sprint 10.14b–e — Hardening guiado por Open Judge 🚧
+
+Hardening acumulado guiado por la baseline:
+
+- estado compartido para cartas, keywords, reglas y búsquedas conceptuales;
+- conservación de dos cartas en comparaciones;
+- desambiguación contextual entre keyword y carta homónima;
+- seguimiento de reglas numeradas y procedimientos;
+- reducción de ruido en definiciones directas de keywords;
+- respuestas deterministas para definiciones de Undying/Persist y sus diferencias;
+- relación genérica entre disparos «when you cast» y preguntas de entrada;
+- interpretación genérica de costes «Sacrifice another ...»;
+- normalización semántica del evaluador;
+- cantidades variables basadas en expresiones Oracle con `X`;
+- frontera factual/estratégica mediante `STRATEGY_REQUIRED`;
+- exclusión de objetos suplementarios y caso abierto de Squee;
+- corrección de la referencia de exilio a la regla 701.13.
+
+Cierre: repetir el Open Judge Gauntlet y comprobar que todos los turnos son `PASS`, `NEEDS_CLARIFICATION` o `STRATEGY_REQUIRED`, sin contradicciones factuales.
 
 ---
 
-## Sprint 10.15 — Contrato `JudgeResult` ⏳
+## Sprint 10.15 — Contrato `JudgeResult` 🚧
 
 Crear una salida estructurada estable:
 
@@ -128,13 +164,30 @@ Crear una salida estructurada estable:
 }
 ```
 
-Objetivos:
+Primera entrega implementada:
 
-- separar hechos, explicación y supuestos;
-- permitir aclaraciones formales;
-- exponer evidencia en la UI;
-- ofrecer una API interna estable a otros perfiles;
-- hacer los tests menos dependientes de coincidencias puramente léxicas.
+- `MagicAI.ask_result()` y compatibilidad de `MagicAI.ask()`;
+- estados `answered`, `needs_clarification`, `insufficient_evidence`, `strategy_required` y `false_premise`;
+- origen de respuesta determinista, LLM validado, fallback, estrategia o desambiguación;
+- evidencia estructurada de cartas y reglas;
+- autoridad, confianza, consultas de recuperación, advertencias y versiones locales de fuentes;
+- respuesta `/ask` ampliada sin eliminar `answer` ni `session_id`;
+- metadata `JudgeResult` incluida en los informes Open Judge.
+
+Cierre del sprint:
+
+- rulings locales y renderer literal determinista;
+- supuestos conservadores y premisas falsas de alta confianza;
+- `schema_version=1.0` y política de compatibilidad aditiva;
+- endpoints `/meta` y `/health`;
+- errores HTTP estructurados;
+- puerta para tres baselines Open Judge consecutivas.
+
+Pendiente antes del Judge Release Candidate:
+
+- ejecutar tres baselines completas consecutivas en la máquina objetivo;
+- ejecutar smoke tests HTTP con Ollama activo y simular Ollama no disponible;
+- congelar el schema `1.0` durante la primera UI beta.
 
 ---
 

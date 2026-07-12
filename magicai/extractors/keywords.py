@@ -5,6 +5,7 @@ KEYWORDS = {
     "deathtouch",
     "ward",
     "undying",
+    "persist",
     "landfall",
     "hexproof",
     "flash",

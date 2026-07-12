@@ -35,7 +35,7 @@ if __package__:
     from .regression_cases import TESTS
 else:
     # Compatibilidad con ejecución directa:
-    # python tests/regression/regression_parallel.py.py
+    # python tests/regression/regression_parallel.py
     from regression_cases import TESTS
 
 

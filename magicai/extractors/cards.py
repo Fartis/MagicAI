@@ -8,6 +8,7 @@ from magicai.scryfall import load_cards
 _exact_cards = None
 _alias_cards = None
 _ambiguous_aliases = None
+_card_data_by_name = None
 
 _STOP_ALIASES = {
     "a",
@@ -127,15 +128,22 @@ def _load():
     global _exact_cards
     global _alias_cards
     global _ambiguous_aliases
+    global _card_data_by_name
 
     if (
         _exact_cards is not None
         and _alias_cards is not None
         and _ambiguous_aliases is not None
+        and _card_data_by_name is not None
     ):
         return
 
     cards = load_cards()
+
+    _card_data_by_name = {
+        _display_name(card["name"]): card
+        for card in cards
+    }
 
     names = sorted(
         {
@@ -398,11 +406,20 @@ def find_ambiguous_card_references(
 
             continue
 
+        if _is_explicit_card_descriptor(alias, question_lower):
+
+            continue
+
         if pattern.search(question_lower):
+
+            filtered_candidates = _filter_candidates_by_question(
+                candidates=candidates,
+                question=question_lower,
+            )
 
             return CardNameAmbiguity(
                 alias=alias,
-                candidates=candidates[:10],
+                candidates=filtered_candidates[:10],
             )
 
     return None
@@ -594,3 +611,87 @@ def _add_reference_alias(
         aliases,
         alias,
     )
+
+_CARD_TYPE_HINTS = {
+    "artifact": ("artifact", "artefacto"),
+    "battle": ("battle", "batalla"),
+    "creature": ("creature", "criatura"),
+    "enchantment": ("enchantment", "encantamiento"),
+    "instant": ("instant", "instantaneo", "instantáneo"),
+    "land": ("land", "tierra"),
+    "planeswalker": ("planeswalker",),
+    "sorcery": ("sorcery", "conjuro"),
+}
+
+_SUBTYPE_HINTS = {
+    "goblin": ("goblin", "trasgo"),
+}
+
+
+def _filter_candidates_by_question(
+    candidates: list[str],
+    question: str,
+) -> list[str]:
+    """Narrow ambiguous names using explicit type/subtype words.
+
+    The filter is conservative: it only applies a hint when that hint appears
+    explicitly in the user's question and keeps the original candidate list if
+    no card matches. This avoids silently inventing a card while allowing
+    phrases such as "la criatura goblin Squee" to discard Auras, artifacts and
+    sorceries before asking the user which creature they mean.
+    """
+
+    if not _card_data_by_name:
+        return list(candidates)
+
+    normalized_question = question.casefold()
+    active_type_hints = [
+        oracle_type
+        for oracle_type, markers in _CARD_TYPE_HINTS.items()
+        if any(marker in normalized_question for marker in markers)
+    ]
+    active_subtype_hints = [
+        oracle_subtype
+        for oracle_subtype, markers in _SUBTYPE_HINTS.items()
+        if any(marker in normalized_question for marker in markers)
+    ]
+
+    if not active_type_hints and not active_subtype_hints:
+        return list(candidates)
+
+    filtered = []
+
+    for candidate in candidates:
+        card = _card_data_by_name.get(candidate) or {}
+        type_line = str(card.get("type_line", "")).casefold()
+
+        if active_type_hints and not all(
+            hint in type_line
+            for hint in active_type_hints
+        ):
+            continue
+
+        if active_subtype_hints and not all(
+            hint in type_line
+            for hint in active_subtype_hints
+        ):
+            continue
+
+        filtered.append(candidate)
+
+    return filtered or list(candidates)
+
+
+def _is_explicit_card_descriptor(alias: str, question: str) -> bool:
+    alias_key = alias.casefold().strip()
+
+    for markers in (*_CARD_TYPE_HINTS.values(), *_SUBTYPE_HINTS.values()):
+        normalized_markers = {marker.casefold() for marker in markers}
+
+        if alias_key in normalized_markers and any(
+            marker in question
+            for marker in normalized_markers
+        ):
+            return True
+
+    return False

@@ -59,6 +59,28 @@ def build_knowledge(context):
 
             _append_rule(parts, rule)
 
+    if context.rulings:
+
+        parts.append("=" * 60)
+        parts.append("RULINGS")
+        parts.append("")
+
+        for ruling in context.rulings:
+            card_name = ruling.get("card_name", "")
+            published_at = ruling.get("published_at", "")
+            source = ruling.get("source", "")
+            comment = ruling.get("comment", "")
+
+            if card_name:
+                parts.append(f"Card: {card_name}")
+            if published_at:
+                parts.append(f"Published: {published_at}")
+            if source:
+                parts.append(f"Source: {source}")
+            if comment:
+                parts.append(comment)
+            parts.append("")
+
     if context.facts:
 
         parts.append("=" * 60)

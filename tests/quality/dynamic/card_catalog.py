@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from magicai.scryfall import SCRYFALL_FILE
+from magicai.sources.card_scope import (
+    is_supported_judge_card,
+    supported_legal_formats,
+)
 
 
 _MANA_SYMBOL_RE = re.compile(
@@ -13,20 +17,6 @@ _MANA_SYMBOL_RE = re.compile(
     flags=re.IGNORECASE,
 )
 _LOYALTY_PREFIX_RE = re.compile(r"^[+−-]?\d+\s*:")
-
-_SUPPORTED_PAPER_FORMATS = (
-    "standard",
-    "pioneer",
-    "modern",
-    "legacy",
-    "pauper",
-    "vintage",
-    "commander",
-    "standardbrawl",
-    "brawl",
-)
-_SUPPORTED_LEGALITY_STATUSES = {"legal", "restricted"}
-
 
 @dataclass(frozen=True)
 class CardCandidate:
@@ -105,36 +95,6 @@ class CardCatalog:
         return selected
 
 
-def _supported_legal_formats(raw_card: dict) -> tuple[str, ...]:
-    legalities = raw_card.get("legalities") or {}
-
-    return tuple(
-        format_name
-        for format_name in _SUPPORTED_PAPER_FORMATS
-        if str(legalities.get(format_name, "")).casefold()
-        in _SUPPORTED_LEGALITY_STATUSES
-    )
-
-
-def _is_funny_or_playtest_card(raw_card: dict) -> bool:
-    set_type = str(raw_card.get("set_type", "")).casefold()
-    border_color = str(raw_card.get("border_color", "")).casefold()
-    security_stamp = str(raw_card.get("security_stamp", "")).casefold()
-    set_name = str(raw_card.get("set_name", "")).casefold()
-    promo_types = {
-        str(item).casefold()
-        for item in (raw_card.get("promo_types") or [])
-    }
-
-    return (
-        set_type == "funny"
-        or border_color == "silver"
-        or security_stamp == "acorn"
-        or "playtest" in promo_types
-        or "playtest" in set_name
-    )
-
-
 def _to_candidate(raw_card: dict) -> CardCandidate | None:
     name = str(raw_card.get("name", "")).strip()
     oracle_text = str(raw_card.get("oracle_text", "")).strip()
@@ -146,18 +106,10 @@ def _to_candidate(raw_card: dict) -> CardCandidate | None:
     if "//" in name:
         return None
 
-    games = raw_card.get("games") or []
-
-    if games and "paper" not in games:
+    if not is_supported_judge_card(raw_card):
         return None
 
-    if raw_card.get("digital") is True:
-        return None
-
-    if _is_funny_or_playtest_card(raw_card):
-        return None
-
-    legal_formats = _supported_legal_formats(raw_card)
+    legal_formats = supported_legal_formats(raw_card)
 
     if not legal_formats:
         return None

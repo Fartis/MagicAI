@@ -1,5 +1,6 @@
 from magicai.context_enricher import _looks_like_continuous_effect_question
 from magicai.context_enricher import _merge_unique_queries
+from magicai.context_enricher import _needs_rulings
 
 
 def test_oracle_queries_are_prioritized_without_duplicates():
@@ -53,11 +54,26 @@ def test_characteristic_change_with_power_toughness_keeps_continuous_focus():
             "type-changing 4/4 question must keep continuous-effect focus"
         )
 
+
+def test_rulings_are_loaded_only_for_explicit_requests():
+    class Context:
+        cards = [object()]
+
+    context = Context()
+    context.question = "¿Qué dicen los rulings oficiales de esta carta?"
+    if not _needs_rulings(context):
+        raise AssertionError("explicit rulings request must load local rulings")
+
+    context.question = "¿Qué hace esta carta?"
+    if _needs_rulings(context):
+        raise AssertionError("basic Oracle question must not inject rulings noise")
+
 def main():
     tests = [
         test_oracle_queries_are_prioritized_without_duplicates,
         test_bare_power_toughness_is_not_enough_for_continuous_focus,
         test_characteristic_change_with_power_toughness_keeps_continuous_focus,
+        test_rulings_are_loaded_only_for_explicit_requests,
     ]
 
     errors = []
