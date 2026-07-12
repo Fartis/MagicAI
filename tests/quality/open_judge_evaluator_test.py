@@ -93,6 +93,57 @@ def main() -> int:
         "Persist es un conjuro.",
     )
 
+
+    assert_outcome(
+        OpenJudgeOutcome.PASS,
+        OpenJudgeTurn(
+            id="TEST-VARIANTS-TRIGGER",
+            question="¿Se dispara?",
+            required_all=("no activa",),
+        ),
+        "La habilidad no se activa.",
+    )
+
+    assert_outcome(
+        OpenJudgeOutcome.PASS,
+        OpenJudgeTurn(
+            id="TEST-VARIANTS-HASTE",
+            question="¿Tiene prisa?",
+            required_all=("prisa",),
+        ),
+        "Strangleroot Geist tiene Haste.",
+    )
+
+    assert_outcome(
+        OpenJudgeOutcome.PASS,
+        OpenJudgeTurn(
+            id="TEST-VARIANTS-DRAW",
+            question="¿Cuántas roba?",
+            required_all=("roba",),
+        ),
+        "El jugador dibuja siete cartas.",
+    )
+
+    assert_outcome(
+        OpenJudgeOutcome.PASS,
+        OpenJudgeTurn(
+            id="TEST-VARIANTS-COUNTER",
+            question="¿Qué comprueba?",
+            required_all=("no tenía",),
+        ),
+        "Comprueba que no tiene contadores +1/+1.",
+    )
+
+    assert_outcome(
+        OpenJudgeOutcome.PASS,
+        OpenJudgeTurn(
+            id="TEST-VARIANTS-SUBJUNCTIVE",
+            question="¿Qué comprueba?",
+            required_all=("no tenía",),
+        ),
+        "Se dispara siempre que no tuviera contadores +1/+1.",
+    )
+
     assert_outcome(
         OpenJudgeOutcome.EXECUTION_ERROR,
         base,

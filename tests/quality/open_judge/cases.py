@@ -34,7 +34,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 question="¿Y si muere?",
                 required_any=(
                     ("cementerio", "muere"),
-                    ("no tenía", "sin contador", "sin contadores"),
+                    ("no tenía", "no tuviera", "sin contador", "sin contadores"),
                     ("vuelve", "regresa", "retorna"),
                     ("+1/+1", "contador +1/+1"),
                 ),
@@ -62,7 +62,13 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_any=(
                     ("exilio", "exilias", "exiliar"),
                     ("no se dispara", "no activa", "no activarás", "no vuelve"),
-                    ("no entra al cementerio", "no va al cementerio"),
+                    (
+                        "no entra al cementerio",
+                        "no va al cementerio",
+                        "no se coloca en el cementerio",
+                        "no se cumple la condición",
+                        "evitando que cumpla la condición",
+                    ),
                 ),
                 forbidden=(
                     ForbiddenClaim("vuelve al campo de batalla con un contador"),
@@ -106,6 +112,8 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 ),
                 forbidden=(
                     ForbiddenClaim("siempre crea seis"),
+                    ForbiddenClaim("por lo tanto, crea 6 kobolds"),
+                    ForbiddenClaim("por lo tanto crea 6 kobolds"),
                     ForbiddenClaim("igual a su valor de maná"),
                     ForbiddenClaim("igual a su valor de mana"),
                 ),
@@ -122,6 +130,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                     (
                         "no puede sacrificarse a sí mismo",
                         "no puedes sacrificar a Prossh",
+                        "no puedes sacrificar Prossh",
                         "no se puede sacrificar a sí mismo",
                     ),
                 ),
@@ -223,7 +232,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_any=(
                     ("Undying", "persistencia"),
                     ("Strangleroot Geist tiene prisa", "Geist tiene prisa", "prisa"),
-                    ("depende", "según", "en función"),
+                    ("depende", "según", "en función", "si necesitas"),
                 ),
                 recommended_any=(
                     ("{G}", "un maná", "un mana"),
@@ -312,7 +321,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_any=(
                     ("ejemplo", "por ejemplo"),
                     ("muere", "cementerio"),
-                    ("sin contador +1/+1", "no tenía"),
+                    ("sin contador +1/+1", "sin contadores +1/+1", "no tenía"),
                     ("vuelve", "regresa", "retorna"),
                     ("contador +1/+1", "+1/+1"),
                 ),

@@ -36,7 +36,33 @@ def normalize(text: str) -> str:
     )
     text = text.replace("*", "").replace("_", "").replace("`", "")
     text = re.sub(r"\s+", " ", text.lower()).strip()
-    return text
+    return _canonicalize_semantic_variants(text)
+
+
+def _canonicalize_semantic_variants(text: str) -> str:
+    """Collapse harmless wording variants without trying to judge new facts."""
+
+    replacements = (
+        # Official Spanish uses "robar", but archived model runs may use the
+        # literal translation "dibujar" while expressing the same fact.
+        (r"\b(?:roba|robar|robas|robo|dibuja|dibujar|dibujas|dibujo)\b", "roba"),
+        (r"\b(?:haste|prisa)\b", "prisa"),
+        (r"\b(?:vuelve|volver|regresa|regresar|retorna|retornar)\b", "vuelve"),
+        (
+            r"\b(?:tiene|tenia|tenga|teniendo|tuviera|tuviese|tuvo)\b",
+            "tiene",
+        ),
+        (
+            r"\b(?:se\s+)?(?:activa|activar|activan|activara|activaras|"
+            r"dispara|disparar|disparan|disparara|dispararas)\b",
+            "activa",
+        ),
+    )
+
+    for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text)
+
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def contains_term(text: str, term: str) -> bool:

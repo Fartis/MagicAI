@@ -52,6 +52,7 @@ _RULE_MARKERS = {
     "zone_change": ["400.7"],
     "persist": ["702.79", "702.79a"],
     "undying": ["702.93", "702.93a"],
+    "mulligan": ["103.5", "103.5a", "103.5b", "103.5c", "103.5d"],
 }
 
 
@@ -72,6 +73,40 @@ def render_rule_answer(knowledge: str) -> str | None:
     if not q:
         return None
 
+    if _is_undying_existing_counter_question(q) and _has_rules(
+        knowledge,
+        ["undying"],
+    ):
+        return (
+            "Si el permanente ya tiene un contador +1/+1 cuando muere, "
+            "Undying no se dispara porque no se cumple su condición. La carta "
+            "permanece en el cementerio, salvo que otro efecto la mueva o la "
+            "devuelva."
+        )
+
+    if _is_london_mulligan_question(q) and _has_rules(
+        knowledge,
+        ["mulligan"],
+    ):
+        return (
+            "Con el London Mulligan, cada vez que haces mulligan robas una "
+            "nueva mano igual a tu tamaño inicial, normalmente siete cartas. "
+            "Después colocas en el fondo de tu biblioteca tantas cartas como "
+            "mulligans hayan contado para ti. En multijugador y Brawl, el "
+            "primer mulligan es gratuito: no cuenta para las cartas que debes "
+            "poner en el fondo."
+        )
+
+    if _is_mulligan_draw_followup(q) and _has_rules(
+        knowledge,
+        ["mulligan"],
+    ):
+        return (
+            "Robas una nueva mano igual a tu tamaño inicial, normalmente siete "
+            "cartas. Después colocas en el fondo de la biblioteca una carta por "
+            "cada mulligan que haya contado para ti; en multijugador y Brawl, el "
+            "primero es gratuito."
+        )
 
     layered_answer = _render_layered_static_source_comparison(
         knowledge,
@@ -80,6 +115,49 @@ def render_rule_answer(knowledge: str) -> str | None:
 
     if layered_answer is not None:
         return layered_answer
+
+    if _asks_keyword_difference(q) and _has_rules(
+        knowledge,
+        ["persist", "undying"],
+    ):
+        return (
+            "Undying y Persist se disparan cuando el permanente muere, pero "
+            "comprueban contadores distintos. Undying solo se dispara si no "
+            "tenía contadores +1/+1 y lo devuelve con un contador +1/+1. "
+            "Persist solo se dispara si no tenía contadores -1/-1 y lo devuelve "
+            "con un contador -1/-1."
+        )
+
+    if _asks_for_example(q) and _has_rules(
+        knowledge,
+        ["undying"],
+    ):
+        return (
+            "Por ejemplo, una criatura con Undying muere sin contadores +1/+1. "
+            "La habilidad se dispara y, al resolverse, la carta vuelve del "
+            "cementerio al campo de batalla con un contador +1/+1. Si ya tenía "
+            "un contador +1/+1 cuando murió, Undying no se dispara."
+        )
+
+    if _is_direct_keyword_definition(q, "undying") and _has_rules(
+        knowledge,
+        ["undying"],
+    ):
+        return (
+            "Undying es una habilidad disparada. Cuando el permanente muere, "
+            "si no tenía contadores +1/+1, vuelve del cementerio al campo de "
+            "batalla bajo el control de su dueño con un contador +1/+1."
+        )
+
+    if _is_direct_keyword_definition(q, "persist") and _has_rules(
+        knowledge,
+        ["persist"],
+    ):
+        return (
+            "Persist es una habilidad disparada. Cuando el permanente muere, "
+            "si no tenía contadores -1/-1, vuelve del cementerio al campo de "
+            "batalla bajo el control de su dueño con un contador -1/-1."
+        )
 
     if _is_persist_and_undying_question(q) and _has_rules(
         knowledge,
@@ -1020,6 +1098,115 @@ def _is_may_trigger_choice(question: str) -> bool:
         )
     )
 
+
+
+def _is_undying_existing_counter_question(question: str) -> bool:
+    mentions_positive_counter = any(
+        marker in question
+        for marker in [
+            "contador +1/+1",
+            "contadores +1/+1",
+            "+1/+1 counter",
+            "+1/+1 counters",
+        ]
+    )
+    asks_existing_state = any(
+        marker in question
+        for marker in [
+            "ya tiene",
+            "ya tenia",
+            "ademas tiene",
+            "tambien tiene",
+            "si tiene",
+            "with a +1/+1",
+            "already has",
+        ]
+    )
+
+    return mentions_positive_counter and asks_existing_state
+
+
+def _is_london_mulligan_question(question: str) -> bool:
+    return (
+        "mulligan" in question
+        and any(
+            marker in question
+            for marker in [
+                "explicame",
+                "como funciona",
+                "que es",
+                "define",
+                "explain",
+                "how does",
+            ]
+        )
+    )
+
+
+def _is_mulligan_draw_followup(question: str) -> bool:
+    asks_quantity = any(
+        marker in question
+        for marker in [
+            "cuantas cartas",
+            "cuanto robo",
+            "cuantas robo",
+            "how many cards",
+        ]
+    )
+    mentions_draw = any(
+        marker in question
+        for marker in [
+            "robo",
+            "robar",
+            "draw",
+        ]
+    )
+
+    return asks_quantity and mentions_draw
+
+
+def _asks_keyword_difference(question: str) -> bool:
+    return any(
+        marker in question
+        for marker in [
+            "diferencia",
+            "diferencias",
+            "se diferencian",
+            "comparacion",
+            "comparar",
+        ]
+    )
+
+
+def _asks_for_example(question: str) -> bool:
+    return any(
+        marker in question
+        for marker in [
+            "con un ejemplo",
+            "por ejemplo",
+            "un ejemplo",
+        ]
+    )
+
+
+def _is_direct_keyword_definition(question: str, keyword: str) -> bool:
+    if keyword not in question:
+        return False
+
+    definition_markers = [
+        "como funciona",
+        "que es",
+        "explicame",
+        "define",
+    ]
+
+    if any(marker in question for marker in definition_markers):
+        return True
+
+    # Conversational continuation such as "¿Y Persist?". The evidence check in
+    # the caller guarantees that the keyword rule was actually recovered.
+    words = re.findall(r"[a-z0-9+/-]+", question)
+    return len(words) <= 3
 
 def _is_persist_and_undying_question(question: str) -> bool:
     return (
