@@ -244,7 +244,9 @@ PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
 PYTHONPATH=. python -m tests.retrieval.rule_queries_test
 PYTHONPATH=. python -m tests.retrieval.rule_intent_test
 PYTHONPATH=. python -m tests.retrieval.card_extractor_test
+PYTHONPATH=. python -m tests.retrieval.card_scope_test
 PYTHONPATH=. python -m tests.retrieval.context_enricher_test
+PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
 PYTHONPATH=. python -m tests.quality.gauntlet_matcher_test
@@ -299,8 +301,13 @@ Ejecutar solo casos concretos:
 ```bash
 PYTHONPATH=. python -m tests.quality.open_judge_test \
   --case OJ-002 \
-  --case OJ-006
+  --case OJ-003 \
+  --case OJ-006 \
+  --case OJ-007 \
+  --case OJ-008
 ```
+
+Estos casos concentran el hardening de continuidad, keywords, reglas referenciadas, comparaciones y procedimientos.
 
 Por defecto, la baseline genera informes aunque existan fallos semánticos. Para usarla como puerta de calidad:
 

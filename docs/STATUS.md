@@ -85,19 +85,32 @@ FAIL                           0
 
 ### Open Judge Gauntlet
 
-El Sprint 10.14 ya dispone de su infraestructura inicial:
+El Sprint 10.14 ya dispone de infraestructura y una primera baseline completa:
 
 ```text
-Conversaciones contratadas       9
-Turnos contratados              25
-Formatos de informe              4
-Categorías semánticas           10
-Baseline completa        pendiente
+Conversaciones ejecutadas        9
+Turnos ejecutados               25
+PASS                            10
+CORRECT_BUT_INCOMPLETE           2
+INSUFFICIENT_EVIDENCE            1
+RETRIEVAL_FAILURE                3
+CONTEXT_FAILURE                  9
+Errores de ejecución             0
 ```
 
-La Regression Suite y el Open Judge Gauntlet comparten ahora el mismo corpus de preguntas. La primera sigue siendo útil para inspección humana; el segundo añade evaluación automática y estado conversacional.
+La auditoría manual detectó además falsos negativos del evaluador por variantes válidas como `Haste`/«prisa», «dibuja»/«roba» y «no se activa»/«no activa». El evaluador ya normaliza estas variantes y ahora detecta también afirmaciones demasiado absolutas, como fijar en seis el número de Kobolds de Prossh sin considerar el maná realmente gastado.
 
-El siguiente paso no es añadir renderizadores concretos, sino ejecutar la baseline, auditar los contratos y agrupar los fallos por causas genéricas.
+El hardening 10.14b añade continuidad conversacional genérica para:
+
+- comparaciones que introducen una segunda carta;
+- preguntas implícitas sobre la carta activa;
+- keywords que comparten nombre con una carta;
+- reglas numeradas referenciadas mediante pronombres;
+- procedimientos sin carta, como London Mulligan;
+- diferencias entre «al lanzar» y «al entrar»;
+- costes de Oracle que exigen sacrificar «otra» criatura o permanente.
+
+La Regression Suite y el Open Judge Gauntlet comparten el mismo corpus de preguntas. La primera sigue siendo útil para inspección humana; el segundo añade evaluación automática y estado conversacional.
 
 Los últimos hardenings añadieron regresiones deterministas para:
 
@@ -159,7 +172,7 @@ brawl
 - El sistema no simula una partida completa como un motor de reglas digital.
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
 - La UI todavía no está implementada.
-- La baseline completa del Open Judge Gauntlet aún debe ejecutarse y revisarse manualmente.
+- La baseline debe repetirse después de cada hardening conversacional para medir la mejora real y detectar regresiones.
 
 ### Definición de “Juez finalizado y funcional”
 

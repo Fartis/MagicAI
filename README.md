@@ -40,7 +40,7 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 
 ### Alcance de cartas
 
-Las campañas estándar se centran en **cartas de papel jugables en formatos oficiales soportados**. Se excluyen cartas de broma, silver-border, acorn y playtest, así como objetos sin legalidad relevante.
+El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. Se excluyen cartas de broma, silver-border, acorn y playtest, además de objetos suplementarios como Vanguard, tokens, emblemas, planos, fenómenos y esquemas. Las cartas ordinarias siguen siendo consultables aunque estén prohibidas actualmente.
 
 ### Estado
 
@@ -85,7 +85,7 @@ Its core principle is:
 
 MagicAI does not try to memorize every card or rule. It builds the context required for each question, uses deterministic renderers where a formal answer is available, validates LLM output and falls back safely when evidence is insufficient.
 
-The standard test catalog focuses on paper cards playable in supported official formats. Funny, silver-border, acorn and playtest cards are intentionally out of scope.
+The Judge and standard test catalog focus on ordinary paper cards. Funny, silver-border, acorn and playtest cards are out of scope, together with supplemental objects such as Vanguard cards, tokens, emblems, planes, phenomena and schemes.
 
 See [docs/STATUS.md](docs/STATUS.md) for the current state and [docs/ROADMAP.md](docs/ROADMAP.md) for the development plan.
 
@@ -248,6 +248,7 @@ PYTHONPATH=. python -m tests.quality.dynamic_gauntlet_generator_test
 PYTHONPATH=. python -m tests.quality.dynamic_campaign_planner_test
 PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
 PYTHONPATH=. python -m tests.retrieval.rule_queries_test
+PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test
@@ -319,7 +320,7 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Ejecutar y estabilizar la baseline del Open Judge Gauntlet.
+1. Repetir el Open Judge Gauntlet tras cada hardening y estabilizar sus contratos.
 2. Corregir por familias los fallos de contexto, retrieval y atribución.
 3. Crear `JudgeResult` como contrato factual estable.
 4. Completar cobertura guiada por fallos reales.
