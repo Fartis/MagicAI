@@ -177,6 +177,7 @@ python -m uvicorn magicai.api:app \
 Rutas:
 
 ```text
+http://127.0.0.1:8000/ui
 http://127.0.0.1:8000/
 http://127.0.0.1:8000/meta
 http://127.0.0.1:8000/health
@@ -236,6 +237,31 @@ curl -sS http://127.0.0.1:8000/health | jq
 
 `ready=true` indica que Oracle y Comprehensive Rules están disponibles.
 `full_service=true` indica además que Ollama y el modelo configurado responden.
+
+## 🖥️ UI beta del Juez
+
+Iniciar la API y la interfaz:
+
+```bash
+python -m uvicorn magicai.api:app --reload
+```
+
+Abrir en el navegador:
+
+```text
+http://127.0.0.1:8000/ui
+```
+
+Pruebas de la shell web:
+
+```bash
+PYTHONPATH=. python -m tests.api.ui_routes_test
+PYTHONPATH=. python -m tests.ui.ui_assets_test
+```
+
+La UI utiliza los endpoints `/ask`, `/meta` y `/health`. No requiere Node ni npm.
+
+---
 
 Comprobar el error estructurado para una pregunta vacía:
 
