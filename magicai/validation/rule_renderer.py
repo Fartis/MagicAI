@@ -159,6 +159,14 @@ def render_rule_answer(knowledge: str) -> str | None:
             "batalla bajo el control de su dueño con un contador -1/-1."
         )
 
+    layered_answer = _render_layered_static_source_comparison(
+        knowledge,
+        q,
+    )
+
+    if layered_answer is not None:
+        return layered_answer
+
     if _is_persist_and_undying_question(q) and _has_rules(
         knowledge,
         ["persist", "undying", "triggered", "stack", "zone_change"],

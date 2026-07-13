@@ -139,7 +139,11 @@ MagicAI utiliza un enfoque híbrido:
 
 Esto permite aprovechar la flexibilidad lingüística del LLM sin convertirlo en la fuente de verdad.
 
----
+1. Si la evidencia coincide con una familia formal cubierta, el `rule_renderer` genera una respuesta determinista.
+2. Si no existe renderer, Ollama explica el contexto recuperado.
+3. La respuesta del modelo se valida.
+4. Si falla, se reintenta con las violaciones detectadas.
+5. Si sigue fallando, se produce un fallback seguro.
 
 ## Arquitectura de pruebas
 
@@ -233,7 +237,7 @@ STRATEGIC_VALIDATION = Deck Master
 
 La sesión futura será compartida entre perfiles y conservará un `authority_trace` para distinguir hechos, recomendaciones y propuestas.
 
----
+Deck Master y Deckbuilder:
 
 ## Contrato `JudgeResult`
 
