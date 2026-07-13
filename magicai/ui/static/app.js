@@ -6,6 +6,15 @@ const STORAGE = {
   lastResult: "magicai.ui.lastResult.v1",
 };
 
+const ASK_TIMEOUT_MS = 180000;
+const AUXILIARY_TIMEOUT_MS = 10000;
+const MAX_STORED_MESSAGES = 40;
+const ALLOWED_MESSAGE_ROLES = new Set(["user", "assistant", "error"]);
+
+let storageAvailable = true;
+let storageWarningPending = false;
+let storageWarningShown = false;
+
 const STATUS_LABELS = {
   answered: "Respondido",
   needs_clarification: "Necesita aclaración",
@@ -25,19 +34,23 @@ const ORIGIN_LABELS = {
   safe_fallback: "Fallback seguro",
 };
 
+const elements = {};
+
 const state = {
-  sessionId: readStorage(STORAGE.session, null),
-  messages: readStorage(STORAGE.transcript, []),
-  lastResult: readStorage(STORAGE.lastResult, null),
+  sessionId: loadStoredSession(),
+  messages: loadStoredMessages(),
+  lastResult: loadStoredResult(),
   sending: false,
   metadata: null,
+  activeRequest: null,
+  requestSequence: 0,
+  healthRequestPending: false,
 };
-
-const elements = {};
 
 document.addEventListener("DOMContentLoaded", () => {
   captureElements();
   bindEvents();
+  flushStorageWarning();
   restoreState();
   void loadMetadata();
   void refreshHealth();
@@ -55,6 +68,8 @@ function captureElements() {
     "question-form",
     "question-input",
     "send-button",
+    "cancel-request-button",
+    "request-status",
     "result-status",
     "result-summary",
     "evidence-sections",
@@ -93,6 +108,7 @@ function bindEvents() {
 
   elements["question-input"].addEventListener("input", autoResizeTextarea);
   elements["new-session-button"].addEventListener("click", resetConversation);
+  elements["cancel-request-button"].addEventListener("click", cancelActiveRequest);
 
   for (const button of document.querySelectorAll(".suggestion")) {
     button.addEventListener("click", () => {
@@ -131,11 +147,18 @@ async function loadMetadata() {
 }
 
 async function refreshHealth() {
+  if (state.healthRequestPending) {
+    return;
+  }
+
+  state.healthRequestPending = true;
   const badge = elements["health-badge"];
   const label = elements["health-label"];
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort("timeout"), AUXILIARY_TIMEOUT_MS);
 
   try {
-    const health = await fetchJson("/health");
+    const health = await fetchJson("/health", {signal: controller.signal});
     badge.className = "health-badge";
 
     if (health.status === "ok") {
@@ -152,8 +175,11 @@ async function refreshHealth() {
     badge.title = buildHealthDescription(health);
   } catch (error) {
     badge.className = "health-badge is-unavailable";
-    label.textContent = "API no disponible";
+    label.textContent = error.name === "AbortError" ? "Salud sin respuesta" : "API no disponible";
     badge.title = error.message;
+  } finally {
+    window.clearTimeout(timeoutId);
+    state.healthRequestPending = false;
   }
 }
 
@@ -171,6 +197,21 @@ async function submitQuestion() {
     return;
   }
 
+  const requestId = ++state.requestSequence;
+  const sentSessionId = state.sessionId;
+  const controller = new AbortController();
+  const activeRequest = {
+    id: requestId,
+    controller,
+    cancelReason: null,
+    timeoutId: null,
+  };
+  state.activeRequest = activeRequest;
+  activeRequest.timeoutId = window.setTimeout(() => {
+    activeRequest.cancelReason = "timeout";
+    controller.abort("timeout");
+  }, ASK_TIMEOUT_MS);
+
   setSending(true);
   removeWelcome();
   addStoredMessage({role: "user", text: question});
@@ -181,18 +222,24 @@ async function submitQuestion() {
 
   try {
     const payload = {question};
-    if (state.sessionId) {
-      payload.session_id = state.sessionId;
+    if (sentSessionId) {
+      payload.session_id = sentSessionId;
     }
 
     const result = await fetchJson("/ask", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
 
+    if (!isCurrentRequest(requestId)) {
+      loadingNode.remove();
+      return;
+    }
+
     loadingNode.remove();
-    state.sessionId = result.session_id || state.sessionId;
+    state.sessionId = normalizeSessionId(result.session_id) || sentSessionId;
     state.lastResult = result;
     writeStorage(STORAGE.session, state.sessionId);
     writeStorage(STORAGE.lastResult, result);
@@ -204,15 +251,55 @@ async function submitQuestion() {
     });
     renderEvidence(result);
     updateSessionLabel();
+    announceRequestStatus("Respuesta recibida.");
   } catch (error) {
+    if (!isCurrentRequest(requestId)) {
+      loadingNode.remove();
+      return;
+    }
+
     loadingNode.remove();
-    const message = error.userMessage || error.message || "No se pudo completar la consulta.";
+    const message = describeRequestError(error, activeRequest.cancelReason);
     addStoredMessage({role: "error", text: message});
-    showToast(message);
+    showToast(message, activeRequest.cancelReason === "user" ? "info" : "error");
+    announceRequestStatus(message);
   } finally {
-    setSending(false);
-    input.focus();
+    window.clearTimeout(activeRequest.timeoutId);
+    if (isCurrentRequest(requestId)) {
+      state.activeRequest = null;
+      setSending(false);
+      input.focus();
+    }
   }
+}
+
+function cancelActiveRequest() {
+  const activeRequest = state.activeRequest;
+  if (!activeRequest || activeRequest.controller.signal.aborted) {
+    return;
+  }
+
+  activeRequest.cancelReason = "user";
+  announceRequestStatus("Cancelando consulta…");
+  activeRequest.controller.abort("user");
+}
+
+function isCurrentRequest(requestId) {
+  return state.activeRequest?.id === requestId;
+}
+
+function describeRequestError(error, cancelReason) {
+  if (error?.name === "AbortError") {
+    if (cancelReason === "user") {
+      return "Consulta cancelada.";
+    }
+    return "La consulta superó el tiempo máximo de espera. Puedes volver a intentarlo.";
+  }
+  return error.userMessage || error.message || "No se pudo completar la consulta.";
+}
+
+function announceRequestStatus(message) {
+  elements["request-status"].textContent = message;
 }
 
 async function fetchJson(url, options = {}) {
@@ -273,6 +360,8 @@ function renderMessage(message, shouldScroll = true) {
 function renderLoadingMessage() {
   const article = document.createElement("article");
   article.className = "message is-assistant";
+  article.setAttribute("role", "status");
+  article.setAttribute("aria-label", "El Juez está consultando las fuentes");
 
   const header = document.createElement("div");
   header.className = "message-header";
@@ -421,10 +510,11 @@ function renderCards(cards) {
       node.appendChild(oracle);
     }
 
-    if (card.scryfall_uri) {
+    const scryfallUrl = getTrustedScryfallUrl(card.scryfall_uri);
+    if (scryfallUrl) {
       const link = document.createElement("a");
       link.className = "evidence-link";
-      link.href = card.scryfall_uri;
+      link.href = scryfallUrl;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       link.textContent = "Abrir en Scryfall ↗";
@@ -563,7 +653,7 @@ function createEmptyNote(text) {
 
 function addStoredMessage(message) {
   state.messages.push(message);
-  state.messages = state.messages.slice(-40);
+  state.messages = state.messages.slice(-MAX_STORED_MESSAGES);
   writeStorage(STORAGE.transcript, state.messages);
   renderMessage(message);
 }
@@ -573,9 +663,9 @@ function resetConversation() {
   state.messages = [];
   state.lastResult = null;
 
-  localStorage.removeItem(STORAGE.session);
-  localStorage.removeItem(STORAGE.transcript);
-  localStorage.removeItem(STORAGE.lastResult);
+  removeStorage(STORAGE.session);
+  removeStorage(STORAGE.transcript);
+  removeStorage(STORAGE.lastResult);
 
   clearNode(elements["message-list"]);
   const welcome = buildWelcomeClone();
@@ -640,16 +730,24 @@ function removeWelcome() {
 }
 
 function updateSessionLabel() {
-  elements["session-label"].textContent = state.sessionId
-    ? `Sesión ${state.sessionId.slice(0, 8)}`
+  const sessionId = normalizeSessionId(state.sessionId);
+  elements["session-label"].textContent = sessionId
+    ? `Sesión ${sessionId.slice(0, 8)}`
     : "Sesión nueva";
 }
 
 function setSending(value) {
   state.sending = value;
   elements["send-button"].disabled = value;
+  elements["send-button"].hidden = value;
+  elements["cancel-request-button"].hidden = !value;
   elements["new-session-button"].disabled = value;
   elements["question-input"].disabled = value;
+  elements["question-form"].setAttribute("aria-busy", String(value));
+  elements["message-list"].setAttribute("aria-busy", String(value));
+  if (value) {
+    announceRequestStatus("Consulta enviada. El Juez está consultando las fuentes.");
+  }
 }
 
 function autoResizeTextarea() {
@@ -670,28 +768,156 @@ function clearNode(node) {
   }
 }
 
-function showToast(message) {
+function showToast(message, kind = "error") {
   const toast = document.createElement("div");
-  toast.className = "toast";
+  toast.className = `toast is-${kind}`;
   toast.textContent = message;
   elements["toast-region"].appendChild(toast);
   window.setTimeout(() => toast.remove(), 5500);
 }
 
+function loadStoredSession() {
+  const value = readStorage(STORAGE.session, null);
+  const normalized = normalizeSessionId(value);
+  if (value !== null && normalized === null) {
+    removeStorage(STORAGE.session);
+  }
+  return normalized;
+}
+
+function loadStoredMessages() {
+  const value = readStorage(STORAGE.transcript, []);
+  if (!Array.isArray(value)) {
+    removeStorage(STORAGE.transcript);
+    return [];
+  }
+
+  const messages = value
+    .filter(isValidStoredMessage)
+    .map(message => ({
+      role: message.role,
+      text: message.text,
+      ...(typeof message.status === "string" ? {status: message.status} : {}),
+    }))
+    .slice(-MAX_STORED_MESSAGES);
+
+  if (messages.length !== value.length) {
+    writeStorage(STORAGE.transcript, messages);
+  }
+  return messages;
+}
+
+function loadStoredResult() {
+  const value = readStorage(STORAGE.lastResult, null);
+  if (value === null) {
+    return null;
+  }
+  if (!isRecord(value) || typeof value.answer !== "string" || typeof value.status !== "string") {
+    removeStorage(STORAGE.lastResult);
+    return null;
+  }
+  return value;
+}
+
+function normalizeSessionId(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const normalized = value.trim();
+  return normalized && normalized.length <= 256 ? normalized : null;
+}
+
+function isValidStoredMessage(value) {
+  return isRecord(value)
+    && ALLOWED_MESSAGE_ROLES.has(value.role)
+    && typeof value.text === "string"
+    && (value.status === undefined || typeof value.status === "string");
+}
+
+function isRecord(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function readStorage(key, fallback) {
+  if (!storageAvailable) {
+    return fallback;
+  }
+
   try {
     const raw = localStorage.getItem(key);
-    return raw === null ? fallback : JSON.parse(raw);
+    if (raw === null) {
+      return fallback;
+    }
+    return JSON.parse(raw);
   } catch (error) {
-    localStorage.removeItem(key);
+    if (error instanceof SyntaxError) {
+      removeStorage(key);
+    } else {
+      markStorageUnavailable();
+    }
     return fallback;
   }
 }
 
 function writeStorage(key, value) {
+  if (!storageAvailable) {
+    return false;
+  }
+
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch (error) {
-    // The UI remains usable when private mode or storage limits block persistence.
+    markStorageUnavailable();
+    return false;
+  }
+}
+
+function removeStorage(key) {
+  if (!storageAvailable) {
+    return false;
+  }
+
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    markStorageUnavailable();
+    return false;
+  }
+}
+
+function markStorageUnavailable() {
+  storageAvailable = false;
+  storageWarningPending = true;
+  flushStorageWarning();
+}
+
+function flushStorageWarning() {
+  if (!storageWarningPending || storageWarningShown || !elements["toast-region"]) {
+    return;
+  }
+
+  storageWarningPending = false;
+  storageWarningShown = true;
+  const message = "El navegador no permite guardar el historial local. La conversación seguirá funcionando, pero no persistirá al recargar.";
+  showToast(message, "warning");
+  announceRequestStatus(message);
+}
+
+function getTrustedScryfallUrl(value) {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    if (url.protocol !== "https:" || !["scryfall.com", "www.scryfall.com"].includes(hostname)) {
+      return null;
+    }
+    return url.href;
+  } catch (error) {
+    return null;
   }
 }

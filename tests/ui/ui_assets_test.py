@@ -40,6 +40,8 @@ def test_index_exposes_chat_and_evidence_contract() -> None:
         "question-form",
         "question-input",
         "send-button",
+        "cancel-request-button",
+        "request-status",
         "evidence-panel",
         "result-status",
         "cards-list",
@@ -63,6 +65,8 @@ def test_javascript_uses_structured_api_without_html_injection() -> None:
     assert "textContent" in javascript
     assert "innerHTML" not in javascript
     assert "localStorage" in javascript
+    assert "AbortController" in javascript
+    assert "getTrustedScryfallUrl" in javascript
 
 
 def main() -> int:

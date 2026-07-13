@@ -257,9 +257,10 @@ Pruebas de la shell web:
 ```bash
 PYTHONPATH=. python -m tests.api.ui_routes_test
 PYTHONPATH=. python -m tests.ui.ui_assets_test
+PYTHONPATH=. python -m tests.ui.ui_resilience_test
 ```
 
-La UI utiliza los endpoints `/ask`, `/meta` y `/health`. No requiere Node ni npm.
+La UI utiliza los endpoints `/ask`, `/meta` y `/health`. No requiere Node ni npm. Durante una consulta aparece un botón **Cancelar** y `/ask` dispone de un timeout de seguridad de tres minutos en el navegador.
 
 ---
 

@@ -7,7 +7,11 @@ from magicai.ui.routes import INDEX_FILE, ui_index
 
 
 def test_application_exposes_ui_routes_and_assets() -> None:
-    paths = {route.path for route in app.routes}
+    paths = {
+        route_path
+        for route in app.routes
+        if isinstance((route_path := getattr(route, "path", None)), str)
+    }
 
     assert "/ui" in paths
     assert "/ui/" in paths

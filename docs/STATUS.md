@@ -1,7 +1,7 @@
 # 📊 Estado actual de MagicAI
 
 > Snapshot de desarrollo: **v0.1.0-alpha**
-> Última actualización documental: **12 de julio de 2026**
+> Última actualización documental: **13 de julio de 2026**
 
 [Español](#-estado-del-proyecto) · [English](#-project-status)
 
@@ -9,9 +9,9 @@
 
 ## 🇪🇸 Estado del proyecto
 
-MagicAI se encuentra en una **alpha funcional del Juez**. El pipeline principal ya recupera conocimiento local, resuelve referencias conversacionales, genera consultas de reglas, utiliza respuestas deterministas para familias cubiertas y valida la salida del LLM.
+MagicAI se encuentra en una **alpha funcional del Juez con UI beta local**. El pipeline principal recupera conocimiento local, resuelve referencias conversacionales, genera consultas de reglas, utiliza respuestas deterministas para familias cubiertas y valida la salida del LLM. El contrato `JudgeResult 1.0`, la salud de fuentes y la baseline abierta estable ya permiten utilizar el Juez desde la interfaz web.
 
-No se considera finalizado porque todavía falta repetir la baseline abierta tras cada hardening, estabilizar completamente el contrato estructurado y cubrir familias de reglas complejas de alta frecuencia.
+No se considera un producto final porque aún faltan persistencia de sesiones del servidor, mayor cobertura guiada por fallos reales, pulido de experiencia, empaquetado y compatibilidad comprobada en más entornos.
 
 ### Capacidades implementadas
 
@@ -171,8 +171,8 @@ brawl
 - La cobertura de capas y dependencias ya tiene casos iniciales, pero todavía no es general; CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
 - El sistema no simula una partida completa como un motor de reglas digital.
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
-- La UI todavía no está implementada.
-- La baseline debe repetirse después de cada hardening conversacional para medir la mejora real y detectar regresiones.
+- La UI beta ya está implementada y dispone de cancelación, timeout, restauración local validada y presentación accesible; todavía faltan desambiguación interactiva, exportación y persistencia real de sesiones.
+- La baseline debe repetirse después de cambios que afecten al Juez o a sus contratos; los cambios puramente visuales se validan con tests de UI y smoke tests de API.
 
 ### Definición de “Juez finalizado y funcional”
 

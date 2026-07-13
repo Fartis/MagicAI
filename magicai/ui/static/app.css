@@ -206,6 +206,7 @@ h3 {
 
 .secondary-button,
 .send-button,
+.cancel-button,
 .suggestion {
   border: 1px solid var(--border);
   cursor: pointer;
@@ -214,6 +215,7 @@ h3 {
 
 .secondary-button:hover,
 .send-button:hover,
+.cancel-button:hover,
 .suggestion:hover {
   transform: translateY(-1px);
 }
@@ -447,7 +449,8 @@ h3 {
   color: var(--faint);
 }
 
-.send-button {
+.send-button,
+.cancel-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -459,6 +462,18 @@ h3 {
   color: #171008;
   background: linear-gradient(145deg, var(--accent-strong), #b8842e);
   font-weight: 780;
+}
+
+.cancel-button {
+  min-width: 124px;
+  border-color: rgba(241, 112, 112, 0.52);
+  color: #ffd7d7;
+  background: rgba(241, 112, 112, 0.12);
+}
+
+.cancel-button:hover {
+  border-color: rgba(241, 112, 112, 0.82);
+  background: rgba(241, 112, 112, 0.2);
 }
 
 .send-button:disabled,
@@ -651,6 +666,20 @@ h3 {
   background: #25171a;
   box-shadow: var(--shadow);
   font-size: 0.78rem;
+}
+
+.toast.is-warning {
+  border-color: rgba(240, 173, 78, 0.4);
+  background: #261f13;
+}
+
+.toast.is-info {
+  border-color: rgba(112, 168, 241, 0.4);
+  background: #151e2b;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .sr-only {

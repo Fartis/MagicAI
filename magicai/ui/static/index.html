@@ -42,7 +42,7 @@
         <span id="session-label" class="session-label">Sesión nueva</span>
       </div>
 
-      <div id="message-list" class="message-list" aria-live="polite" aria-relevant="additions">
+      <div id="message-list" class="message-list" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false">
         <article id="welcome-message" class="welcome-card">
           <p class="welcome-kicker">More Gathering. Less Guessing.</p>
           <h3>Pregunta por cartas, reglas o interacciones.</h3>
@@ -58,7 +58,7 @@
         </article>
       </div>
 
-      <form id="question-form" class="composer">
+      <form id="question-form" class="composer" aria-busy="false">
         <label class="sr-only" for="question-input">Escribe tu pregunta para el Juez</label>
         <textarea
           id="question-input"
@@ -67,13 +67,19 @@
           maxlength="10000"
           placeholder="Escribe una pregunta de reglas…"
           autocomplete="off"
+          aria-describedby="composer-hint"
           required
         ></textarea>
         <button id="send-button" class="send-button" type="submit">
           <span>Preguntar</span>
           <span aria-hidden="true">↗</span>
         </button>
-        <p class="composer-hint">Enter para enviar · Mayús + Enter para nueva línea</p>
+        <button id="cancel-request-button" class="cancel-button" type="button" hidden>
+          <span>Cancelar</span>
+          <span aria-hidden="true">■</span>
+        </button>
+        <p id="composer-hint" class="composer-hint">Enter para enviar · Mayús + Enter para nueva línea</p>
+        <p id="request-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
       </form>
     </section>
 

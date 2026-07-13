@@ -360,13 +360,12 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Repetir el Open Judge Gauntlet tras cada hardening y estabilizar sus contratos.
-2. Corregir por familias los fallos de contexto, retrieval y atribución.
-3. Estabilizar y ampliar `JudgeResult` como contrato factual público.
-4. Completar cobertura guiada por fallos reales.
-5. Cerrar un Judge Release Candidate.
-6. Construir una UI beta modular para conversar con el Juez.
-7. Añadir Deck Master y Deckbuilder sobre la misma UI.
+1. Reforzar resiliencia, accesibilidad y usabilidad de la UI beta del Juez.
+2. Añadir desambiguación interactiva, copia y exportación de evidencia.
+3. Incorporar persistencia real de conversaciones e historial gestionable.
+4. Ampliar cobertura del Juez únicamente según fallos reales de prioridad suficiente.
+5. Preparar instalación y distribución reproducibles.
+6. Añadir Deck Master y Deckbuilder sobre la misma UI, respetando la autoridad factual del Juez.
 
 Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracle ni reglas**. Para cartas, legalidad, rulings e interacciones deberán consultar al Juez mediante su API interna.
 
