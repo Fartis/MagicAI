@@ -96,3 +96,38 @@ class ErrorBodyResponse(BaseModel):
 class ErrorResponse(BaseModel):
     schema_version: str
     error: ErrorBodyResponse
+
+
+class ConversationMessageResponse(BaseModel):
+    role: str
+    content: str
+
+
+class ConversationSummaryResponse(BaseModel):
+    session_id: str
+    title: str
+    created_at: str
+    updated_at: str
+    message_count: int
+
+
+class ConversationDetailResponse(ConversationSummaryResponse):
+    messages: list[ConversationMessageResponse] = Field(default_factory=list)
+    last_result: dict[str, Any] | None = None
+
+
+class ConversationRenameRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str) -> str:
+        normalized = " ".join(value.strip().split())
+        if not normalized:
+            raise ValueError("title must not be empty")
+        return normalized
+
+
+class ConversationDeleteResponse(BaseModel):
+    session_id: str
+    deleted: bool

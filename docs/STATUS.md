@@ -1,7 +1,7 @@
 # 📊 Estado actual de MagicAI
 
 > Snapshot de desarrollo: **v0.1.0-alpha**
-> Última actualización documental: **12 de julio de 2026**
+> Última actualización documental: **13 de julio de 2026**
 
 [Español](#-estado-del-proyecto) · [English](#-project-status)
 
@@ -9,9 +9,9 @@
 
 ## 🇪🇸 Estado del proyecto
 
-MagicAI se encuentra en una **alpha funcional del Juez**. El pipeline principal ya recupera conocimiento local, resuelve referencias conversacionales, genera consultas de reglas, utiliza respuestas deterministas para familias cubiertas y valida la salida del LLM.
+MagicAI se encuentra en una **alpha funcional del Juez con UI beta local**. El pipeline principal recupera conocimiento local, resuelve referencias conversacionales, genera consultas de reglas, utiliza respuestas deterministas para familias cubiertas y valida la salida del LLM. El contrato `JudgeResult 1.0`, la salud de fuentes y la baseline abierta estable ya permiten utilizar el Juez desde la interfaz web.
 
-No se considera finalizado porque todavía falta repetir la baseline abierta tras cada hardening, estabilizar completamente el contrato estructurado y cubrir familias de reglas complejas de alta frecuencia.
+No se considera un producto final porque aún faltan mayor cobertura guiada por fallos reales, pulido de experiencia, empaquetado, migraciones de datos y compatibilidad comprobada en más entornos.
 
 ### Capacidades implementadas
 
@@ -19,15 +19,15 @@ No se considera finalizado porque todavía falta repetir la baseline abierta tra
 - Comprehensive Rules locales y búsqueda por secciones.
 - Índice de cartas en memoria.
 - Detección de cartas, aliases, keywords, acciones y reglas explícitas.
-- Desambiguación conversacional de cartas.
+- Desambiguación conversacional de cartas con selección interactiva en la UI.
 - Context Builder y Context Enricher.
 - Recuperación de reglas guiada por pregunta y Oracle.
 - Símbolos de Scryfall.
 - Renderizadores deterministas de reglas y Oracle.
 - Ollama local con temperatura cero.
 - Validación de respuestas, reintento y fallback seguro.
-- API REST con sesiones en memoria y salida `JudgeResult` retrocompatible.
-- UI beta local con chat, evidencia, estados y salud del servicio.
+- API REST con sesiones persistentes en SQLite y salida `JudgeResult` retrocompatible.
+- UI beta local con chat, evidencia, estados, salud del servicio, copia y exportación.
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
@@ -166,13 +166,13 @@ brawl
 ### Limitaciones conocidas
 
 - `JudgeResult` ya integra rulings locales bajo petición explícita, supuestos conservadores y corrección inicial de premisas falsas; falta ampliar estas familias según fallos reales.
-- Las sesiones de la API viven en memoria y no persisten tras reiniciar el proceso.
+- Las sesiones se persisten en SQLite local y se restauran tras reiniciar FastAPI. Todavía no hay sincronización entre equipos ni cifrado específico de la base local.
 - La cobertura determinista todavía no abarca todas las familias de reglas.
 - La cobertura de capas y dependencias ya tiene casos iniciales, pero todavía no es general; CDA, LKI, copias complejas, costes alternativos y cartas multiface necesitan más cobertura.
 - El sistema no simula una partida completa como un motor de reglas digital.
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
-- La UI todavía no está implementada.
-- La baseline debe repetirse después de cada hardening conversacional para medir la mejora real y detectar regresiones.
+- La UI beta ya dispone de cancelación, timeout, desambiguación interactiva, copia/exportación, historial SQLite gestionable y presentación accesible. Falta seguir puliendo móvil, búsqueda de historial y ajustes de usuario.
+- La baseline debe repetirse después de cambios que afecten al Juez o a sus contratos; los cambios puramente visuales se validan con tests de UI y smoke tests de API.
 
 ### Definición de “Juez finalizado y funcional”
 
@@ -209,7 +209,7 @@ The future UI will start with the Judge and later host Deck Master and Deckbuild
 
 Puerta Open Judge completada: tres baselines consecutivas con 27/27 resultados aceptables, sin fallos críticos. Pendiente del Release Candidate formal: repetir la matriz controlada completa y los smoke tests finales del entorno objetivo.
 
-## Sprint 11.0 — UI beta foundation 🚧
+## Sprint 11.0 — UI beta foundation ✅
 
 Primera shell de usuario servida por FastAPI:
 
@@ -222,3 +222,34 @@ Primera shell de usuario servida por FastAPI:
 - construcción segura del DOM sin insertar respuestas mediante `innerHTML`.
 
 La primera entrega no incluye cuentas, base de datos de conversaciones, acceso remoto endurecido ni Deck Master.
+
+
+## Sprint 11.1 — usabilidad, resiliencia y presentación ✅
+
+### 11.1a completado
+
+- cancelación y timeout de consultas;
+- protección frente a respuestas obsoletas;
+- almacenamiento local validado y fallos visibles;
+- allowlist de enlaces de Scryfall;
+- anuncios accesibles y sondeo de salud no solapado.
+
+### 11.1b implementado
+
+- botones para resolver desambiguaciones sin escribir el nombre;
+- copia de respuesta y evidencia;
+- exportación del último `JudgeResult` en JSON;
+- apertura automática y mejor jerarquía del panel de evidencia;
+- `QUICKSTART.md` lineal y aclaración de ramas.
+
+Pendiente para cerrar 11.1: revisión visual en navegador real, captura para README y correcciones de prioridad media-alta encontradas durante la aceptación manual.
+
+
+## Sprint 11.2a — persistencia local e historial ✅
+
+- conversaciones guardadas en SQLite local;
+- contexto restaurable tras reiniciar FastAPI;
+- endpoints de listado, detalle, renombrado y borrado;
+- panel de historial en la UI;
+- restauración del último `JudgeResult`;
+- nuevo tema visual basado en la paleta del Gauntlet.

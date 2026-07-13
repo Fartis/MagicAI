@@ -1152,6 +1152,185 @@ QUESTION
 
 ¿Cómo funciona Undying?
 
+============================================================
+RULES
+
+Undying
+
+702.93a
+Undying is a triggered ability. When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "habilidad disparada",
+            "muere",
+            "no tenía contadores +1/+1",
+            "vuelve",
+            "contador +1/+1",
+        ],
+        "direct Undying definition",
+    )
+
+
+def test_keyword_difference_uses_recovered_rules():
+    knowledge = """
+QUESTION
+
+¿Qué diferencias tienen?
+
+============================================================
+RULES
+
+Undying
+702.93a
+Undying is a triggered ability.
+
+Persist
+702.79a
+Persist is a triggered ability.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "Undying",
+            "Persist",
+            "+1/+1",
+            "-1/-1",
+            "muere",
+        ],
+        "keyword difference",
+    )
+
+
+def test_rule_followup_example_uses_active_undying_rule():
+    knowledge = """
+QUESTION
+
+¿Puedes explicarla con un ejemplo?
+
+============================================================
+RULES
+
+Undying
+702.93a
+Undying is a triggered ability.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "Por ejemplo",
+            "muere",
+            "cementerio",
+            "+1/+1",
+            "vuelve",
+        ],
+        "rule follow-up example",
+    )
+
+def test_undying_with_existing_positive_counter_is_deterministic():
+    knowledge = """
+QUESTION
+
+¿Y si además tiene un contador +1/+1?
+
+============================================================
+RULES
+
+Undying
+702.93a
+Undying is a triggered ability. When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield with a +1/+1 counter on it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "ya tiene un contador +1/+1",
+            "Undying no se dispara",
+            "permanece en el cementerio",
+        ],
+        "Undying with existing +1/+1 counter",
+    )
+
+
+def test_london_mulligan_definition_is_deterministic():
+    knowledge = """
+QUESTION
+
+Explícame el London Mulligan.
+
+============================================================
+RULES
+
+103.5
+Each player draws a number of cards equal to their starting hand size, which is normally seven. To take a mulligan, a player draws a new hand equal to their starting hand size, then puts a number of those cards equal to the number of mulligans taken on the bottom of their library.
+
+103.5c
+In a multiplayer game and in any Brawl game, the first mulligan a player takes doesn't count toward the number of cards that player will put on the bottom of their library.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "siete cartas",
+            "fondo",
+            "mulligans",
+            "multijugador",
+            "primer mulligan es gratuito",
+        ],
+        "London Mulligan definition",
+    )
+
+
+def test_london_mulligan_draw_followup_is_deterministic():
+    knowledge = """
+QUESTION
+
+¿Cuántas cartas robo después?
+
+============================================================
+RULES
+
+103.5
+Each player draws a number of cards equal to their starting hand size, which is normally seven. To take a mulligan, a player draws a new hand equal to their starting hand size, then puts a number of those cards equal to the number of mulligans taken on the bottom of their library.
+
+103.5c
+In a multiplayer game, the first mulligan doesn't count.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "tamaño inicial",
+            "siete cartas",
+            "fondo",
+            "primero es gratuito",
+        ],
+        "London Mulligan draw follow-up",
+    )
+
+
 def main():
     tests = [
         test_no_priority_during_resolution,

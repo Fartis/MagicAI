@@ -33,6 +33,20 @@
   </header>
 
   <main class="app-shell">
+    <aside class="history-panel" aria-labelledby="history-title">
+      <div class="panel-heading history-heading">
+        <div>
+          <p class="eyebrow">Persistencia local</p>
+          <h2 id="history-title">Conversaciones</h2>
+        </div>
+        <button id="refresh-history-button" class="icon-button" type="button" aria-label="Actualizar historial" title="Actualizar historial">
+          ↻
+        </button>
+      </div>
+      <p id="history-status" class="history-status" role="status" aria-live="polite">Cargando historial…</p>
+      <div id="conversation-list" class="conversation-list" aria-label="Conversaciones guardadas"></div>
+    </aside>
+
     <section class="chat-panel" aria-labelledby="conversation-title">
       <div class="panel-heading chat-heading">
         <div>
@@ -42,7 +56,7 @@
         <span id="session-label" class="session-label">Sesión nueva</span>
       </div>
 
-      <div id="message-list" class="message-list" aria-live="polite" aria-relevant="additions">
+      <div id="message-list" class="message-list" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false">
         <article id="welcome-message" class="welcome-card">
           <p class="welcome-kicker">More Gathering. Less Guessing.</p>
           <h3>Pregunta por cartas, reglas o interacciones.</h3>
@@ -58,7 +72,7 @@
         </article>
       </div>
 
-      <form id="question-form" class="composer">
+      <form id="question-form" class="composer" aria-busy="false">
         <label class="sr-only" for="question-input">Escribe tu pregunta para el Juez</label>
         <textarea
           id="question-input"
@@ -67,13 +81,19 @@
           maxlength="10000"
           placeholder="Escribe una pregunta de reglas…"
           autocomplete="off"
+          aria-describedby="composer-hint"
           required
         ></textarea>
         <button id="send-button" class="send-button" type="submit">
           <span>Preguntar</span>
           <span aria-hidden="true">↗</span>
         </button>
-        <p class="composer-hint">Enter para enviar · Mayús + Enter para nueva línea</p>
+        <button id="cancel-request-button" class="cancel-button" type="button" hidden>
+          <span>Cancelar</span>
+          <span aria-hidden="true">■</span>
+        </button>
+        <p id="composer-hint" class="composer-hint">Enter para enviar · Mayús + Enter para nueva línea</p>
+        <p id="request-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
       </form>
     </section>
 
@@ -89,6 +109,18 @@
       <section id="result-summary" class="result-summary" aria-live="polite">
         <p>La evidencia de la última respuesta aparecerá aquí.</p>
       </section>
+
+      <div id="result-actions" class="result-actions" aria-label="Acciones sobre el último resultado">
+        <button id="copy-answer-button" class="compact-button" type="button" disabled>
+          Copiar respuesta
+        </button>
+        <button id="copy-evidence-button" class="compact-button" type="button" disabled>
+          Copiar evidencia
+        </button>
+        <button id="export-result-button" class="compact-button" type="button" disabled>
+          Exportar JSON
+        </button>
+      </div>
 
       <div id="evidence-sections" class="evidence-sections" hidden>
         <details id="cards-section" open>

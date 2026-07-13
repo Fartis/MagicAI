@@ -11,6 +11,8 @@
 
 `v0.1.0-alpha` · Judge core in active development · Local-first
 
+> `main` contiene la versión estable o publicada. El desarrollo activo se integra en `develop` y cada sprint se trabaja en una rama `feature/*`.
+
 </div>
 
 ---
@@ -36,6 +38,7 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 - Validación, reintento y fallback source-grounded.
 - API REST de desarrollo.
 - UI beta local servida por FastAPI, sin Node ni servicios externos.
+- Historial persistente de conversaciones en SQLite local, con apertura, renombrado y borrado desde la UI.
 - Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
 - Open Judge Gauntlet con contratos semánticos para conversaciones reales.
 
@@ -45,7 +48,7 @@ El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. 
 
 ### Estado
 
-El Juez ya es funcional para varias familias de reglas, pero todavía no es una versión final. El desarrollo inmediato se centra en medir su generalización abierta, ampliar cobertura según fallos reales y estabilizar un contrato estructurado que sirva tanto a la futura UI como a otros perfiles.
+El Juez ya es funcional para varias familias de reglas y dispone de una UI beta local. El desarrollo inmediato se centra en mejorar usabilidad, persistencia y distribución, mientras la cobertura factual solo se amplía cuando aparecen fallos reales de prioridad suficiente.
 
 La última campaña dinámica validada cubrió:
 
@@ -71,6 +74,8 @@ Ejecuciones validadas   216/216
 WARN                           0
 FAIL                           0
 ```
+
+Esta cifra describe una matriz controlada y reproducible sin regresiones. No significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic.
 
 Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado y [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta.
 
@@ -171,6 +176,8 @@ Ambas variables pueden sobrescribirse mediante el entorno.
 
 ## Instalación rápida · Quick start
 
+La guía lineal completa, incluida la diferencia entre `main` y `develop`, Ollama local, Docker o LAN y comprobaciones de salud, está en [docs/QUICKSTART.md](docs/QUICKSTART.md).
+
 ```bash
 git clone https://github.com/Fartis/MagicAI.git
 cd MagicAI
@@ -230,7 +237,7 @@ POST http://127.0.0.1:8000/ask
 DOCS http://127.0.0.1:8000/docs
 ```
 
-La UI beta muestra la conversación, el estado de `JudgeResult`, cartas, reglas, rulings, supuestos, advertencias y salud de las fuentes. Consulta [docs/UI.md](docs/UI.md).
+La UI beta muestra la conversación, el estado de `JudgeResult`, cartas, reglas, rulings, supuestos, advertencias y salud de las fuentes. También permite seleccionar candidatos de desambiguación, copiar o exportar evidencia y gestionar un historial persistente de conversaciones guardado localmente en SQLite. Consulta [docs/UI.md](docs/UI.md).
 
 Ejemplo:
 
@@ -360,13 +367,12 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Repetir el Open Judge Gauntlet tras cada hardening y estabilizar sus contratos.
-2. Corregir por familias los fallos de contexto, retrieval y atribución.
-3. Estabilizar y ampliar `JudgeResult` como contrato factual público.
-4. Completar cobertura guiada por fallos reales.
-5. Cerrar un Judge Release Candidate.
-6. Construir una UI beta modular para conversar con el Juez.
-7. Añadir Deck Master y Deckbuilder sobre la misma UI.
+1. Validar la persistencia real y el nuevo historial gestionable de la UI beta.
+2. Continuar el pulido visual y la experiencia móvil a partir de uso real.
+3. Añadir preferencias de usuario y mejorar la experiencia móvil.
+4. Ampliar cobertura del Juez únicamente según fallos reales de prioridad suficiente.
+5. Preparar instalación y distribución reproducibles.
+6. Añadir Deck Master y Deckbuilder sobre la misma UI, respetando la autoridad factual del Juez.
 
 Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracle ni reglas**. Para cartas, legalidad, rulings e interacciones deberán consultar al Juez mediante su API interna.
 
@@ -375,6 +381,7 @@ Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracl
 ## Documentación
 
 - [Arquitectura](docs/ARCHITECTURE.md)
+- [Quickstart](docs/QUICKSTART.md)
 - [Comandos](docs/COMMANDS.md)
 - [UI beta](docs/UI.md)
 - [Estado actual](docs/STATUS.md)

@@ -82,7 +82,7 @@ Orquesta una consulta completa. No implementa reglas ni búsqueda directa.
 
 #### `magicai.conversation`
 
-Mantiene historial, cartas activas y estados pendientes de desambiguación. Las sesiones actuales viven en memoria.
+Mantiene historial, cartas activas y estados pendientes de desambiguación. `ConversationManager` usa un repositorio SQLite local para restaurar las sesiones después de reiniciar FastAPI, conservando además una caché en memoria para la ejecución activa.
 
 #### `magicai.context_builder`
 

@@ -238,6 +238,24 @@ curl -sS http://127.0.0.1:8000/health | jq
 `ready=true` indica que Oracle y Comprehensive Rules están disponibles.
 `full_service=true` indica además que Ollama y el modelo configurado responden.
 
+
+### Historial persistente
+
+```bash
+curl -sS http://127.0.0.1:8000/conversations | jq
+curl -sS http://127.0.0.1:8000/conversations/SESSION_ID | jq
+curl -sS -X PATCH http://127.0.0.1:8000/conversations/SESSION_ID \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Young Wolf y Undying"}' | jq
+curl -sS -X DELETE http://127.0.0.1:8000/conversations/SESSION_ID | jq
+```
+
+Cambiar la base local:
+
+```bash
+export MAGICAI_CONVERSATION_DB="$HOME/.local/share/magicai/conversations.sqlite3"
+```
+
 ## 🖥️ UI beta del Juez
 
 Iniciar la API y la interfaz:
@@ -257,9 +275,10 @@ Pruebas de la shell web:
 ```bash
 PYTHONPATH=. python -m tests.api.ui_routes_test
 PYTHONPATH=. python -m tests.ui.ui_assets_test
+PYTHONPATH=. python -m tests.ui.ui_resilience_test
 ```
 
-La UI utiliza los endpoints `/ask`, `/meta` y `/health`. No requiere Node ni npm.
+La UI utiliza los endpoints `/ask`, `/meta` y `/health`. No requiere Node ni npm. Durante una consulta aparece un botón **Cancelar** y `/ask` dispone de un timeout de seguridad de tres minutos en el navegador.
 
 ---
 
@@ -650,3 +669,29 @@ python -m uvicorn magicai.api:app --reload
 ```
 
 Run the fast validation set before committing, then execute a 42-case Dynamic Gauntlet or a multiseed campaign for changes that affect retrieval, selection, rendering or evaluation.
+
+---
+
+## 🖥️ UI beta
+
+Pruebas de rutas, assets, resiliencia y usabilidad:
+
+```bash
+PYTHONPATH=. python -m tests.api.ui_routes_test
+PYTHONPATH=. python -m tests.ui.ui_assets_test
+PYTHONPATH=. python -m tests.ui.ui_resilience_test
+PYTHONPATH=. python -m tests.ui.ui_usability_test
+node --check magicai/ui/static/app.js
+```
+
+Abrir la interfaz:
+
+```bash
+python -m uvicorn magicai.api:app --host 127.0.0.1 --port 8000 --reload
+```
+
+```text
+http://127.0.0.1:8000/ui
+```
+
+La guía desde un clon limpio está en `docs/QUICKSTART.md`.

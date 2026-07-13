@@ -270,6 +270,49 @@ La UI se diseñará desde el principio para incorporar nuevos perfiles sin rehac
 
 Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia conversacional.
 
+### Sprint 11.0 — base funcional ✅
+
+- shell web local servida por FastAPI;
+- chat, sesiones y panel de evidencia;
+- representación de todos los estados de `JudgeResult 1.0`;
+- salud de fuentes y Ollama;
+- assets empaquetados sin framework frontend.
+
+### Sprint 11.1a — resiliencia y accesibilidad ✅
+
+- cancelación y timeout de consultas;
+- protección frente a respuestas obsoletas;
+- almacenamiento local validado y fallos visibles;
+- enlaces externos limitados a Scryfall por HTTPS;
+- anuncios accesibles y estado `aria-busy`;
+- sondeo de salud sin peticiones solapadas.
+
+### Sprint 11.1b — usabilidad y presentación ✅
+
+- desambiguación interactiva implementada;
+- copia de respuesta y evidencia, más exportación JSON;
+- jerarquía visual de cartas, reglas, rulings, supuestos y advertencias;
+- apertura automática de secciones con evidencia;
+- `QUICKSTART.md` y aclaración de ramas;
+- pendiente: aceptación visual final y captura para README.
+
+### Sprint 11.2a — persistencia e historial ✅
+
+- persistencia real de conversaciones en SQLite local;
+- historial gestionable: abrir, renombrar y eliminar;
+- restauración del contexto y del último `JudgeResult`;
+- tema visual inspirado en el dashboard del Gauntlet.
+
+### Sprint 11.2b — ajustes e historial avanzado ⏳
+
+- búsqueda y filtrado de conversaciones;
+- preferencias de usuario;
+- mejoras adicionales de móvil;
+- ajustes del usuario;
+- experiencia móvil ampliada.
+
+Los cambios fuera de esta ruta solo interrumpirán el sprint cuando sean críticos o de prioridad media-alta.
+
 ---
 
 ## Fase 4 — Deck Master ⏳
@@ -331,7 +374,7 @@ The immediate goal is to finish the Judge. The next milestones are an open-quest
 
 Only after that will MagicAI ship its modular UI, followed by Deck Master and Deckbuilder. Both strategic profiles will be required to use the Judge as their sole factual authority for rules, Oracle text, rulings and legality.
 
-### Sprint 11.0 — UI beta foundation 🚧
+### Sprint 11.0 — UI beta foundation ✅
 
 - shell web local servida por FastAPI;
 - chat con sesiones;
