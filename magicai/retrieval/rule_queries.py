@@ -628,7 +628,7 @@ def _rule_number_queries(question: str) -> list[str]:
     if _contains_any(q, ["exilio", "exiliar", "exiliado", "exiliada", "exile"]):
 
         add(
-            "701.11",
+            "701.13",
         )
 
         if "undying" in q:
@@ -1162,7 +1162,7 @@ def _specialized_queries(question: str) -> list[str]:
         if _contains_any(q, ["exilio", "exiliar", "exiliado", "exiliada", "exile"]):
             queries.extend(
                 [
-                    "701.11a to exile an object move it to the exile zone",
+                    "701.13a to exile an object move it to the exile zone",
                     "700.4 dies means put into a graveyard from the battlefield",
                     "undying does not trigger when a permanent is exiled instead of dying",
                 ]

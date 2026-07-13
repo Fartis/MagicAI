@@ -71,6 +71,8 @@ COMMON_EXCLUDES=(
     "quality-results/*"
     "test-results/*"
     "reports/*"
+    "tests/regression/output/*"
+    "resultado_open_judge/*"
     "audit_gauntlet_*_failures.txt"
     "sprint*.patch"
     "MagicAI-*.zip"

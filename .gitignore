@@ -183,6 +183,8 @@ $RECYCLE.BIN/
 /quality-results/
 /test-results/
 /reports/
+/tests/regression/output/
+/resultado_open_judge/
 
 # -----------------------------------------------------------------------------
 # Local diagnostics, merge-conflict bundles and assistant patches

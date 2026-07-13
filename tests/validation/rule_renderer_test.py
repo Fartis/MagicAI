@@ -921,7 +921,7 @@ RULES
 700.4
 The term dies means “is put into a graveyard from the battlefield.”
 
-701.11a
+701.13a
 To exile an object, move it to the exile zone from wherever it is.
 
 702.93a
@@ -1145,6 +1145,13 @@ Within a layer or sublayer, determining which order effects are applied in is so
         "layered static source comparison",
     )
 
+
+def test_direct_undying_definition_is_deterministic():
+    knowledge = """
+QUESTION
+
+¿Cómo funciona Undying?
+
 def main():
     tests = [
         test_no_priority_during_resolution,
@@ -1177,6 +1184,12 @@ def main():
         test_zero_zero_persist_mentions_state_based_actions,
         test_persist_and_undying_share_stack_but_only_one_returns_card,
         test_layered_static_source_comparison_is_deterministic,
+        test_direct_undying_definition_is_deterministic,
+        test_keyword_difference_uses_recovered_rules,
+        test_rule_followup_example_uses_active_undying_rule,
+        test_undying_with_existing_positive_counter_is_deterministic,
+        test_london_mulligan_definition_is_deterministic,
+        test_london_mulligan_draw_followup_is_deterministic,
     ]
 
     errors = []

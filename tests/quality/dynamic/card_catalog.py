@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from magicai.scryfall import SCRYFALL_FILE
+from magicai.sources.card_scope import (
+    is_supported_judge_card,
+    supported_legal_formats,
+)
 
 
 _MANA_SYMBOL_RE = re.compile(
@@ -13,20 +17,6 @@ _MANA_SYMBOL_RE = re.compile(
     flags=re.IGNORECASE,
 )
 _LOYALTY_PREFIX_RE = re.compile(r"^[+−-]?\d+\s*:")
-
-_SUPPORTED_PAPER_FORMATS = (
-    "standard",
-    "pioneer",
-    "modern",
-    "legacy",
-    "pauper",
-    "vintage",
-    "commander",
-    "standardbrawl",
-    "brawl",
-)
-_SUPPORTED_LEGALITY_STATUSES = {"legal", "restricted"}
-
 
 @dataclass(frozen=True)
 class CardCandidate:
@@ -146,12 +136,12 @@ def _to_candidate(raw_card: dict) -> CardCandidate | None:
     if "//" in name:
         return None
 
-    games = raw_card.get("games") or []
-
-    if games and "paper" not in games:
+    if not is_supported_judge_card(raw_card):
         return None
 
-    if raw_card.get("digital") is True:
+    legal_formats = supported_legal_formats(raw_card)
+
+    if not legal_formats:
         return None
 
     if _is_funny_or_playtest_card(raw_card):

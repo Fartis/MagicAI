@@ -4,6 +4,7 @@ from magicai.extractors.keywords import extract_keywords
 
 from magicai.repositories.card_repository import CardRepository
 from magicai.repositories.rule_repository import RuleRepository
+from magicai.repositories.ruling_repository import RulingRepository
 from magicai.sources.symbology import extract_symbols_from_card
 from magicai.retrieval import build_oracle_rule_queries
 
@@ -15,6 +16,7 @@ def enrich(context):
 
     card_repo = CardRepository()
     rule_repo = RuleRepository()
+    ruling_repo = RulingRepository()
 
     enriched_cards = []
 
@@ -39,6 +41,14 @@ def enrich(context):
             )
 
     context.symbols = symbols
+
+    context.rulings = []
+    if _needs_rulings(context):
+        for card in context.cards:
+            for ruling in ruling_repo.find_by_oracle_id(card.oracle_id):
+                enriched_ruling = dict(ruling)
+                enriched_ruling["card_name"] = card.name
+                context.rulings.append(enriched_ruling)
 
     oracle_query_focus = _oracle_query_focus(context)
 
@@ -89,6 +99,17 @@ def enrich(context):
 
         if rule is not None:
             _add_unique_rule(enriched_rules, rule)
+
+    #
+    # Una consulta directa de definición o comparación entre keywords ya tiene
+    # su evidencia más específica en las reglas exactas recuperadas arriba.
+    # Evitamos añadir secciones completas de reglas relacionadas que pueden
+    # eclipsar la definición principal ante el LLM.
+    #
+
+    if _prefer_exact_keyword_rules(context):
+        context.rules = enriched_rules
+        return context
 
     #
     # Keywords detectadas en el Oracle text de las cartas recuperadas.
@@ -317,3 +338,60 @@ def _merge_unique_queries(
         )
 
     return merged
+
+
+def _prefer_exact_keyword_rules(context) -> bool:
+    if context.cards or not context.keywords:
+        return False
+
+    q = context.question.lower()
+
+    action_markers = [
+        "muere",
+        "morir",
+        "sacrific",
+        "exilio",
+        "exiliar",
+        "0/0",
+        "contador",
+        "contadores",
+        "pila",
+        "prioridad",
+        "entra al campo",
+        "campo de batalla",
+    ]
+
+    if any(marker in q for marker in action_markers):
+        return False
+
+    definition_markers = [
+        "como funciona",
+        "cómo funciona",
+        "que es",
+        "qué es",
+        "explicame",
+        "explícame",
+        "diferenc",
+    ]
+
+    return (
+        any(marker in q for marker in definition_markers)
+        or context.follow_up
+    )
+
+
+def _needs_rulings(context) -> bool:
+    q = context.question.lower()
+    markers = (
+        "ruling",
+        "rulings",
+        "dictamen",
+        "aclaración oficial",
+        "aclaracion oficial",
+        "fallo oficial",
+        "qué dice scryfall",
+        "que dice scryfall",
+        "qué dice wizards",
+        "que dice wizards",
+    )
+    return bool(context.cards) and any(marker in q for marker in markers)

@@ -32,6 +32,31 @@ def post_json(path: str, payload: dict) -> dict:
         )
 
 
+
+def get_json(path: str) -> dict:
+    with urllib.request.urlopen(API_URL + path, timeout=10) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def post_json_error(path: str, payload: dict) -> tuple[int, dict]:
+    data = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        API_URL + path,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        urllib.request.urlopen(request, timeout=10)
+    except urllib.error.HTTPError as error:
+        return (
+            error.code,
+            json.loads(error.read().decode("utf-8")),
+        )
+
+    raise AssertionError("Expected an HTTP error response.")
+
 def assert_contains(text: str, expected: list[str], label: str):
 
     lower = text.lower()
@@ -65,6 +90,36 @@ def assert_not_contains(text: str, forbidden: list[str], label: str):
         )
 
 
+
+
+def assert_judge_result(payload: dict, label: str) -> None:
+    required = [
+        "schema_version",
+        "answer",
+        "session_id",
+        "question",
+        "status",
+        "origin",
+        "confidence",
+        "authority",
+        "cards",
+        "rules",
+        "rulings",
+        "retrieval_queries",
+        "assumptions",
+        "warnings",
+        "source_versions",
+        "source_health",
+        "validation_attempts",
+    ]
+    missing = [key for key in required if key not in payload]
+    if missing:
+        raise AssertionError(f"{label}: missing JudgeResult fields {missing!r}")
+
+    if payload.get("authority") != "judge":
+        raise AssertionError(f"{label}: unexpected authority {payload.get('authority')!r}")
+
+
 def main():
 
     started = time.perf_counter()
@@ -74,6 +129,23 @@ def main():
     print("=" * 80)
     print(f"API URL: {API_URL}")
     print()
+
+    metadata = get_json("/meta")
+    if metadata.get("judge_result_schema_version") != "1.0":
+        raise AssertionError(f"Unexpected schema version: {metadata!r}")
+
+    health = get_json("/health")
+    if "ready" not in health or "sources" not in health:
+        raise AssertionError(f"Invalid health payload: {health!r}")
+
+    error_status, error_payload = post_json_error(
+        "/ask",
+        {"question": "   "},
+    )
+    if error_status != 422:
+        raise AssertionError(f"Expected 422, got {error_status}")
+    if error_payload.get("error", {}).get("code") != "invalid_request":
+        raise AssertionError(f"Invalid structured error: {error_payload!r}")
 
     #
     # Session A: Young Wolf
@@ -87,6 +159,8 @@ def main():
             "question": "¿Qué hace Young Wolf?",
         },
     )
+
+    assert_judge_result(response_1, "Young Wolf initial response")
 
     session_young_wolf = response_1.get("session_id")
     answer_1 = response_1.get("answer", "")
@@ -188,6 +262,8 @@ def main():
         },
     )
 
+    assert_judge_result(response_4, "Sol Ring strategy response")
+
     answer_4 = response_4.get("answer", "")
     session_4 = response_4.get("session_id")
 
@@ -206,6 +282,11 @@ def main():
         "Sol Ring follow-up answer",
     )
     
+    if response_4.get("status") != "strategy_required":
+        raise AssertionError(
+            f"Sol Ring follow-up: expected strategy_required, got {response_4.get('status')!r}"
+        )
+
     assert_not_contains(
         answer_4,
         [
