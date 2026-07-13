@@ -236,6 +236,31 @@ def test_removed_source_queries_include_independent_ability_rule():
     )
 
 
+
+def test_copied_triggered_ability_source_removal_queries_exact_rules():
+    queries = build_rule_queries(
+        question=(
+            "Si copio la habilidad de Braids y sacrifico a Braids con la copia, "
+            "¿la habilidad original se resuelve normalmente?"
+        ),
+        keywords=[],
+        action_terms=[],
+    )
+
+    assert_contains(
+        queries,
+        [
+            "707.10",
+            "113.7a",
+            "608.2d",
+            "405.5",
+            "117.3b",
+            "choices made on resolution are not copied",
+            "exists independently of its source",
+        ],
+        "copied ability source-removal queries",
+    )
+
 def test_response_before_resolution_queries_include_priority_and_stack():
 
     queries = build_rule_queries(
@@ -582,6 +607,7 @@ def main():
         test_mana_production_queries_include_rule_605_without_card_name,
         test_response_before_resolution_queries_include_priority_and_stack,
         test_removed_source_queries_include_independent_ability_rule,
+        test_copied_triggered_ability_source_removal_queries_exact_rules,
         test_cleanup_queries_include_normal_no_priority_exception,
         test_sacrifice_destroy_queries_include_both_keyword_actions,
         test_commander_death_queries_include_state_based_move,

@@ -303,6 +303,13 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - restauración del contexto y del último `JudgeResult`;
 - tema visual inspirado en el dashboard del Gauntlet.
 
+### Hotfix 11.2a.1 — interacción copiada con fuente ausente ✅
+
+- corregir consultas donde una copia de habilidad sacrifica o elimina su propia fuente;
+- mantener la habilidad original en la pila mediante la regla de independencia de fuente;
+- repetir por separado las elecciones que se realizan durante la resolución;
+- convertir el fallo real en regresiones de retrieval, renderer, JudgeResult y validación.
+
 ### Sprint 11.2b — ajustes e historial avanzado ⏳
 
 - búsqueda y filtrado de conversaciones;

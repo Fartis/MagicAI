@@ -253,3 +253,11 @@ Pendiente para cerrar 11.1: revisión visual en navegador real, captura para REA
 - panel de historial en la UI;
 - restauración del último `JudgeResult`;
 - nuevo tema visual basado en la paleta del Gauntlet.
+
+### Hotfix 11.2a.1 — copias de habilidades y fuente ausente
+
+- recuperación prioritaria de las reglas 707.10, 113.7a, 608.2d, 405.5 y 117.3b;
+- respuesta determinista para copias de habilidades cuya fuente abandona el campo;
+- elecciones hechas al resolver tratadas de forma independiente para copia y original;
+- validador que rechaza respuestas genéricas de prioridad que no contesten al escenario;
+- regresión basada en una consulta real con Braids, Arisen Nightmare.

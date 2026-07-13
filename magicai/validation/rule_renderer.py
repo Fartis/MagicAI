@@ -18,6 +18,7 @@ Preferred direction:
 
 _RULE_MARKERS = {
     "abilities": ["113", "113."],
+    "source_independence": ["113.7a"],
     "priority": ["117", "117."],
     "stack": ["405", "405."],
     "untap": ["502", "502."],
@@ -26,6 +27,7 @@ _RULE_MARKERS = {
     "activated": ["602", "602."],
     "mana": ["605", "605."],
     "resolution": ["608", "608."],
+    "resolution_choices": ["608.2d"],
     "casting": ["601", "601."],
     "ward": ["702.21", "702.21a"],
     "cleanup": ["514", "514."],
@@ -53,6 +55,7 @@ _RULE_MARKERS = {
     "persist": ["702.79", "702.79a"],
     "undying": ["702.93", "702.93a"],
     "mulligan": ["103.5", "103.5a", "103.5b", "103.5c", "103.5d"],
+    "copy_ability": ["707.10"],
 }
 
 
@@ -348,6 +351,40 @@ def render_rule_answer(knowledge: str) -> str | None:
             "su dueño puede mover esa carta del cementerio a la zona de mando. "
             "Moverla después no deshace que haya muerto."
         )
+
+    if _is_copied_ability_source_removed_question(q) and _has_rules(
+        knowledge,
+        [
+            "source_independence",
+            "copy_ability",
+            "resolution_choices",
+            "stack",
+        ],
+    ):
+        card_name = _extract_primary_card_name(knowledge)
+        source_name = card_name or "la fuente de la habilidad"
+        answer = (
+            "Sí. La copia se pone en la pila por encima de la habilidad "
+            "original y, si nadie añade nada más, se resuelve primero. "
+            f"Aunque sacrifiques {source_name} al resolver la copia, la "
+            "habilidad original no desaparece ni se contrarresta: una "
+            "habilidad activada o disparada que ya está en la pila existe "
+            "independientemente de su fuente. Después de que termine la copia, "
+            "el jugador activo recibe prioridad y, si nadie responde, la habilidad "
+            "original se resuelve normalmente. "
+            "Las elecciones que se hacen durante la resolución se realizan de "
+            "nuevo e independientemente para la copia y para la original."
+        )
+
+        if _oracle_has_optional_sacrifice_condition(knowledge):
+            answer += (
+                " Por tanto, al resolver la habilidad original puedes "
+                "sacrificar otro permanente válido. Si no sacrificas ninguno, "
+                "no ocurre la parte de esa instancia condicionada por "
+                "«si lo haces»."
+            )
+
+        return answer
 
     if _is_sacrifice_as_cost_death_trigger(q) and _has_rules(
         knowledge,
@@ -863,6 +900,80 @@ def _is_sacrifice_as_cost_death_trigger(question: str) -> bool:
             or "persist" in question
         )
     )
+
+
+def _is_copied_ability_source_removed_question(question: str) -> bool:
+    mentions_copy = any(
+        marker in question
+        for marker in [
+            "copiar la habilidad",
+            "copio la habilidad",
+            "copia la habilidad",
+            "copia de la habilidad",
+            "habilidad copiada",
+            "copy the ability",
+            "copy of the ability",
+            "copied ability",
+        ]
+    )
+
+    mentions_original = any(
+        marker in question
+        for marker in [
+            "habilidad original",
+            "la original",
+            "original se resuelve",
+            "original resuelve",
+            "suya propia",
+            "las dos",
+            "ambas",
+            "original ability",
+        ]
+    )
+
+    source_leaves = any(
+        marker in question
+        for marker in [
+            "sacrific",
+            "destruy",
+            "muere",
+            "exili",
+            "deja el campo",
+            "ya no esta",
+            "no estar",
+            "retir",
+            "elimin",
+        ]
+    )
+
+    asks_resolution = any(
+        marker in question
+        for marker in [
+            "se resuelve",
+            "resuelve normalmente",
+            "sigue resolviendo",
+            "se resuelven",
+            "resolveria",
+            "resolverá",
+            "resolve",
+        ]
+    )
+
+    return mentions_copy and mentions_original and source_leaves and asks_resolution
+
+
+def _oracle_has_optional_sacrifice_condition(knowledge: str) -> bool:
+    entries = _extract_card_entries(knowledge)
+
+    for _name, card_text in entries:
+        oracle = _normalize(card_text)
+        if (
+            ("may sacrifice" in oracle or "puedes sacrificar" in oracle)
+            and ("if you do" in oracle or "si lo haces" in oracle)
+        ):
+            return True
+
+    return False
 
 
 def _is_no_priority_during_resolution(question: str) -> bool:

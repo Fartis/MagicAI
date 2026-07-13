@@ -474,6 +474,88 @@ Stack
     )
 
 
+
+def test_copied_triggered_ability_survives_sacrificing_its_source():
+    knowledge = """
+QUESTION
+
+Si tengo la posibilidad de copiar la habilidad, la copia entra después de la original en la pila y sacrifico a Braids con la copia, ¿la habilidad original se resuelve normalmente aunque Braids ya no esté?
+
+============================================================
+CARDS
+
+Braids, Arisen Nightmare
+Mana Cost: {1}{B}{B}
+Legendary Creature — Nightmare
+
+At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.
+
+============================================================
+RULES
+
+113.7a
+Once activated or triggered, an ability exists on the stack independently of its source.
+
+405.5
+When all players pass in succession, the top (last-added) spell or ability on the stack resolves.
+
+608.2d
+If an effect offers choices not already made while putting it on the stack, the player announces these while applying the effect.
+
+707.10
+To copy an activated or triggered ability means to put a copy of it onto the stack. Choices that are normally made on resolution are not copied.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "copia",
+            "se resuelve primero",
+            "Braids",
+            "no desaparece",
+            "independientemente de su fuente",
+            "original se resuelve normalmente",
+            "otro permanente válido",
+            "si lo haces",
+        ],
+        "copied triggered ability source removal",
+    )
+    assert_not_contains(
+        answer,
+        [
+            "las habilidades desencadenadas se resuelven antes de la prioridad",
+            "la original no se resuelve",
+        ],
+        "copied triggered ability source removal",
+    )
+
+
+def test_copied_ability_renderer_requires_source_independence_evidence():
+    knowledge = """
+QUESTION
+
+Si copio una habilidad y sacrifico su fuente con la copia, ¿la original se resuelve?
+
+============================================================
+RULES
+
+405.5
+The top object on the stack resolves first.
+
+707.10
+To copy an ability means to put a copy of it onto the stack.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    if answer is not None:
+        raise AssertionError(
+            "copied ability renderer must require rule 113.7a and resolution-choice evidence"
+        )
+
 def test_activated_ability_exists_independently_of_source():
     knowledge = """
 QUESTION
@@ -1345,6 +1427,8 @@ def main():
         test_priority_returns_between_stack_objects,
         test_opponent_can_respond_before_spell_resolves,
         test_ward_is_triggered_and_can_be_responded_to,
+        test_copied_triggered_ability_survives_sacrificing_its_source,
+        test_copied_ability_renderer_requires_source_independence_evidence,
         test_activated_ability_exists_independently_of_source,
         test_source_independence_uses_type_neutral_wording,
         test_source_independence_wins_over_resolution_wording,

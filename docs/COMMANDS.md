@@ -336,6 +336,7 @@ PYTHONPATH=. python -m tests.retrieval.card_scope_test
 PYTHONPATH=. python -m tests.retrieval.context_enricher_test
 PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
+PYTHONPATH=. python -m tests.validation.copied_ability_answer_guard_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
 PYTHONPATH=. python -m tests.quality.gauntlet_matcher_test
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test

@@ -167,6 +167,12 @@ def validate_answer(answer: str, knowledge: str) -> list[str]:
             "The answer adds an unasked self-sacrifice edge case."
         )
 
+    if _fails_to_answer_copied_ability_source_removal(answer, knowledge):
+
+        violations.append(
+            "The answer is incomplete for a copied ability whose source leaves the battlefield."
+        )
+
 
     if _has_card_support(knowledge):
 
@@ -617,6 +623,98 @@ def _incorrectly_denies_response_before_resolution(
         pattern in lower
         for pattern in bad_patterns
     )
+
+def _fails_to_answer_copied_ability_source_removal(
+    answer: str,
+    knowledge: str,
+) -> bool:
+    question = _normalize_for_contract(_extract_question(knowledge))
+
+    mentions_copy = any(
+        marker in question
+        for marker in [
+            "copiar la habilidad",
+            "copio la habilidad",
+            "copia la habilidad",
+            "copia de la habilidad",
+            "habilidad copiada",
+            "copy the ability",
+            "copy of the ability",
+            "copied ability",
+        ]
+    )
+    mentions_original = any(
+        marker in question
+        for marker in [
+            "habilidad original",
+            "la original",
+            "suya propia",
+            "las dos",
+            "ambas",
+            "original ability",
+        ]
+    )
+    source_leaves = any(
+        marker in question
+        for marker in [
+            "sacrific",
+            "destruy",
+            "muere",
+            "exili",
+            "deja el campo",
+            "ya no esta",
+            "no estar",
+            "retir",
+            "elimin",
+        ]
+    )
+
+    if not (mentions_copy and mentions_original and source_leaves):
+        return False
+
+    lower = _normalize_for_contract(answer)
+    addresses_original = any(
+        marker in lower
+        for marker in [
+            "habilidad original se resuelve",
+            "original se resuelve",
+            "original permanece",
+            "original no desaparece",
+            "las dos se resuelven",
+            "ambas se resuelven",
+        ]
+    )
+    addresses_source = any(
+        marker in lower
+        for marker in [
+            "independientemente de su fuente",
+            "retirar su fuente no",
+            "eliminar su fuente no",
+            "sacrificar su fuente no",
+            "aunque la fuente ya no",
+            "aunque ya no este",
+            "no se contrarresta",
+            "no desaparece",
+        ]
+    )
+
+    return not (addresses_original and addresses_source)
+
+
+def _normalize_for_contract(text: str) -> str:
+    text = text.lower()
+    replacements = {
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+        "ü": "u",
+    }
+    for source, target in replacements.items():
+        text = text.replace(source, target)
+    return re.sub(r"\s+", " ", text).strip()
+
 
 def _is_hard_violation(violation: str) -> bool:
 
