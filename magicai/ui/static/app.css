@@ -397,6 +397,46 @@ h3 {
   font-size: 0.65rem;
 }
 
+.clarification-actions {
+  width: min(780px, 88%);
+  padding: 0.8rem;
+  border: 1px solid rgba(240, 173, 78, 0.3);
+  border-radius: 0.9rem;
+  background: rgba(240, 173, 78, 0.06);
+}
+
+.clarification-label {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 720;
+}
+
+.clarification-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.clarification-option {
+  padding: 0.55rem 0.72rem;
+  border-color: rgba(240, 173, 78, 0.36);
+  border-radius: 0.7rem;
+  color: #f9d99d;
+  background: rgba(240, 173, 78, 0.08);
+  text-align: left;
+}
+
+.clarification-option:hover {
+  border-color: rgba(240, 173, 78, 0.72);
+  background: rgba(240, 173, 78, 0.14);
+}
+
+.clarification-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .loading-dots {
   display: inline-flex;
   gap: 0.32rem;
@@ -491,6 +531,8 @@ h3 {
 }
 
 .result-summary {
+  display: grid;
+  gap: 0.7rem;
   padding: 1rem 1.2rem;
   color: var(--muted);
   border-bottom: 1px solid var(--border-soft);
@@ -499,6 +541,39 @@ h3 {
 .result-summary p {
   margin: 0;
   line-height: 1.5;
+}
+
+.status-explanation {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.compact-button {
+  padding: 0.48rem 0.65rem;
+  border-radius: 0.65rem;
+  color: var(--muted);
+  background: rgba(10, 13, 18, 0.54);
+  font-size: 0.7rem;
+}
+
+.compact-button:hover:not(:disabled) {
+  color: var(--text);
+  border-color: rgba(212, 168, 79, 0.45);
+  background: var(--accent-soft);
+}
+
+.compact-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .status-row {
@@ -593,8 +668,49 @@ h3 {
 }
 
 .evidence-card h3 {
-  margin-bottom: 0.35rem;
+  margin: 0;
   font-size: 0.88rem;
+}
+
+.evidence-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.card-mana-cost,
+.rule-number {
+  flex: 0 0 auto;
+  padding: 0.18rem 0.4rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 0.45rem;
+  color: var(--accent-strong);
+  background: rgba(212, 168, 79, 0.06);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+}
+
+.card-type-line,
+.ruling-meta {
+  color: var(--faint) !important;
+  font-size: 0.7rem !important;
+}
+
+.oracle-text,
+.ruling-comment {
+  margin-top: 0.5rem !important;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text) !important;
+}
+
+.rule-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .evidence-card p,
@@ -608,6 +724,20 @@ h3 {
 
 .evidence-card p + p {
   margin-top: 0.35rem;
+}
+
+.evidence-note.is-assumptions {
+  border-color: rgba(240, 173, 78, 0.26);
+  background: rgba(240, 173, 78, 0.05);
+}
+
+.evidence-note.is-warnings {
+  border-color: rgba(241, 112, 112, 0.3);
+  background: rgba(241, 112, 112, 0.06);
+}
+
+.evidence-sections details.is-empty summary {
+  color: var(--faint);
 }
 
 .evidence-link {
@@ -678,6 +808,15 @@ h3 {
   background: #151e2b;
 }
 
+.clipboard-fallback {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -743,12 +882,24 @@ h3 {
     grid-template-columns: 1fr;
   }
 
-  .send-button {
+  .send-button,
+  .cancel-button {
     width: 100%;
   }
 
-  .message-bubble {
+  .message-bubble,
+  .clarification-actions {
     max-width: 96%;
+    width: 96%;
+  }
+
+  .result-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .compact-button {
+    width: 100%;
   }
 
   .app-footer {
@@ -765,4 +916,16 @@ h3 {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.clarification-actions.is-resolved {
+  border-color: rgba(84, 198, 138, 0.26);
+  background: rgba(84, 198, 138, 0.045);
+}
+
+.clarification-option.is-selected {
+  border-color: rgba(84, 198, 138, 0.5);
+  color: #a8e8c3;
+  background: rgba(84, 198, 138, 0.1);
+  opacity: 1;
 }

@@ -44,6 +44,18 @@ No necesita Node, npm, un servidor web adicional ni recursos externos.
 
 La cancelación detiene la espera del navegador. El backend o el proceso de Ollama pueden necesitar terminar internamente el trabajo ya iniciado, dependiendo de su soporte de cancelación.
 
+### Sprint 11.1b — usabilidad y presentación
+
+- botones interactivos para seleccionar cartas cuando `JudgeResult.status=needs_clarification`;
+- persistencia local de los candidatos de desambiguación;
+- copia de la respuesta en texto plano;
+- copia de respuesta y evidencia en un resumen legible;
+- exportación del último `JudgeResult` como JSON;
+- apertura automática de las secciones que contienen evidencia;
+- jerarquía visual diferenciada para Oracle, reglas, rulings, supuestos y advertencias;
+- presentación de las consultas de recuperación dentro de los detalles técnicos;
+- controles responsive sin introducir frameworks frontend.
+
 ## Arquitectura
 
 ```text
@@ -75,10 +87,8 @@ El frontend construye nodos DOM mediante `textContent`; no inserta las respuesta
 
 ## Próximos bloques de UI
 
-- selección de candidatos en respuestas de desambiguación;
-- copia de respuestas y exportación de evidencia;
-- mejora de la jerarquía visual de cartas, reglas y rulings;
-- pulido responsive y pruebas manuales de accesibilidad;
+- pulido visual guiado por uso real y captura para el README;
+- pruebas manuales ampliadas de accesibilidad;
 - gestión visual de sesiones persistentes;
 - búsqueda y copia de evidencia;
 - preferencias de apariencia y densidad;

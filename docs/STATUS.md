@@ -19,7 +19,7 @@ No se considera un producto final porque aún faltan persistencia de sesiones de
 - Comprehensive Rules locales y búsqueda por secciones.
 - Índice de cartas en memoria.
 - Detección de cartas, aliases, keywords, acciones y reglas explícitas.
-- Desambiguación conversacional de cartas.
+- Desambiguación conversacional de cartas con selección interactiva en la UI.
 - Context Builder y Context Enricher.
 - Recuperación de reglas guiada por pregunta y Oracle.
 - Símbolos de Scryfall.
@@ -27,7 +27,7 @@ No se considera un producto final porque aún faltan persistencia de sesiones de
 - Ollama local con temperatura cero.
 - Validación de respuestas, reintento y fallback seguro.
 - API REST con sesiones en memoria y salida `JudgeResult` retrocompatible.
-- UI beta local con chat, evidencia, estados y salud del servicio.
+- UI beta local con chat, evidencia, estados, salud del servicio, copia y exportación.
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
@@ -209,7 +209,7 @@ The future UI will start with the Judge and later host Deck Master and Deckbuild
 
 Puerta Open Judge completada: tres baselines consecutivas con 27/27 resultados aceptables, sin fallos críticos. Pendiente del Release Candidate formal: repetir la matriz controlada completa y los smoke tests finales del entorno objetivo.
 
-## Sprint 11.0 — UI beta foundation 🚧
+## Sprint 11.0 — UI beta foundation ✅
 
 Primera shell de usuario servida por FastAPI:
 
@@ -222,3 +222,24 @@ Primera shell de usuario servida por FastAPI:
 - construcción segura del DOM sin insertar respuestas mediante `innerHTML`.
 
 La primera entrega no incluye cuentas, base de datos de conversaciones, acceso remoto endurecido ni Deck Master.
+
+
+## Sprint 11.1 — usabilidad, resiliencia y presentación 🚧
+
+### 11.1a completado
+
+- cancelación y timeout de consultas;
+- protección frente a respuestas obsoletas;
+- almacenamiento local validado y fallos visibles;
+- allowlist de enlaces de Scryfall;
+- anuncios accesibles y sondeo de salud no solapado.
+
+### 11.1b implementado
+
+- botones para resolver desambiguaciones sin escribir el nombre;
+- copia de respuesta y evidencia;
+- exportación del último `JudgeResult` en JSON;
+- apertura automática y mejor jerarquía del panel de evidencia;
+- `QUICKSTART.md` lineal y aclaración de ramas.
+
+Pendiente para cerrar 11.1: revisión visual en navegador real, captura para README y correcciones de prioridad media-alta encontradas durante la aceptación manual.

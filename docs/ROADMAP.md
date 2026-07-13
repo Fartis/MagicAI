@@ -278,7 +278,7 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - salud de fuentes y Ollama;
 - assets empaquetados sin framework frontend.
 
-### Sprint 11.1a — resiliencia y accesibilidad 🚧
+### Sprint 11.1a — resiliencia y accesibilidad ✅
 
 - cancelación y timeout de consultas;
 - protección frente a respuestas obsoletas;
@@ -287,13 +287,14 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - anuncios accesibles y estado `aria-busy`;
 - sondeo de salud sin peticiones solapadas.
 
-### Sprint 11.1b — usabilidad y presentación ⏳
+### Sprint 11.1b — usabilidad y presentación 🚧
 
-- desambiguación interactiva;
-- copia de respuesta y exportación de evidencia;
-- jerarquía visual de cartas, reglas y rulings;
-- pulido responsive y documentación visual;
-- `QUICKSTART.md` y aclaración de ramas.
+- desambiguación interactiva implementada;
+- copia de respuesta y evidencia, más exportación JSON;
+- jerarquía visual de cartas, reglas, rulings, supuestos y advertencias;
+- apertura automática de secciones con evidencia;
+- `QUICKSTART.md` y aclaración de ramas;
+- pendiente: aceptación visual final y captura para README.
 
 ### Sprint 11.2 — persistencia e historial ⏳
 

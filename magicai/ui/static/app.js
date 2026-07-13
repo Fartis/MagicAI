@@ -9,6 +9,7 @@ const STORAGE = {
 const ASK_TIMEOUT_MS = 180000;
 const AUXILIARY_TIMEOUT_MS = 10000;
 const MAX_STORED_MESSAGES = 40;
+const MAX_DISAMBIGUATION_CANDIDATES = 8;
 const ALLOWED_MESSAGE_ROLES = new Set(["user", "assistant", "error"]);
 
 let storageAvailable = true;
@@ -32,6 +33,14 @@ const ORIGIN_LABELS = {
   strategy_boundary: "Frontera estratégica",
   llm_validated: "LLM validado",
   safe_fallback: "Fallback seguro",
+};
+
+const STATUS_EXPLANATIONS = {
+  answered: "El Juez ha respondido usando la evidencia recuperada y la ruta indicada.",
+  needs_clarification: "Hay varias cartas compatibles. Elige una opción para continuar la pregunta original.",
+  strategy_required: "Los hechos están validados, pero la recomendación final corresponde al futuro Deck Master.",
+  insufficient_evidence: "Las fuentes disponibles no bastan para responder con seguridad.",
+  false_premise: "El Juez ha corregido una premisa incompatible con Oracle o las reglas antes de responder.",
 };
 
 const elements = {};
@@ -72,6 +81,10 @@ function captureElements() {
     "request-status",
     "result-status",
     "result-summary",
+    "result-actions",
+    "copy-answer-button",
+    "copy-evidence-button",
+    "export-result-button",
     "evidence-sections",
     "cards-count",
     "cards-list",
@@ -109,6 +122,9 @@ function bindEvents() {
   elements["question-input"].addEventListener("input", autoResizeTextarea);
   elements["new-session-button"].addEventListener("click", resetConversation);
   elements["cancel-request-button"].addEventListener("click", cancelActiveRequest);
+  elements["copy-answer-button"].addEventListener("click", () => void copyLastAnswer());
+  elements["copy-evidence-button"].addEventListener("click", () => void copyLastEvidence());
+  elements["export-result-button"].addEventListener("click", exportLastResult);
 
   for (const button of document.querySelectorAll(".suggestion")) {
     button.addEventListener("click", () => {
@@ -244,10 +260,13 @@ async function submitQuestion() {
     writeStorage(STORAGE.session, state.sessionId);
     writeStorage(STORAGE.lastResult, result);
 
+    markClarificationResolved(question);
+    const candidates = getClarificationCandidates(result);
     addStoredMessage({
       role: "assistant",
       text: result.answer || "El Juez no devolvió texto.",
       status: result.status,
+      ...(candidates.length ? {candidates} : {}),
     });
     renderEvidence(result);
     updateSessionLabel();
@@ -348,6 +367,11 @@ function renderMessage(message, shouldScroll = true) {
   renderRichText(bubble, message.text || "");
 
   article.append(header, bubble);
+
+  const candidates = normalizeCandidates(message.candidates);
+  if (message.role === "assistant" && candidates.length) {
+    article.appendChild(renderDisambiguationActions(candidates, message.selectedCandidate));
+  }
   elements["message-list"].appendChild(article);
 
   if (shouldScroll) {
@@ -355,6 +379,106 @@ function renderMessage(message, shouldScroll = true) {
   }
 
   return article;
+}
+
+function renderDisambiguationActions(candidates, selectedCandidate = null) {
+  const container = document.createElement("div");
+  container.className = "clarification-actions";
+  if (selectedCandidate) {
+    container.classList.add("is-resolved");
+  }
+  container.setAttribute("aria-label", "Opciones de carta para aclarar la consulta");
+
+  const label = document.createElement("p");
+  label.className = "clarification-label";
+  label.textContent = "Selecciona la carta:";
+  container.appendChild(label);
+
+  const options = document.createElement("div");
+  options.className = "clarification-options";
+
+  for (const candidate of candidates) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "clarification-option";
+    button.textContent = candidate;
+    button.dataset.resolved = String(Boolean(selectedCandidate));
+    button.disabled = state.sending || Boolean(selectedCandidate);
+    button.classList.toggle("is-selected", candidate === selectedCandidate);
+    button.setAttribute("aria-label", candidate === selectedCandidate
+      ? `Opción seleccionada: ${candidate}`
+      : `Continuar con ${candidate}`);
+    button.addEventListener("click", () => submitClarificationCandidate(candidate));
+    options.appendChild(button);
+  }
+
+  container.appendChild(options);
+  return container;
+}
+
+function markClarificationResolved(candidate) {
+  if (typeof candidate !== "string") {
+    return;
+  }
+
+  const normalized = candidate.trim();
+  for (let index = state.messages.length - 1; index >= 0; index -= 1) {
+    const message = state.messages[index];
+    const candidates = normalizeCandidates(message.candidates);
+    if (!candidates.includes(normalized) || message.selectedCandidate) {
+      continue;
+    }
+
+    message.selectedCandidate = normalized;
+    writeStorage(STORAGE.transcript, state.messages);
+
+    const actionGroups = [...document.querySelectorAll(".clarification-actions:not(.is-resolved)")];
+    const actionGroup = actionGroups.at(-1);
+    if (actionGroup) {
+      actionGroup.classList.add("is-resolved");
+      for (const button of actionGroup.querySelectorAll(".clarification-option")) {
+        const selected = button.textContent.trim() === normalized;
+        button.dataset.resolved = "true";
+        button.disabled = true;
+        button.classList.toggle("is-selected", selected);
+        button.setAttribute("aria-label", selected
+          ? `Opción seleccionada: ${normalized}`
+          : `Opción descartada: ${button.textContent.trim()}`);
+      }
+    }
+    return;
+  }
+}
+
+function submitClarificationCandidate(candidate) {
+  if (state.sending || typeof candidate !== "string" || !candidate.trim()) {
+    return;
+  }
+
+  elements["question-input"].value = candidate.trim();
+  autoResizeTextarea();
+  void submitQuestion();
+}
+
+function getClarificationCandidates(result) {
+  if (result?.status !== "needs_clarification") {
+    return [];
+  }
+
+  return normalizeCandidates((result.cards || []).map(card => card?.name));
+}
+
+function normalizeCandidates(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(
+    value
+      .filter(candidate => typeof candidate === "string")
+      .map(candidate => candidate.trim())
+      .filter(Boolean),
+  )].slice(0, MAX_DISAMBIGUATION_CANDIDATES);
 }
 
 function renderLoadingMessage() {
@@ -449,6 +573,11 @@ function renderEvidence(result) {
   const summary = elements["result-summary"];
   clearNode(summary);
 
+  const explanation = document.createElement("p");
+  explanation.className = "status-explanation";
+  explanation.textContent = STATUS_EXPLANATIONS[status] || "Resultado estructurado del Juez.";
+  summary.appendChild(explanation);
+
   const row = document.createElement("div");
   row.className = "status-row";
   row.append(
@@ -459,13 +588,21 @@ function renderEvidence(result) {
   summary.appendChild(row);
 
   elements["evidence-sections"].hidden = false;
+  setResultActionsEnabled(true);
 
-  renderCards(result.cards || []);
-  renderRules(result.rules || []);
-  renderRulings(result.rulings || []);
-  renderNotes("assumptions", result.assumptions || [], "No se declararon supuestos.");
-  renderNotes("warnings", result.warnings || [], "No hay advertencias.");
+  const cards = result.cards || [];
+  const rules = result.rules || [];
+  const rulings = result.rulings || [];
+  const assumptions = result.assumptions || [];
+  const warnings = result.warnings || [];
+
+  renderCards(cards);
+  renderRules(rules);
+  renderRulings(rulings);
+  renderNotes("assumptions", assumptions, "No se declararon supuestos.");
+  renderNotes("warnings", warnings, "No hay advertencias.");
   renderTechnicalDetails(result);
+  configureEvidenceSections({cards, rules, rulings, assumptions, warnings, result});
 }
 
 function createPill(text, className = "") {
@@ -493,19 +630,31 @@ function renderCards(cards) {
     const node = document.createElement("article");
     node.className = "evidence-card";
 
+    const header = document.createElement("div");
+    header.className = "evidence-card-header";
+
     const title = document.createElement("h3");
     title.textContent = card.name || "Carta sin nombre";
-    node.appendChild(title);
+    header.appendChild(title);
 
-    const identity = [card.mana_cost, card.type_line].filter(Boolean).join(" · ");
-    if (identity) {
-      const line = document.createElement("p");
-      line.textContent = identity;
-      node.appendChild(line);
+    if (card.mana_cost) {
+      const mana = document.createElement("span");
+      mana.className = "card-mana-cost";
+      mana.textContent = card.mana_cost;
+      header.appendChild(mana);
+    }
+    node.appendChild(header);
+
+    if (card.type_line) {
+      const typeLine = document.createElement("p");
+      typeLine.className = "card-type-line";
+      typeLine.textContent = card.type_line;
+      node.appendChild(typeLine);
     }
 
     if (card.oracle_text) {
       const oracle = document.createElement("p");
+      oracle.className = "oracle-text";
       oracle.textContent = card.oracle_text;
       node.appendChild(oracle);
     }
@@ -537,9 +686,17 @@ function renderRules(rules) {
 
   for (const rule of rules) {
     const node = document.createElement("article");
-    node.className = "evidence-card";
+    node.className = "evidence-card rule-card";
+
+    if (rule.number) {
+      const number = document.createElement("span");
+      number.className = "rule-number";
+      number.textContent = rule.number;
+      node.appendChild(number);
+    }
+
     const title = document.createElement("h3");
-    title.textContent = [rule.number, rule.title].filter(Boolean).join(" · ") || "Regla recuperada";
+    title.textContent = rule.title || "Regla recuperada";
     node.appendChild(title);
     list.appendChild(node);
   }
@@ -564,10 +721,12 @@ function renderRulings(rulings) {
     node.appendChild(title);
 
     const metadata = document.createElement("p");
+    metadata.className = "ruling-meta";
     metadata.textContent = [ruling.published_at, String(ruling.source || "").toUpperCase()].filter(Boolean).join(" · ");
     node.appendChild(metadata);
 
     const comment = document.createElement("p");
+    comment.className = "ruling-comment";
     comment.textContent = ruling.comment || "";
     node.appendChild(comment);
 
@@ -587,7 +746,7 @@ function renderNotes(kind, notes, emptyMessage) {
 
   for (const note of notes) {
     const node = document.createElement("p");
-    node.className = "evidence-note";
+    node.className = `evidence-note is-${kind}`;
     node.textContent = note;
     list.appendChild(node);
   }
@@ -607,6 +766,7 @@ function renderTechnicalDetails(result) {
     ["Confianza", result.confidence],
     ["Intent", result.intent || "—"],
     ["Intentos de validación", String(result.validation_attempts ?? 0)],
+    ["Consultas de recuperación", (result.retrieval_queries || []).join(" · ") || "—"],
     ["Sesión", result.session_id || "—"],
   ];
 
@@ -625,6 +785,174 @@ function renderTechnicalDetails(result) {
   }
 
   list.appendChild(definitionList);
+}
+
+function configureEvidenceSections({cards, rules, rulings, assumptions, warnings, result}) {
+  const configuration = [
+    ["cards-section", cards.length, cards.length > 0],
+    ["rules-section", rules.length, rules.length > 0],
+    ["rulings-section", rulings.length, rulings.length > 0],
+    ["assumptions-section", assumptions.length, assumptions.length > 0],
+    ["warnings-section", warnings.length, warnings.length > 0],
+    ["sources-section", 1, false],
+  ];
+
+  for (const [id, count, shouldOpen] of configuration) {
+    const section = document.getElementById(id);
+    if (!section) {
+      continue;
+    }
+    section.classList.toggle("is-empty", count === 0);
+    section.open = Boolean(shouldOpen);
+  }
+
+  if (result.status === "needs_clarification") {
+    document.getElementById("cards-section").open = true;
+  }
+}
+
+function setResultActionsEnabled(enabled) {
+  for (const id of ["copy-answer-button", "copy-evidence-button", "export-result-button"]) {
+    elements[id].disabled = !enabled;
+  }
+}
+
+async function copyLastAnswer() {
+  const answer = state.lastResult?.answer;
+  if (!answer) {
+    showToast("No hay una respuesta para copiar.", "warning");
+    return;
+  }
+
+  const copied = await copyText(answer);
+  showToast(copied ? "Respuesta copiada." : "No se pudo copiar la respuesta.", copied ? "info" : "error");
+}
+
+async function copyLastEvidence() {
+  if (!state.lastResult) {
+    showToast("No hay evidencia para copiar.", "warning");
+    return;
+  }
+
+  const copied = await copyText(buildEvidenceText(state.lastResult));
+  showToast(copied ? "Respuesta y evidencia copiadas." : "No se pudo copiar la evidencia.", copied ? "info" : "error");
+}
+
+async function copyText(text) {
+  const value = String(text || "");
+  if (!value) {
+    return false;
+  }
+
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch (error) {
+    // Fall back to the local textarea method below.
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.className = "clipboard-fallback";
+  document.body.appendChild(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, value.length);
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch (error) {
+    copied = false;
+  } finally {
+    textarea.remove();
+  }
+  return copied;
+}
+
+function exportLastResult() {
+  if (!state.lastResult) {
+    showToast("No hay un resultado para exportar.", "warning");
+    return;
+  }
+
+  const payload = JSON.stringify(state.lastResult, null, 2);
+  const blob = new Blob([payload], {type: "application/json;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `magicai-judge-result-${formatExportTimestamp(new Date())}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  showToast("JudgeResult exportado en JSON.", "info");
+}
+
+function formatExportTimestamp(date) {
+  const parts = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+    "-",
+    String(date.getHours()).padStart(2, "0"),
+    String(date.getMinutes()).padStart(2, "0"),
+    String(date.getSeconds()).padStart(2, "0"),
+  ];
+  return parts.join("");
+}
+
+function buildEvidenceText(result) {
+  const lines = [
+    "MagicAI Judge",
+    "",
+    `Pregunta: ${result.question || "—"}`,
+    "",
+    "Respuesta:",
+    result.answer || "—",
+    "",
+    `Estado: ${STATUS_LABELS[result.status] || result.status || "—"}`,
+    `Origen: ${ORIGIN_LABELS[result.origin] || result.origin || "—"}`,
+    `Confianza: ${translateConfidence(result.confidence)}`,
+    `Autoridad: ${result.authority || "judge"}`,
+  ];
+
+  appendEvidenceTextSection(lines, "Cartas", (result.cards || []).map(card => {
+    const identity = [card.name, card.mana_cost, card.type_line].filter(Boolean).join(" · ");
+    return card.oracle_text ? `${identity}\n  ${card.oracle_text}` : identity;
+  }));
+  appendEvidenceTextSection(lines, "Reglas", (result.rules || []).map(rule => [rule.number, rule.title].filter(Boolean).join(" · ")));
+  appendEvidenceTextSection(lines, "Rulings", (result.rulings || []).map(ruling => {
+    const metadata = [ruling.card_name, ruling.published_at, ruling.source].filter(Boolean).join(" · ");
+    return `${metadata}\n  ${ruling.comment || ""}`.trimEnd();
+  }));
+  appendEvidenceTextSection(lines, "Consultas de recuperación", result.retrieval_queries || []);
+  appendEvidenceTextSection(lines, "Supuestos", result.assumptions || []);
+  appendEvidenceTextSection(lines, "Advertencias", result.warnings || []);
+  appendEvidenceTextSection(lines, "Versiones de fuentes", Object.entries(result.source_versions || {}).map(
+    ([key, value]) => `${formatKey(key)}: ${value}`,
+  ));
+
+  const sourceHealth = result.source_health || {};
+  if (sourceHealth.status) {
+    lines.push("", `Salud de fuentes: ${sourceHealth.status}`);
+  }
+
+  return lines.join("\n").trim();
+}
+
+function appendEvidenceTextSection(lines, title, entries) {
+  const values = entries.filter(entry => typeof entry === "string" && entry.trim());
+  if (!values.length) {
+    return;
+  }
+
+  lines.push("", `${title}:`);
+  for (const value of values) {
+    lines.push(`- ${value}`);
+  }
 }
 
 function appendMetaRow(container, label, value) {
@@ -676,6 +1004,7 @@ function resetConversation() {
   elements["result-status"].textContent = "Sin respuesta";
   elements["result-summary"].textContent = "La evidencia de la última respuesta aparecerá aquí.";
   elements["evidence-sections"].hidden = true;
+  setResultActionsEnabled(false);
   updateSessionLabel();
   elements["question-input"].focus();
 }
@@ -745,6 +1074,9 @@ function setSending(value) {
   elements["question-input"].disabled = value;
   elements["question-form"].setAttribute("aria-busy", String(value));
   elements["message-list"].setAttribute("aria-busy", String(value));
+  for (const button of document.querySelectorAll(".clarification-option")) {
+    button.disabled = value || button.dataset.resolved === "true";
+  }
   if (value) {
     announceRequestStatus("Consulta enviada. El Juez está consultando las fuentes.");
   }
@@ -798,6 +1130,8 @@ function loadStoredMessages() {
       role: message.role,
       text: message.text,
       ...(typeof message.status === "string" ? {status: message.status} : {}),
+      ...(normalizeCandidates(message.candidates).length ? {candidates: normalizeCandidates(message.candidates)} : {}),
+      ...(typeof message.selectedCandidate === "string" ? {selectedCandidate: message.selectedCandidate} : {}),
     }))
     .slice(-MAX_STORED_MESSAGES);
 
@@ -831,7 +1165,9 @@ function isValidStoredMessage(value) {
   return isRecord(value)
     && ALLOWED_MESSAGE_ROLES.has(value.role)
     && typeof value.text === "string"
-    && (value.status === undefined || typeof value.status === "string");
+    && (value.status === undefined || typeof value.status === "string")
+    && (value.candidates === undefined || Array.isArray(value.candidates))
+    && (value.selectedCandidate === undefined || typeof value.selectedCandidate === "string");
 }
 
 function isRecord(value) {

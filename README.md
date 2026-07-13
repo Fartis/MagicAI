@@ -11,6 +11,8 @@
 
 `v0.1.0-alpha` · Judge core in active development · Local-first
 
+> `main` contiene la versión estable o publicada. El desarrollo activo se integra en `develop` y cada sprint se trabaja en una rama `feature/*`.
+
 </div>
 
 ---
@@ -45,7 +47,7 @@ El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. 
 
 ### Estado
 
-El Juez ya es funcional para varias familias de reglas, pero todavía no es una versión final. El desarrollo inmediato se centra en medir su generalización abierta, ampliar cobertura según fallos reales y estabilizar un contrato estructurado que sirva tanto a la futura UI como a otros perfiles.
+El Juez ya es funcional para varias familias de reglas y dispone de una UI beta local. El desarrollo inmediato se centra en mejorar usabilidad, persistencia y distribución, mientras la cobertura factual solo se amplía cuando aparecen fallos reales de prioridad suficiente.
 
 La última campaña dinámica validada cubrió:
 
@@ -71,6 +73,8 @@ Ejecuciones validadas   216/216
 WARN                           0
 FAIL                           0
 ```
+
+Esta cifra describe una matriz controlada y reproducible sin regresiones. No significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic.
 
 Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado y [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta.
 
@@ -171,6 +175,8 @@ Ambas variables pueden sobrescribirse mediante el entorno.
 
 ## Instalación rápida · Quick start
 
+La guía lineal completa, incluida la diferencia entre `main` y `develop`, Ollama local, Docker o LAN y comprobaciones de salud, está en [docs/QUICKSTART.md](docs/QUICKSTART.md).
+
 ```bash
 git clone https://github.com/Fartis/MagicAI.git
 cd MagicAI
@@ -230,7 +236,7 @@ POST http://127.0.0.1:8000/ask
 DOCS http://127.0.0.1:8000/docs
 ```
 
-La UI beta muestra la conversación, el estado de `JudgeResult`, cartas, reglas, rulings, supuestos, advertencias y salud de las fuentes. Consulta [docs/UI.md](docs/UI.md).
+La UI beta muestra la conversación, el estado de `JudgeResult`, cartas, reglas, rulings, supuestos, advertencias y salud de las fuentes. También permite seleccionar candidatos de desambiguación, copiar la respuesta o la evidencia y exportar el último `JudgeResult` en JSON. Consulta [docs/UI.md](docs/UI.md).
 
 Ejemplo:
 
@@ -360,9 +366,9 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Reforzar resiliencia, accesibilidad y usabilidad de la UI beta del Juez.
-2. Añadir desambiguación interactiva, copia y exportación de evidencia.
-3. Incorporar persistencia real de conversaciones e historial gestionable.
+1. Completar el pulido visual y las pruebas manuales de la UI beta del Juez.
+2. Incorporar persistencia real de conversaciones e historial gestionable.
+3. Añadir preferencias de usuario y mejorar la experiencia móvil.
 4. Ampliar cobertura del Juez únicamente según fallos reales de prioridad suficiente.
 5. Preparar instalación y distribución reproducibles.
 6. Añadir Deck Master y Deckbuilder sobre la misma UI, respetando la autoridad factual del Juez.
@@ -374,6 +380,7 @@ Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracl
 ## Documentación
 
 - [Arquitectura](docs/ARCHITECTURE.md)
+- [Quickstart](docs/QUICKSTART.md)
 - [Comandos](docs/COMMANDS.md)
 - [UI beta](docs/UI.md)
 - [Estado actual](docs/STATUS.md)
