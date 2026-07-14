@@ -55,33 +55,34 @@ El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. 
 
 El Juez ya es funcional para varias familias de reglas y dispone de una UI beta local. El desarrollo inmediato se centra en mejorar usabilidad, persistencia y distribución, mientras la cobertura factual solo se amplía cuando aparecen fallos reales de prioridad suficiente.
 
-La última campaña dinámica validada repitió exactamente las 20 semillas de Research C1.2 después del hardening semántico:
+La última campaña ejecutada en el equipo de desarrollo utilizó las veinte semillas de Research C1.3:
 
 ```text
 20 semillas
 1.000 escenarios
 14 conceptos
 42 plantillas
-1.000 PASS
+1.000 PASS del harness
 0 WARN
 0 FAIL
 0 llamadas al LLM
+63,40 segundos
 ```
 
-La matriz completa de regresión actualmente validada es:
+La revisión posterior no trató esos `PASS` como autoridad. Detectó seis clasificaciones Oracle que debían corregirse, cuatro costes donde la fuente podía ser uno de los objetos sacrificados y quince preguntas que no excluían a la fuente como posible objetivo. Algunas categorías se solapan, para un total de 23 escenarios que necesitaban una premisa más precisa. Research C1.4 incorpora esas distinciones sin condiciones por carta.
+
+La matriz focalizada de código validada para C1.4 es:
 
 ```text
-Reddit Gauntlet             30/30
-Generalization Probe        18/18
-Dynamic Gauntlet            42/42
-Dynamic C1.3 Campaign   1.000/1.000
------------------------------------
-Ejecuciones validadas   1.090/1.090
-WARN                              0
-FAIL                              0
+Pruebas rápidas y ampliadas   231/231
+Full-Oracle smoke               42/42
+Replays de hallazgos C1.3       23/23
+Campaña reconstruida         1.000/1.000
+WARN                                0
+FAIL                                0
 ```
 
-Esta cifra describe una matriz controlada y reproducible sin regresiones; no significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic. La campaña C1.3 valida premisas antes de consultar al Juez, aplica auditorías semánticas independientes y reserva evidencia reglamentaria obligatoria por concepto. Sus 1.000 respuestas fueron deterministas y no se utilizaron para entrenamiento.
+La campaña reconstruida utiliza exclusivamente las 228 cartas que aparecieron en C1.3 y sirve para comprobar semillas, contratos y paralelismo. No significa que las 30.000 cartas del Oracle completo hayan quedado revalidadas. La validación final contra el Oracle completo debe repetirse después de aplicar el parche en el equipo de desarrollo. Ningún resultado se utiliza para entrenamiento, modificación de pesos o promoción automática.
 
 Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado, [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta y [docs/COMMUNITY_FEEDBACK_GAUNTLET.md](docs/COMMUNITY_FEEDBACK_GAUNTLET.md) para incorporar manualmente escenarios reales sin rastrear foros.
 

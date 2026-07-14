@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import random
 
+from magicai.oracle_abilities import ActivatedAbility
 from tests.quality.dynamic.card_catalog import (
     CardAbilityCandidate,
     CardCandidate,
@@ -57,6 +58,9 @@ class ScenarioGenerator:
             ability = ability_candidate.ability if ability_candidate else None
             card_name = card.name if card else ""
             ability_text = ability.text if ability else ""
+            question = template.render(card_name, ability_text)
+            if concept.id == "source_independence" and ability is not None:
+                question += _source_premise_qualifier(card_name, ability)
             scenarios.append(
                 DynamicScenario(
                     id=f"DG-{index:03d}",
@@ -65,11 +69,17 @@ class ScenarioGenerator:
                     concept_name=concept.name,
                     card_name=card_name,
                     template_id=template.id,
-                    question=template.render(card_name, ability_text),
+                    question=question,
                     tags=concept.tags + (f"template:{template.id}",),
                     contract=contract_for_scenario(
                         concept,
                         source_dependency=ability.source_dependency if ability else "",
+                        source_may_be_removed_as_cost=(
+                            ability.source_may_be_removed_as_cost if ability else False
+                        ),
+                        source_may_be_target=(
+                            ability.source_may_be_target if ability else False
+                        ),
                     ),
                     oracle_evidence=card.oracle_text if card else "",
                     card_type_line=card.type_line if card else "",
@@ -86,7 +96,11 @@ class ScenarioGenerator:
                     ability_is_mana=ability.is_mana if ability else None,
                     ability_source_zone=ability.source_zone if ability else "",
                     source_removed_as_cost=ability.source_removed_as_cost if ability else None,
+                    source_may_be_removed_as_cost=(
+                        ability.source_may_be_removed_as_cost if ability else None
+                    ),
                     source_dependency=ability.source_dependency if ability else "",
+                    source_may_be_target=ability.source_may_be_target if ability else None,
                 )
             )
         return scenarios
@@ -118,3 +132,18 @@ class ScenarioGenerator:
             self.random.shuffle(remaining)
             self._remaining_templates[concept.id] = remaining
         return remaining.pop()
+
+
+def _source_premise_qualifier(card_name: str, ability: ActivatedAbility) -> str:
+    qualifiers: list[str] = []
+    if ability.source_may_be_removed_as_cost and not ability.source_removed_as_cost:
+        qualifiers.append(
+            f"Los sacrificios del coste se pagaron con otros objetos; "
+            f"{card_name} no fue uno de los objetos sacrificados."
+        )
+    if ability.source_may_be_target:
+        qualifiers.append(
+            f"Ninguno de los objetivos de la habilidad era {card_name}; "
+            "todos eran objetos distintos."
+        )
+    return (" " + " ".join(qualifiers)) if qualifiers else ""

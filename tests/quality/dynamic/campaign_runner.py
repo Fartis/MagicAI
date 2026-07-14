@@ -20,7 +20,7 @@ from typing import Any
 from magicai.assistant import MagicAI
 from magicai.llm.ollama import MODEL, OLLAMA_URL
 from magicai.services.rule_service import warm_rule_index
-from magicai.scryfall import load_cards
+from magicai.scryfall import configure_card_source, load_cards
 from tests.quality.dynamic.card_catalog import CardCatalog
 from tests.quality.dynamic.concepts import get_concepts
 from tests.quality.dynamic.execution import (
@@ -40,6 +40,7 @@ CODE_FINGERPRINT_PATHS = (
     "magicai/context_enricher.py",
     "magicai/judge_result.py",
     "magicai/oracle_abilities.py",
+    "magicai/scryfall.py",
     "magicai/retrieval/concept_evidence.py",
     "magicai/retrieval/rule_queries.py",
     "magicai/services/rule_service.py",
@@ -212,6 +213,8 @@ def execute_campaign_runs(
     _PRELOADED_ORACLE_PATH = ""
     gc.collect()
     if requires_oracle:
+        runtime_oracle = Path(oracle_file).resolve() if oracle_file else CardCatalog().oracle_file.resolve()
+        configure_card_source(runtime_oracle)
         load_cards()
 
     max_workers = min(workers, len(tasks))
@@ -304,6 +307,14 @@ def _execute_run_task(task: dict[str, Any]) -> dict[str, Any]:
                 print("=" * 80)
                 generated = _load_run_scenarios(run_dir / "manifest.json")
                 manifest = run_dir / "manifest.json"
+                if task.get("requires_oracle"):
+                    runtime_oracle = (
+                        Path(task["oracle_file"]).resolve()
+                        if task.get("oracle_file")
+                        else CardCatalog().oracle_file.resolve()
+                    )
+                    configure_card_source(runtime_oracle)
+                    load_cards()
                 assistant = MagicAI()
 
                 def progress(scenario, result):

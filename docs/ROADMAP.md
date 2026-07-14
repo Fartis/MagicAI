@@ -67,7 +67,7 @@ Completado:
 
 ```text
 Dynamic Campaign: 3 seeds · 126/126 PASS · 14 concepts · 42 templates
-Matriz completa: 216/216 ejecuciones · 0 WARN · 0 FAIL
+Matriz focalizada C1.4: 231/231 ejecuciones · 0 WARN · 0 FAIL
 ```
 
 ---
@@ -362,6 +362,21 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - reparseo de la habilidad vinculada antes de ejecutar el Juez, sin confiar en metadatos antiguos;
 - huella de campaña ampliada para incluir evidencia conceptual, validación de respuestas y auditoría semántica;
 - repetición exacta de 20 semillas × 50 casos: `1000 PASS`, `0 WARN`, `0 FAIL`, `0` llamadas al LLM.
+
+### Research C1.4 — Oracle Ability Semantics & Bound Premises ✅
+
+- auditoría de los 1.000 resultados reales de C1.3, incluidos todos los `PASS`;
+- parser de habilidades modales multilínea con conservación de viñetas Oracle;
+- separación entre instrucciones de activación y efecto de resolución;
+- clasificación genérica de efectos sobre la fuente, uso de información y efectos parciales;
+- detección de costes genéricos donde la fuente podría ser sacrificada sin asumir que lo fue;
+- detección independiente de si la fuente podía ser objetivo de su propia habilidad;
+- premisas generadas que fijan qué objetos pagaron el coste y excluyen a la fuente de todos los objetivos;
+- contratos y guardas semánticas para coste, objetivos ilegales, última información conocida y resolución parcial;
+- consistencia del snapshot indicado por `--oracle-file` entre generador y Juez, incluida inicialización en workers `spawn`;
+- esquema dinámico v3, compatible al leer escenarios v1 y v2;
+- replays de los 23 hallazgos C1.3: `23 PASS`, cero llamadas al LLM;
+- smoke con Oracle completo: `42/42 PASS`; campaña reconstruida de veinte semillas: `1000/1000 PASS`.
 
 Los resultados siguen siendo artefactos de evaluación. No se generan targets de entrenamiento ni se modifica el modelo.
 

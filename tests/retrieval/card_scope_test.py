@@ -58,6 +58,7 @@ def _card(
 def _reset_scryfall() -> None:
     scryfall._cards = None
     scryfall._card_index = None
+    scryfall._loaded_source = None
 
 
 def _reset_extractor() -> None:
@@ -185,11 +186,36 @@ def test_squee_vanguard_cannot_override_playable_squee_cards():
             _reset_scryfall()
 
 
+
+def test_configure_card_source_switches_runtime_index():
+    first = _card("First Snapshot Card", oracle_id="first-snapshot")
+    second = _card("Second Snapshot Card", oracle_id="second-snapshot")
+    old_file = Path(scryfall.SCRYFALL_FILE)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        first_file = Path(temp_dir) / "first.json"
+        second_file = Path(temp_dir) / "second.json"
+        first_file.write_text(json.dumps([first]), encoding="utf-8")
+        second_file.write_text(json.dumps([second]), encoding="utf-8")
+
+        try:
+            scryfall.configure_card_source(first_file)
+            assert scryfall.search_exact_card("First Snapshot Card") is not None
+            assert scryfall.search_exact_card("Second Snapshot Card") is None
+
+            scryfall.configure_card_source(second_file)
+            assert scryfall.search_exact_card("First Snapshot Card") is None
+            assert scryfall.search_exact_card("Second Snapshot Card") is not None
+        finally:
+            scryfall.configure_card_source(old_file)
+
+
 def main():
     tests = [
         test_vanguard_is_outside_normal_judge_scope,
         test_banned_ordinary_paper_card_remains_queryable,
         test_squee_vanguard_cannot_override_playable_squee_cards,
+        test_configure_card_source_switches_runtime_index,
     ]
     errors = []
 

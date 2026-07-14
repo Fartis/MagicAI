@@ -51,6 +51,39 @@ def validate_dynamic_premise(scenario: DynamicScenario) -> list[str]:
                 problems.append(
                     "Stored source-removal metadata disagrees with the current Oracle parser."
                 )
+            if (
+                scenario.source_may_be_removed_as_cost is not None
+                and scenario.source_may_be_removed_as_cost
+                != parsed.source_may_be_removed_as_cost
+            ):
+                problems.append(
+                    "Stored optional source-payment metadata disagrees with the current Oracle parser."
+                )
+            if (
+                scenario.source_may_be_target is not None
+                and scenario.source_may_be_target != parsed.source_may_be_target
+            ):
+                problems.append(
+                    "Stored source-target metadata disagrees with the current Oracle parser."
+                )
+            if parsed.source_may_be_removed_as_cost and not parsed.source_removed_as_cost:
+                normalized_question = scenario.question.casefold()
+                if not any(marker in normalized_question for marker in (
+                    "no fue uno de los objetos sacrificados",
+                    "no fue sacrificad",
+                )):
+                    problems.append(
+                        "The source could pay a generic sacrifice cost, but the question does not state that other objects were sacrificed instead."
+                    )
+            if parsed.source_may_be_target:
+                normalized_question = scenario.question.casefold()
+                if not any(marker in normalized_question for marker in (
+                    "ninguno de los objetivos",
+                    "todos eran objetos distintos",
+                )):
+                    problems.append(
+                        "The source could be a legal target, but the question does not exclude it from every target."
+                    )
             if scenario.source_dependency != parsed.source_dependency:
                 problems.append(
                     "Stored source-dependency metadata disagrees with the current Oracle parser "

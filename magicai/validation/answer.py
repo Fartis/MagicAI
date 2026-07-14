@@ -185,6 +185,7 @@ def validate_answer(answer: str, knowledge: str) -> list[str]:
     # Concept-specific factual guards run after generic evidence filters. A
     # well-sourced answer can still contradict Ward's actual procedure.
     violations.extend(_ward_semantic_violations(answer, knowledge))
+    violations.extend(_source_independence_semantic_violations(answer, knowledge))
 
     return list(dict.fromkeys(violations))
 
@@ -234,6 +235,40 @@ def _ward_semantic_violations(answer: str, knowledge: str) -> list[str]:
         violations.append("The answer does not link Ward's countering effect to nonpayment.")
     return violations
 
+
+
+def _source_independence_semantic_violations(answer: str, knowledge: str) -> list[str]:
+    question = _normalize_match_text(_extract_question(knowledge))
+    if not (
+        "fuente" in question
+        and ("pila" in question or "destruy" in question or "elimin" in question)
+    ):
+        return []
+
+    text = _normalize_match_text(answer)
+    violations: list[str] = []
+    if "no fue uno de los objetos sacrificados" in question and not any(marker in text for marker in (
+        "no fue uno de los objetos sacrificados",
+        "no fue sacrificada para pagar",
+        "si se hubiera sacrificado la fuente",
+        "si hubieras sacrificado la propia fuente",
+    )):
+        violations.append(
+            "The answer omits that the source was not used to pay an optional sacrifice cost."
+        )
+    if "ninguno de los objetivos" in question and not any(marker in text for marker in (
+        "ninguno de los objetivos era la fuente",
+        "si la fuente hubiera sido objetivo",
+        "si la fuente hubiera sido también el único objetivo",
+        "si la fuente hubiera sido tambien el unico objetivo",
+        "si la fuente fuese objetivo",
+        "objetivo ilegal",
+        "todos sus objetivos",
+    )):
+        violations.append(
+            "The answer omits the separate target-legality consequence if the source were a target."
+        )
+    return violations
 
 def _normalize_match_text(text: str) -> str:
     value = (text or "").casefold()

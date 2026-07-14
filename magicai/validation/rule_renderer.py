@@ -445,36 +445,55 @@ def render_rule_answer(knowledge: str) -> str | None:
         knowledge,
         ["source_independence", "stack", "source_information", "do_possible"],
     ):
-        dependency = _quoted_source_dependency(knowledge, question)
-        base = (
+        ability = _quoted_source_ability(knowledge, question)
+        dependency = ability.source_dependency if ability else ""
+        answer = (
             "No. La habilidad no se contrarresta por destruir o retirar su "
             "fuente. Una vez activada, existe de forma independiente de su "
             "fuente y permanece en la pila. "
         )
         if dependency == "source_object":
-            return base + (
+            answer += (
                 "La habilidad seguirá resolviéndose y hará todo lo posible, pero "
                 "si intenta modificar a la propia fuente y ese objeto ya no está, "
                 "esa parte puede no hacer nada."
             )
-        if dependency == "information":
-            return base + (
+        elif dependency == "information":
+            answer += (
                 "La habilidad seguirá resolviéndose y hará todo lo posible. Si "
                 "necesita información de la fuente, puede usar su última "
                 "información conocida."
             )
-        if dependency == "partial":
-            return base + (
+        elif dependency == "partial":
+            answer += (
                 "La habilidad seguirá resolviéndose y hará todo lo posible: las "
                 "partes independientes todavía ocurren; una parte que necesite "
-                "información puede usar la última información conocida, y una "
+                "información puede usar su última información conocida, y una "
                 "parte que intente modificar la fuente desaparecida puede no "
                 "hacer nada."
             )
-        return base + (
-            "La habilidad seguirá resolviéndose y hará todo lo posible sin "
-            "necesitar que la fuente siga en el campo de batalla."
-        )
+        else:
+            answer += (
+                "La habilidad seguirá resolviéndose y hará todo lo posible sin "
+                "necesitar que la fuente siga en el campo de batalla."
+            )
+
+        if ability and ability.source_may_be_removed_as_cost and not ability.source_removed_as_cost:
+            answer += (
+                " La pregunta aclara que la propia fuente no fue uno de los "
+                "objetos sacrificados para pagar el coste. Si se hubiera "
+                "sacrificado la fuente para pagarlo, ya habría abandonado el "
+                "campo de batalla durante la activación, aunque la habilidad "
+                "seguiría existiendo en la pila."
+            )
+        if ability and ability.source_may_be_target:
+            answer += (
+                " Si la fuente hubiera sido también el único objetivo de la "
+                "habilidad, al dejar de ser un objetivo legal la habilidad no se "
+                "resolvería por no conservar ningún objetivo legal. Eso sería una "
+                "consecuencia de las reglas de objetivos, no de perder su fuente."
+            )
+        return answer
 
     if _is_no_priority_during_resolution(q) and _has_rules(
         knowledge,
@@ -876,7 +895,7 @@ def _has_rules(
     return True
 
 
-def _quoted_source_dependency(knowledge: str, question: str) -> str:
+def _quoted_source_ability(knowledge: str, question: str):
     card_name = _extract_primary_card_name(knowledge) or ""
     type_line = ""
     for name, entry_text in _extract_card_entries(knowledge):
@@ -890,7 +909,12 @@ def _quoted_source_dependency(knowledge: str, question: str) -> str:
         card_name=card_name,
         type_line=type_line,
     )
-    return abilities[0].source_dependency if abilities else ""
+    return abilities[0] if abilities else None
+
+
+def _quoted_source_dependency(knowledge: str, question: str) -> str:
+    ability = _quoted_source_ability(knowledge, question)
+    return ability.source_dependency if ability else ""
 
 
 def _supports_mana_ability(

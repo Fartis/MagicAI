@@ -69,6 +69,26 @@ def _validate_source_independence(
     )):
         failures.append("The answer does not establish source independence.")
 
+    if scenario.source_may_be_removed_as_cost and not any(marker in text for marker in (
+        "no fue uno de los objetos sacrificados",
+        "no fue sacrificada para pagar",
+        "si se hubiera sacrificado la fuente",
+        "si hubieras sacrificado la propia fuente",
+        "source had been sacrificed for the cost",
+    )):
+        failures.append("An optional source-as-cost payment is not qualified.")
+    if scenario.source_may_be_target and not any(marker in text for marker in (
+        "ninguno de los objetivos era la fuente",
+        "si la fuente hubiera sido objetivo",
+        "si la fuente hubiera sido también el único objetivo",
+        "si la fuente hubiera sido tambien el unico objetivo",
+        "si la fuente fuese objetivo",
+        "objetivo ilegal",
+        "todos sus objetivos",
+        "if the source had been a target",
+    )):
+        failures.append("Possible source targeting is not qualified for target legality.")
+
     dependency = scenario.source_dependency
     if dependency == "source_object" and not any(marker in text for marker in (
         "puede no hacer nada",

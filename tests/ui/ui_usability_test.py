@@ -111,7 +111,7 @@ def test_quickstart_documents_branches_ui_and_ollama_modes() -> None:
     assert "Ollama en el mismo equipo" in quickstart
     assert "Ollama en un contenedor existente" in quickstart
     assert "Ollama en otra máquina de la red local" in quickstart
-    assert "216/216" in readme
+    assert "231/231" in readme
     assert "No significa" in readme
     assert "docs/QUICKSTART.md" in readme
 

@@ -891,3 +891,68 @@ tests/quality/dynamic/concepts.py
 ```
 
 No se debe usar `--resume` sobre una campaña creada con una huella anterior. El runner bloqueará esa mezcla de forma deliberada.
+
+---
+
+## 17. Revalidación de Research C1.4
+
+C1.4 cambia el esquema de escenario y la huella de campaña. No se debe reanudar un directorio C1.3. Utiliza un directorio nuevo:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260715 \
+  --runs 20 \
+  --cases 50 \
+  --workers 4 \
+  --output-dir quality-results/dynamic-giant-1000-C14 \
+  --require-full-coverage
+```
+
+Para reanudar esa misma campaña C1.4:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260715 \
+  --runs 20 \
+  --cases 50 \
+  --workers 4 \
+  --output-dir quality-results/dynamic-giant-1000-C14 \
+  --require-full-coverage \
+  --resume
+```
+
+### Qué debe comprobar el informe
+
+```text
+Cases     : 1000
+Failures  : 0
+Warnings  : 0
+Templates : 42/42
+LLM calls : 0
+Status    : PASS
+```
+
+Además de esos contadores, revisa que los escenarios `source_independence` incluyan, cuando proceda:
+
+- `source_may_be_removed_as_cost`;
+- `source_may_be_target`;
+- la habilidad Oracle completa, incluidas viñetas;
+- una premisa que indique que la fuente no fue sacrificada para pagar;
+- una premisa que excluya a la fuente de todos los objetivos.
+
+### Corpus Oracle alternativo
+
+El mismo archivo indicado con `--oracle-file` debe usarse tanto para seleccionar escenarios como para la recuperación del Juez:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260715 \
+  --runs 2 \
+  --cases 42 \
+  --workers 2 \
+  --oracle-file /ruta/al/oracle-cards.json \
+  --output-dir quality-results/c14-oracle-override \
+  --require-full-coverage
+```
+
+La ruta y el SHA-256 del snapshot quedan registrados en `campaign_manifest.json`.

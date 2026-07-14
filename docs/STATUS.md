@@ -63,9 +63,9 @@ counters_as_enters
 
 Cada concepto contiene tres plantillas controladas, para un total de **42 plantillas**.
 
-### Última campaña validada
+### Última campaña recibida y auditoría C1.4
 
-Research C1.3 repitió exactamente las mismas 20 semillas y los mismos 50 casos por semilla utilizados para auditar C1.2:
+La campaña C1.3 recibida desde el equipo de desarrollo ejecutó exactamente veinte semillas y cincuenta casos por semilla:
 
 ```text
 Semillas                 20
@@ -73,39 +73,43 @@ Casos                  1.000
 Conceptos cubiertos    14/14
 Plantillas cubiertas   42/42
 Cartas distintas          228
-PASS                    1.000
+PASS del harness        1.000
 WARN                        0
 FAIL                        0
 Llamadas al LLM             0
 Origen determinista     1.000
+Tiempo de pared          63,40 s
 ```
 
-La campaña incluye escenarios `rules-only` y escenarios respaldados por cartas reales del Oracle local. Todas las premisas fueron reparadas con el parser actual antes de consultar al Juez y las familias Ward e independencia de fuente pasaron una auditoría semántica adicional al matcher textual.
+La huella de código y las fuentes declaradas por la campaña coinciden con el snapshot `source(27)`. El resultado confirma estabilidad y rendimiento, pero la auditoría humana y estructural encontró 23 escenarios de independencia de la fuente que necesitaban mayor precisión:
 
-### Evolución de la auditoría de 1.000 casos
+- seis habilidades con texto modal, instrucciones de activación o efectos mixtos mal clasificados;
+- cuatro costes de sacrificio genéricos donde la fuente era una opción legal de pago;
+- quince habilidades donde la fuente podía ser uno de los objetivos y la pregunta no lo excluía expresamente;
+- dos escenarios pertenecían a más de una categoría.
 
-La campaña exploratoria inicial obtuvo `1000 PASS` en el harness, pero la revisión humana detectó falsos positivos. C1.2 corrigió la selección Oracle y aceleró el runner; su repetición produjo `999 PASS` y descubrió un fallback LLM incorrecto de Ward, tres autorretiradas no reconocidas y clasificaciones incompletas de dependencia. Research C1.3 cierra esos huecos mediante:
+Research C1.4 corrige esas familias de forma genérica:
 
-- evidencia obligatoria reservada por concepto antes de reglas incidentales;
-- procedimiento determinista completo de Ward y guardas factuales para fallbacks;
-- autorreferencias por nombre completo, nombre Oracle abreviado, tipo y subtipo de objeto;
-- clasificación `independent`, `source_object`, `information` y `partial`;
-- contratos y respuestas diferenciados según la dependencia de la fuente;
-- validación semántica independiente del vocabulario del renderer;
-- revalidación exacta de las 20 semillas con 1.000 respuestas deterministas y cero llamadas al LLM.
+- conserva los modos Oracle en varias líneas y sus viñetas;
+- separa instrucciones de activación del efecto que realmente se resuelve;
+- reconoce Monstrosity, Adapt, Level y efectos de prevención o redirección ligados a la fuente;
+- distingue si la fuente debe salir como coste o solo podría elegirse para un coste genérico;
+- distingue independencia de la fuente y legalidad de objetivos;
+- añade a la pregunta premisas explícitas sobre qué objetos pagaron el coste y cuáles fueron los objetivos;
+- exige que la respuesta explique por separado coste, fuente, última información conocida y objetivos ilegales;
+- garantiza que `--oracle-file` use el mismo snapshot tanto para generar como para responder, también con procesos `spawn`.
 
-### Matriz de regresión validada
+### Validación previa a la campaña completa C1.4
 
 ```text
-Reddit Gauntlet             30/30
-Generalization Probe        18/18
-Dynamic Gauntlet            42/42
-Dynamic C1.3 Campaign   1.000/1.000
------------------------------------
-Ejecuciones validadas   1.090/1.090
-WARN                              0
-FAIL                              0
+Matriz rápida y ampliada       231/231 PASS
+Full-Oracle smoke                42/42 PASS
+Replays exactos de hallazgos     23/23 PASS
+Campaña reconstruida          1.000/1.000 PASS
+Llamadas al LLM                       0
 ```
+
+El smoke y los 23 replays utilizan el Oracle completo con el mismo SHA-256 de C1.3. La campaña de 1.000 utiliza un corpus mínimo reconstruido con las 228 cartas observadas en C1.3; valida las veinte semillas, los 42 contratos y cuatro procesos, pero no sustituye la repetición final contra el Oracle completo en el equipo del usuario.
 
 ### Open Judge Gauntlet
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-SCENARIO_SCHEMA_VERSION = 2
+SCENARIO_SCHEMA_VERSION = 3
 
 
 @dataclass(frozen=True)
@@ -86,7 +86,9 @@ class DynamicScenario:
     ability_is_mana: bool | None = None
     ability_source_zone: str = ""
     source_removed_as_cost: bool | None = None
+    source_may_be_removed_as_cost: bool | None = None
     source_dependency: str = ""
+    source_may_be_target: bool | None = None
 
     def to_case(self) -> dict[str, Any]:
         case_name = self.concept_name
@@ -126,13 +128,15 @@ class DynamicScenario:
             "ability_is_mana": self.ability_is_mana,
             "ability_source_zone": self.ability_source_zone,
             "source_removed_as_cost": self.source_removed_as_cost,
+            "source_may_be_removed_as_cost": self.source_may_be_removed_as_cost,
             "source_dependency": self.source_dependency,
+            "source_may_be_target": self.source_may_be_target,
         }
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "DynamicScenario":
         schema_version = int(payload.get("schema_version", 1))
-        if schema_version not in {1, SCENARIO_SCHEMA_VERSION}:
+        if schema_version not in {1, 2, SCENARIO_SCHEMA_VERSION}:
             raise ValueError(
                 "Unsupported dynamic scenario schema version: "
                 f"{schema_version!r}"
@@ -140,6 +144,8 @@ class DynamicScenario:
         ability_index = payload.get("ability_index")
         ability_is_mana = payload.get("ability_is_mana")
         source_removed = payload.get("source_removed_as_cost")
+        source_may_be_removed = payload.get("source_may_be_removed_as_cost")
+        source_may_be_target = payload.get("source_may_be_target")
         return cls(
             id=str(payload["id"]),
             seed=int(payload["seed"]),
@@ -165,5 +171,11 @@ class DynamicScenario:
             ability_is_mana=bool(ability_is_mana) if ability_is_mana is not None else None,
             ability_source_zone=str(payload.get("ability_source_zone", "")),
             source_removed_as_cost=bool(source_removed) if source_removed is not None else None,
+            source_may_be_removed_as_cost=(
+                bool(source_may_be_removed) if source_may_be_removed is not None else None
+            ),
             source_dependency=str(payload.get("source_dependency", "")),
+            source_may_be_target=(
+                bool(source_may_be_target) if source_may_be_target is not None else None
+            ),
         )

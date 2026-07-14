@@ -668,68 +668,73 @@ def contract_for_scenario(
     concept: DynamicConcept,
     *,
     source_dependency: str = "",
+    source_may_be_removed_as_cost: bool = False,
+    source_may_be_target: bool = False,
 ) -> EvaluationContract:
     """Return the semantic contract for one generated scenario.
 
     Source-independence is not one factual family: an effect can be completely
     independent, modify its own missing source, read information using LKI, or
-    contain both independent and source-dependent instructions.
+    contain both independent and source-dependent instructions.  Some costs can
+    optionally consume the source and some abilities can legally target it; the
+    answer must preserve those distinctions instead of treating source removal
+    as the only possible reason an ability might fail.
     """
 
     if concept.id != "source_independence":
         return concept.contract
 
     base = concept.contract
+    required_any = list(base.required_any)
     if source_dependency == "source_object":
-        return EvaluationContract(
-            required_all=base.required_all,
-            required_any=base.required_any + (
-                (
-                    "puede no hacer nada",
-                    "esa parte puede no hacer nada",
-                    "no puede modificar",
-                    "ya no está",
-                    "ya no esta",
-                ),
-            ),
-            forbidden=base.forbidden,
-            recommended_all=base.recommended_all,
-            recommended_any=base.recommended_any,
-            soft_forbidden=base.soft_forbidden,
-        )
-    if source_dependency == "information":
-        return EvaluationContract(
-            required_all=base.required_all,
-            required_any=base.required_any + (
-                (
-                    "última información conocida",
-                    "ultima informacion conocida",
-                    "last known information",
-                ),
-            ),
-            forbidden=base.forbidden,
-            recommended_all=base.recommended_all,
-            recommended_any=base.recommended_any,
-            soft_forbidden=base.soft_forbidden,
-        )
-    if source_dependency == "partial":
-        return EvaluationContract(
-            required_all=base.required_all,
-            required_any=base.required_any + (
-                (
-                    "parte",
-                    "todo lo posible",
-                    "puede no hacer nada",
-                    "última información conocida",
-                    "ultima informacion conocida",
-                ),
-            ),
-            forbidden=base.forbidden,
-            recommended_all=base.recommended_all,
-            recommended_any=base.recommended_any,
-            soft_forbidden=base.soft_forbidden,
-        )
-    return base
+        required_any.append((
+            "puede no hacer nada",
+            "esa parte puede no hacer nada",
+            "no puede modificar",
+            "ya no está",
+            "ya no esta",
+        ))
+    elif source_dependency == "information":
+        required_any.append((
+            "última información conocida",
+            "ultima informacion conocida",
+            "last known information",
+        ))
+    elif source_dependency == "partial":
+        required_any.append((
+            "parte",
+            "todo lo posible",
+            "puede no hacer nada",
+            "última información conocida",
+            "ultima informacion conocida",
+        ))
+
+    if source_may_be_removed_as_cost:
+        required_any.append((
+            "no fue uno de los objetos sacrificados",
+            "no fue sacrificada para pagar",
+            "si se hubiera sacrificado la fuente",
+            "si hubieras sacrificado la propia fuente",
+        ))
+    if source_may_be_target:
+        required_any.append((
+            "ninguno de los objetivos era la fuente",
+            "si la fuente hubiera sido objetivo",
+            "si la fuente hubiera sido también el único objetivo",
+            "si la fuente hubiera sido tambien el unico objetivo",
+            "si la fuente fuese objetivo",
+            "objetivo ilegal",
+            "todos sus objetivos",
+        ))
+
+    return EvaluationContract(
+        required_all=base.required_all,
+        required_any=tuple(required_any),
+        forbidden=base.forbidden,
+        recommended_all=base.recommended_all,
+        recommended_any=base.recommended_any,
+        soft_forbidden=base.soft_forbidden,
+    )
 
 
 _CONCEPT_INDEX = {
