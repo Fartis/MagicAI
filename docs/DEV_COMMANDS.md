@@ -827,3 +827,67 @@ else
   echo "El proceso ha terminado"
 fi
 ```
+
+---
+
+## 16. Revalidación exacta de Research C1.3
+
+Research C1.3 se validó repitiendo exactamente las semillas de la campaña que descubrió el fallo de Ward:
+
+```bash
+python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260715 \
+  --runs 20 \
+  --cases 50 \
+  --workers 4 \
+  --output-dir quality-results/dynamic-giant-1000-C13 \
+  --require-full-coverage
+```
+
+Resultado de referencia:
+
+```text
+Cases     : 1000
+Failures  : 0
+Warnings  : 0
+Templates : 42/42
+Origins   : {'deterministic_rule': 1000}
+LLM calls : 0
+Status    : PASS
+```
+
+El hecho de que `LLM calls` sea cero es relevante para esta campaña concreta: Ward y las demás familias cubiertas deben disponer de evidencia suficiente para utilizar sus rutas deterministas. No constituye una prohibición general de usar el LLM en preguntas abiertas.
+
+### Qué audita C1.3 además del matcher
+
+Antes de ejecutar el Juez:
+
+- se reparsea la habilidad Oracle vinculada;
+- se rechaza una fuente sacrificada, descartada o exiliada como coste;
+- se comprueba la zona desde la que se activa;
+- se verifica que la dependencia almacenada coincide con el parser actual.
+
+Después de responder:
+
+- Ward debe describirse como habilidad disparada;
+- debe aparecer en la pila y poder recibir respuestas antes de resolverse;
+- la falta de pago debe estar vinculada a contrarrestar el hechizo o habilidad;
+- no puede afirmarse que se responde durante la resolución;
+- la independencia de la fuente se valida según `independent`, `source_object`, `information` o `partial`.
+
+### Repetir después de modificar estas capas
+
+Debe utilizarse un directorio nuevo cuando cambie cualquiera de estos archivos, porque forman parte de la huella reproducible de campaña:
+
+```text
+magicai/oracle_abilities.py
+magicai/retrieval/concept_evidence.py
+magicai/context_enricher.py
+magicai/validation/answer.py
+magicai/validation/rule_renderer.py
+tests/quality/dynamic/premise_validation.py
+tests/quality/dynamic/semantic_validation.py
+tests/quality/dynamic/concepts.py
+```
+
+No se debe usar `--resume` sobre una campaña creada con una huella anterior. El runner bloqueará esa mezcla de forma deliberada.

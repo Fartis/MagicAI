@@ -3,6 +3,7 @@ import re
 from magicai.oracle_abilities import (
     contains_quoted_mana_ability,
     extract_activated_abilities,
+    extract_quoted_activated_abilities,
 )
 
 
@@ -444,14 +445,35 @@ def render_rule_answer(knowledge: str) -> str | None:
         knowledge,
         ["source_independence", "stack", "source_information", "do_possible"],
     ):
-        return (
+        dependency = _quoted_source_dependency(knowledge, question)
+        base = (
             "No. La habilidad no se contrarresta por destruir o retirar su "
             "fuente. Una vez activada, existe de forma independiente de su "
-            "fuente y permanece en la pila. Normalmente seguirá resolviéndose y "
-            "hará todo lo posible: si necesita "
-            "información de la fuente puede usar su última información conocida, "
-            "pero si intenta modificar a la propia fuente y ese objeto ya no está, "
-            "esa parte puede no hacer nada."
+            "fuente y permanece en la pila. "
+        )
+        if dependency == "source_object":
+            return base + (
+                "La habilidad seguirá resolviéndose y hará todo lo posible, pero "
+                "si intenta modificar a la propia fuente y ese objeto ya no está, "
+                "esa parte puede no hacer nada."
+            )
+        if dependency == "information":
+            return base + (
+                "La habilidad seguirá resolviéndose y hará todo lo posible. Si "
+                "necesita información de la fuente, puede usar su última "
+                "información conocida."
+            )
+        if dependency == "partial":
+            return base + (
+                "La habilidad seguirá resolviéndose y hará todo lo posible: las "
+                "partes independientes todavía ocurren; una parte que necesite "
+                "información puede usar la última información conocida, y una "
+                "parte que intente modificar la fuente desaparecida puede no "
+                "hacer nada."
+            )
+        return base + (
+            "La habilidad seguirá resolviéndose y hará todo lo posible sin "
+            "necesitar que la fuente siga en el campo de batalla."
         )
 
     if _is_no_priority_during_resolution(q) and _has_rules(
@@ -488,11 +510,14 @@ def render_rule_answer(knowledge: str) -> str | None:
         ["ward", "triggered", "stack"],
     ):
         return (
-            "Ward es una habilidad disparada; no es un coste adicional para "
-            "lanzar el hechizo. Cuando el permanente se convierte en objetivo de un "
-            "hechizo o habilidad que controla un oponente, Ward se dispara y su "
-            "habilidad se pone en la pila. Sí, los jugadores reciben prioridad y "
-            "pueden responder a esa habilidad antes de que se resuelva."
+            "Sí. Ward es una habilidad disparada; no es un coste adicional para "
+            "lanzar el hechizo. Cuando el permanente se convierte en objetivo de "
+            "un hechizo o habilidad que controla un oponente, Ward se dispara y "
+            "su habilidad se pone en la pila. Los jugadores reciben prioridad y "
+            "pueden responder mientras Ward está en la pila, antes de que se "
+            "resuelva. Al resolverse, el controlador del hechizo o habilidad que "
+            "hizo objetivo puede pagar el coste de Ward; si no paga, Ward "
+            "contrarresta ese hechizo o habilidad."
         )
 
     if _is_ability_taxonomy_question(q) and _has_rules(
@@ -849,6 +874,23 @@ def _has_rules(
             return False
 
     return True
+
+
+def _quoted_source_dependency(knowledge: str, question: str) -> str:
+    card_name = _extract_primary_card_name(knowledge) or ""
+    type_line = ""
+    for name, entry_text in _extract_card_entries(knowledge):
+        if not card_name or name == card_name:
+            type_line = entry_text.splitlines()[0].strip() if entry_text else ""
+            if not card_name:
+                card_name = name
+            break
+    abilities = extract_quoted_activated_abilities(
+        question,
+        card_name=card_name,
+        type_line=type_line,
+    )
+    return abilities[0].source_dependency if abilities else ""
 
 
 def _supports_mana_ability(

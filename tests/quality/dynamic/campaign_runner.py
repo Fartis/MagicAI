@@ -40,8 +40,10 @@ CODE_FINGERPRINT_PATHS = (
     "magicai/context_enricher.py",
     "magicai/judge_result.py",
     "magicai/oracle_abilities.py",
+    "magicai/retrieval/concept_evidence.py",
     "magicai/retrieval/rule_queries.py",
     "magicai/services/rule_service.py",
+    "magicai/validation/answer.py",
     "magicai/validation/premise_guard.py",
     "magicai/validation/rule_renderer.py",
     "tests/quality/dynamic/campaign.py",
@@ -52,6 +54,7 @@ CODE_FINGERPRINT_PATHS = (
     "tests/quality/dynamic/models.py",
     "tests/quality/dynamic/premise_validation.py",
     "tests/quality/dynamic/scenario_generator.py",
+    "tests/quality/dynamic/semantic_validation.py",
     "tests/quality/dynamic_campaign_test.py",
 )
 

@@ -65,39 +65,46 @@ Cada concepto contiene tres plantillas controladas, para un total de **42 planti
 
 ### Última campaña validada
 
+Research C1.3 repitió exactamente las mismas 20 semillas y los mismos 50 casos por semilla utilizados para auditar C1.2:
+
 ```text
-Semillas                  3
-Casos                   126
+Semillas                 20
+Casos                  1.000
 Conceptos cubiertos    14/14
 Plantillas cubiertas   42/42
-PASS                     126
-WARN                       0
-FAIL                       0
+Cartas distintas          228
+PASS                    1.000
+WARN                        0
+FAIL                        0
+Llamadas al LLM             0
+Origen determinista     1.000
 ```
 
-La campaña incluye escenarios `rules-only` y escenarios respaldados por cartas reales del Oracle local.
+La campaña incluye escenarios `rules-only` y escenarios respaldados por cartas reales del Oracle local. Todas las premisas fueron reparadas con el parser actual antes de consultar al Juez y las familias Ward e independencia de fuente pasaron una auditoría semántica adicional al matcher textual.
 
-### Auditoría exploratoria de 1.000 casos
+### Evolución de la auditoría de 1.000 casos
 
-Una campaña posterior de 20 semillas × 50 casos obtuvo `1000 PASS` en el harness, pero la revisión humana detectó falsos positivos del generador. Por ello **no se incorpora como 1.000 respuestas validadas** a la matriz de regresión. La auditoría motivó Research C1.2:
+La campaña exploratoria inicial obtuvo `1000 PASS` en el harness, pero la revisión humana detectó falsos positivos. C1.2 corrigió la selección Oracle y aceleró el runner; su repetición produjo `999 PASS` y descubrió un fallback LLM incorrecto de Ward, tres autorretiradas no reconocidas y clasificaciones incompletas de dependencia. Research C1.3 cierra esos huecos mediante:
 
-- texto recordatorio y habilidades concedidas a tokens ya no se confunden con habilidades de maná de la carta;
-- cada pregunta de habilidad guarda la línea Oracle exacta, coste, efecto, zona y dependencia de la fuente;
-- premisas imposibles se marcan `FAIL` antes de consultar al Juez;
-- la independencia de la fuente distingue permanencia en la pila, última información conocida y partes del efecto que pueden no hacer nada;
-- se corrigieron matices de comandante y precedencia de efectos de reemplazo.
+- evidencia obligatoria reservada por concepto antes de reglas incidentales;
+- procedimiento determinista completo de Ward y guardas factuales para fallbacks;
+- autorreferencias por nombre completo, nombre Oracle abreviado, tipo y subtipo de objeto;
+- clasificación `independent`, `source_object`, `information` y `partial`;
+- contratos y respuestas diferenciados según la dependencia de la fuente;
+- validación semántica independiente del vocabulario del renderer;
+- revalidación exacta de las 20 semillas con 1.000 respuestas deterministas y cero llamadas al LLM.
 
 ### Matriz de regresión validada
 
 ```text
-Reddit Gauntlet          30/30
-Generalization Probe     18/18
-Dynamic Gauntlet         42/42
-Dynamic Campaign        126/126
---------------------------------
-Ejecuciones validadas   216/216
-WARN                           0
-FAIL                           0
+Reddit Gauntlet             30/30
+Generalization Probe        18/18
+Dynamic Gauntlet            42/42
+Dynamic C1.3 Campaign   1.000/1.000
+-----------------------------------
+Ejecuciones validadas   1.090/1.090
+WARN                              0
+FAIL                              0
 ```
 
 ### Open Judge Gauntlet

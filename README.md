@@ -55,32 +55,33 @@ El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. 
 
 El Juez ya es funcional para varias familias de reglas y dispone de una UI beta local. El desarrollo inmediato se centra en mejorar usabilidad, persistencia y distribución, mientras la cobertura factual solo se amplía cuando aparecen fallos reales de prioridad suficiente.
 
-La última campaña dinámica validada cubrió:
+La última campaña dinámica validada repitió exactamente las 20 semillas de Research C1.2 después del hardening semántico:
 
 ```text
-3 semillas
-126 escenarios
+20 semillas
+1.000 escenarios
 14 conceptos
 42 plantillas
-126 PASS
+1.000 PASS
 0 WARN
 0 FAIL
+0 llamadas al LLM
 ```
 
 La matriz completa de regresión actualmente validada es:
 
 ```text
-Reddit Gauntlet          30/30
-Generalization Probe     18/18
-Dynamic Gauntlet         42/42
-Dynamic Campaign        126/126
---------------------------------
-Ejecuciones validadas   216/216
-WARN                           0
-FAIL                           0
+Reddit Gauntlet             30/30
+Generalization Probe        18/18
+Dynamic Gauntlet            42/42
+Dynamic C1.3 Campaign   1.000/1.000
+-----------------------------------
+Ejecuciones validadas   1.090/1.090
+WARN                              0
+FAIL                              0
 ```
 
-Esta cifra describe una matriz controlada y reproducible sin regresiones. No significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic. Una campaña exploratoria adicional de 1.000 casos obtuvo `PASS` del harness, pero la auditoría humana encontró falsos positivos; por ello no se suma a esta matriz y se utiliza como origen de Research C1.2.
+Esta cifra describe una matriz controlada y reproducible sin regresiones; no significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic. La campaña C1.3 valida premisas antes de consultar al Juez, aplica auditorías semánticas independientes y reserva evidencia reglamentaria obligatoria por concepto. Sus 1.000 respuestas fueron deterministas y no se utilizaron para entrenamiento.
 
 Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado, [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta y [docs/COMMUNITY_FEEDBACK_GAUNTLET.md](docs/COMMUNITY_FEEDBACK_GAUNTLET.md) para incorporar manualmente escenarios reales sin rastrear foros.
 

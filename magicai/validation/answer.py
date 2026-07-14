@@ -181,8 +181,66 @@ def validate_answer(answer: str, knowledge: str) -> list[str]:
             for violation in violations
             if _is_hard_violation(violation)
         ]
-        
+
+    # Concept-specific factual guards run after generic evidence filters. A
+    # well-sourced answer can still contradict Ward's actual procedure.
+    violations.extend(_ward_semantic_violations(answer, knowledge))
+
+    return list(dict.fromkeys(violations))
+
+
+def _ward_semantic_violations(answer: str, knowledge: str) -> list[str]:
+    question = _normalize_match_text(_extract_question(knowledge))
+    if not re.search(r"\bward\b", question):
+        return []
+
+    text = _normalize_match_text(answer)
+    violations: list[str] = []
+    if re.search(r"\bward\s+se\s+activa\b|\bse\s+activa\s+ward\b", text):
+        violations.append("The answer incorrectly describes Ward as an activated ability.")
+    if any(marker in text for marker in (
+        "responder durante su resolucion",
+        "responder durante la resolucion de ward",
+        "respond during its resolution",
+    )):
+        violations.append("The answer incorrectly allows responses during Ward resolution.")
+    if any(marker in text for marker in (
+        "pagar para evitar que el hechizo se resuelva",
+        "paga para evitar que el hechizo se resuelva",
+        "pay to stop the spell from resolving",
+    )):
+        violations.append("The answer misstates what paying the Ward cost prevents.")
+
+    if not any(marker in text for marker in (
+        "habilidad disparada",
+        "habilidad desencadenada",
+        "triggered ability",
+    )):
+        violations.append("The answer does not identify Ward as a triggered ability.")
+    if "pila" not in text and "stack" not in text:
+        violations.append("The answer does not place Ward on the stack.")
+    if "contrarrest" not in text and "counter" not in text:
+        violations.append("The answer does not explain Ward's countering effect.")
+    if not (
+        any(marker in text for marker in (
+            "si no paga",
+            "si no se paga",
+            "a menos que pague",
+            "unless that player pays",
+            "unless its controller pays",
+        ))
+        or re.search(r"\bsi\b[^.]{0,100}\bno\s+paga\b", text)
+    ):
+        violations.append("The answer does not link Ward's countering effect to nonpayment.")
     return violations
+
+
+def _normalize_match_text(text: str) -> str:
+    value = (text or "").casefold()
+    replacements = str.maketrans({
+        "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u",
+    })
+    return " ".join(value.translate(replacements).split())
 
 
 def _looks_incomplete(answer: str) -> bool:
@@ -580,7 +638,9 @@ def _mentions_response_during_resolution(answer: str, knowledge: str) -> bool:
     bad_patterns = [
         "durante la resolución del hechizo original",
         "durante la resolución",
+        "durante su resolución",
         "during the resolution",
+        "during its resolution",
     ]
 
     if not any(pattern in lower for pattern in bad_patterns):

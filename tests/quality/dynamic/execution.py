@@ -7,6 +7,7 @@ from typing import Any, Callable, Iterable
 from tests.quality.dynamic.failure_store import save_failure
 from tests.quality.dynamic.models import DynamicScenario
 from tests.quality.dynamic.premise_validation import validate_dynamic_premise
+from tests.quality.dynamic.semantic_validation import validate_dynamic_answer
 from tests.quality.reddit_gauntlet_test import (
     count_steps_by_status,
     run_case,
@@ -37,6 +38,7 @@ def run_dynamic_scenarios(
             result = _premise_failure_result(scenario, premise_failures)
         else:
             result = run_case(assistant, scenario.to_case())
+            _apply_semantic_failures(scenario, result)
         result["dynamic"] = scenario.to_dict()
         results.append(result)
 
@@ -53,6 +55,27 @@ def run_dynamic_scenarios(
 
     total_elapsed = time.perf_counter() - suite_start
     return results, saved_failures, total_elapsed
+
+
+def _apply_semantic_failures(
+    scenario: DynamicScenario,
+    result: dict[str, Any],
+) -> None:
+    steps = result.get("steps", [])
+    if not steps:
+        return
+    answer = str(steps[0].get("answer", "") or "")
+    failures = validate_dynamic_answer(scenario, answer)
+    if not failures:
+        return
+
+    labelled = [f"Semantic audit: {failure}" for failure in failures]
+    steps[0].setdefault("failures", []).extend(labelled)
+    steps[0]["status"] = "FAIL"
+    result.setdefault("failures", []).extend(
+        f"Step 1: {failure}" for failure in labelled
+    )
+    result["status"] = "FAIL"
 
 
 def write_dynamic_reports(

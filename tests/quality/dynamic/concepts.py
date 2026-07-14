@@ -91,17 +91,28 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
             ),
         ),
         contract=EvaluationContract(
-            required_all=("Ward", "pila"),
+            required_all=("Ward", "pila", "contrarresta"),
             required_any=(
                 ("habilidad disparada", "habilidad desencadenada", "trigger"),
                 ("responder", "prioridad"),
+                (
+                    "si no paga",
+                    "si no se paga",
+                    "a menos que pague",
+                    "unless that player pays",
+                ),
             ),
             recommended_any=(("sí", "si"),),
             forbidden=(
                 "Ward es un coste adicional",
                 "Ward es un costo adicional",
+                "Ward se activa",
+                "se activa Ward",
                 "no se puede responder porque es un coste",
                 "no usa la pila",
+                "responder durante su resolución",
+                "responder durante la resolución de Ward",
+                "pagar para evitar que el hechizo se resuelva",
             ),
         ),
     ),
@@ -651,6 +662,74 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
         ),
     )
 )
+
+
+def contract_for_scenario(
+    concept: DynamicConcept,
+    *,
+    source_dependency: str = "",
+) -> EvaluationContract:
+    """Return the semantic contract for one generated scenario.
+
+    Source-independence is not one factual family: an effect can be completely
+    independent, modify its own missing source, read information using LKI, or
+    contain both independent and source-dependent instructions.
+    """
+
+    if concept.id != "source_independence":
+        return concept.contract
+
+    base = concept.contract
+    if source_dependency == "source_object":
+        return EvaluationContract(
+            required_all=base.required_all,
+            required_any=base.required_any + (
+                (
+                    "puede no hacer nada",
+                    "esa parte puede no hacer nada",
+                    "no puede modificar",
+                    "ya no está",
+                    "ya no esta",
+                ),
+            ),
+            forbidden=base.forbidden,
+            recommended_all=base.recommended_all,
+            recommended_any=base.recommended_any,
+            soft_forbidden=base.soft_forbidden,
+        )
+    if source_dependency == "information":
+        return EvaluationContract(
+            required_all=base.required_all,
+            required_any=base.required_any + (
+                (
+                    "última información conocida",
+                    "ultima informacion conocida",
+                    "last known information",
+                ),
+            ),
+            forbidden=base.forbidden,
+            recommended_all=base.recommended_all,
+            recommended_any=base.recommended_any,
+            soft_forbidden=base.soft_forbidden,
+        )
+    if source_dependency == "partial":
+        return EvaluationContract(
+            required_all=base.required_all,
+            required_any=base.required_any + (
+                (
+                    "parte",
+                    "todo lo posible",
+                    "puede no hacer nada",
+                    "última información conocida",
+                    "ultima informacion conocida",
+                ),
+            ),
+            forbidden=base.forbidden,
+            recommended_all=base.recommended_all,
+            recommended_any=base.recommended_any,
+            soft_forbidden=base.soft_forbidden,
+        )
+    return base
 
 
 _CONCEPT_INDEX = {

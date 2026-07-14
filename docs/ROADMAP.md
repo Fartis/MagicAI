@@ -351,6 +351,18 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - paralelismo configurable por procesos con `--workers`;
 - diagnósticos estructurados de origen, uso de LLM y tiempos por etapa.
 
+### Research C1.3 — Evidence Quotas & Semantic Audit Hardening ✅
+
+- reserva de reglas obligatorias por concepto antes de evidencia incidental de otras keywords;
+- Ward respaldado siempre por 702.21a, disparos, pila y prioridad;
+- validación factual de Ward independiente del matcher textual;
+- reconocimiento genérico de autorreferencias por nombre, nombre abreviado, tipo y subtipo Oracle;
+- clasificación de efectos independientes, dependientes de la fuente, informativos y parciales;
+- contratos y renderizado específicos para última información conocida y partes que no pueden modificar una fuente desaparecida;
+- reparseo de la habilidad vinculada antes de ejecutar el Juez, sin confiar en metadatos antiguos;
+- huella de campaña ampliada para incluir evidencia conceptual, validación de respuestas y auditoría semántica;
+- repetición exacta de 20 semillas × 50 casos: `1000 PASS`, `0 WARN`, `0 FAIL`, `0` llamadas al LLM.
+
 Los resultados siguen siendo artefactos de evaluación. No se generan targets de entrenamiento ni se modifica el modelo.
 
 La ingestión automatizada de JudgeApps o Reddit queda separada y condicionada a permisos explícitos. Este track no sustituye la hoja de ruta de UI y solo genera interrupciones cuando detecta fallos críticos o de prioridad media-alta.

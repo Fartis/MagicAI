@@ -8,6 +8,7 @@ from tests.quality.dynamic.card_catalog import (
     CardCatalog,
 )
 from tests.quality.dynamic.models import DynamicConcept, DynamicScenario
+from tests.quality.dynamic.concepts import contract_for_scenario
 
 
 _ABILITY_SELECTORS = {
@@ -66,7 +67,10 @@ class ScenarioGenerator:
                     template_id=template.id,
                     question=template.render(card_name, ability_text),
                     tags=concept.tags + (f"template:{template.id}",),
-                    contract=concept.contract,
+                    contract=contract_for_scenario(
+                        concept,
+                        source_dependency=ability.source_dependency if ability else "",
+                    ),
                     oracle_evidence=card.oracle_text if card else "",
                     card_type_line=card.type_line if card else "",
                     card_keywords=card.keywords if card else (),
