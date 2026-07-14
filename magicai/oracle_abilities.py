@@ -12,7 +12,13 @@ _LOYALTY_COST_RE = re.compile(r"^[+−-]\d+\s*$")
 _WORD_ADD_RE = re.compile(r"\badds?\b", flags=re.IGNORECASE)
 _QUOTED_TEXT_RE = re.compile(r'["“”«](.*?)["“”»]', flags=re.DOTALL)
 _ROMAN_SUFFIX_RE = re.compile(r"\s+[IVXLCDM]+$", flags=re.IGNORECASE)
-_SOURCE_DEPENDENCIES = {"independent", "source_object", "information", "partial"}
+_SOURCE_DEPENDENCIES = {
+    "independent",
+    "source_object",
+    "information",
+    "source_bound_effect",
+    "partial",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,6 +93,7 @@ def extract_activated_abilities(
                 ),
                 source_dependency=_source_dependency(
                     effect,
+                    cost=cost,
                     card_name=card_name,
                     type_line=type_line,
                 ),
@@ -276,6 +283,14 @@ def _source_reference_pattern(card_name: str, type_line: str) -> str:
 
     card_types, _, subtypes = (type_line or "").partition("—")
     combined_types = f"{card_types} {subtypes}".casefold()
+    if "planeswalker" in card_types.casefold():
+        planeswalker_subtype = " ".join(re.findall(r"[a-z0-9'-]+", subtypes.casefold()))
+        if planeswalker_subtype:
+            refs.append(re.escape(planeswalker_subtype))
+    if "legendary" in card_types.casefold():
+        first_name = next(iter(re.findall(r"[a-z0-9'-]+", (card_name or "").casefold())), "")
+        if len(first_name) >= 4:
+            refs.append(re.escape(first_name))
     for card_type in (
         "artifact", "aura", "battle", "case", "class", "creature",
         "enchantment", "land", "planeswalker", "vehicle",
@@ -340,47 +355,85 @@ def _source_may_be_removed_as_cost(
     return any(allows_source_word(subtype) for subtype in subtypes)
 
 
-def _source_dependency(effect: str, *, card_name: str, type_line: str) -> str:
+def _source_dependency(
+    effect: str,
+    *,
+    cost: str = "",
+    card_name: str,
+    type_line: str,
+) -> str:
+    """Classify how an activated ability depends on its source at resolution.
+
+    Oracle often introduces the source in the activation cost and then refers to
+    it with a pronoun in the effect (``Regenerate it``), or names it in one
+    clause and continues with ``It gains ...`` in the next.  Treating each
+    clause as context-free created false ``independent`` and ``partial``
+    classifications.  This stateful pass carries the source antecedent across
+    the whole ability while keeping target/object dependencies separate.
+    """
+
     normalized = _resolution_effect(effect)
     if not normalized:
         return "independent"
 
     source = _source_reference_pattern(card_name, type_line)
+    normalized_cost = _strip_parenthetical_and_quoted(cost).casefold()
+    source_seen = bool(re.search(source, normalized_cost))
     kinds: set[str] = set()
-    source_seen = False
 
     for clause in _effect_clauses(normalized):
         explicit = bool(re.search(source, clause))
         keyword_self = _keyword_effect_uses_source(clause)
-        pronoun_continuation = source_seen and bool(
-            re.search(r"^(?:then\s+)?(?:return|exile|sacrifice|destroy|put|tap|untap)\s+it\b", clause)
+        pronoun_source = _clause_pronoun_refers_to_source(
+            clause,
+            source_seen=source_seen,
         )
-        dependent = explicit or keyword_self or pronoun_continuation
-        source_seen = source_seen or explicit or keyword_self
+        dependent = explicit or keyword_self or pronoun_source
 
         if not dependent:
             kinds.add("independent")
             continue
 
-        modifies = (
-            _clause_modifies_source(clause, source)
-            or _clause_creates_source_bound_effect(clause, source)
+        if _clause_creates_source_bound_effect(
+            clause,
+            source,
+            pronoun_source=pronoun_source,
+        ):
+            kinds.add("source_bound_effect")
+        elif (
+            _clause_modifies_source(
+                clause,
+                source,
+                pronoun_source=pronoun_source,
+            )
             or keyword_self
-            or pronoun_continuation
-        )
-        if modifies:
+        ):
             kinds.add("source_object")
-            if _clause_also_affects_other_objects(clause, source):
-                kinds.add("independent")
         else:
+            # Damage dealt by ``it``, power/toughness reads, copied values, and
+            # similar instructions can normally use last known information.
             kinds.add("information")
+
+        if _clause_also_affects_other_objects(clause, source):
+            kinds.add("independent")
+
+        source_seen = source_seen or explicit or keyword_self or pronoun_source
 
     if not kinds or kinds == {"independent"}:
         return "independent"
-    if len(kinds) > 1:
-        return "partial"
-    dependency = next(iter(kinds))
-    return dependency if dependency in _SOURCE_DEPENDENCIES else "independent"
+    if len(kinds) == 1:
+        dependency = next(iter(kinds))
+        return dependency if dependency in _SOURCE_DEPENDENCIES else "independent"
+    if kinds <= {"source_object", "source_bound_effect"}:
+        # Every instruction still depends on the source object.  A renderer can
+        # explain the missing object once without inventing an independent part.
+        return "source_object"
+
+    # Multiple source-dependent mechanisms still need a split explanation,
+    # even when no truly independent instruction exists.  ``partial`` means the
+    # resolver must discuss each instruction separately rather than claiming
+    # that the whole effect either works or fails as a unit.
+    return "partial"
 
 
 def _resolution_effect(effect: str) -> str:
@@ -415,8 +468,53 @@ def _keyword_effect_uses_source(clause: str) -> bool:
     )
 
 
-def _clause_modifies_source(clause: str, source: str) -> bool:
+def _clause_pronoun_refers_to_source(
+    clause: str,
+    *,
+    source_seen: bool,
+) -> bool:
+    """Resolve source pronouns conservatively across Oracle clauses.
+
+    A leading ``It`` in an activated ability has the ability source as its
+    implicit antecedent when no other object has been introduced.  Object or
+    reflexive pronouns later in the ability inherit a previously established
+    source antecedent.  This intentionally prefers a source-dependent audit
+    classification over the unsafe claim that an ambiguous effect is fully
+    independent.
+    """
+
+    normalized = clause.strip().casefold()
+    if re.match(r"^(?:then\s+)?(?:it|he|she|they)\b", normalized):
+        return True
+    if not source_seen:
+        return False
+    if re.search(r"\bthis effect\b", normalized):
+        return True
     return bool(
+        re.search(
+            r"\b(?:regenerate|tap|untap|transform|sacrifice|exile|destroy|return|shuffle|attach)\s+"
+            r"(?:it|him|her|them|itself|himself|herself|themselves)\b",
+            normalized,
+        )
+        or re.search(
+            r"\bput\b[^.]{0,100}\b(?:on|onto|under)\s+"
+            r"(?:it|him|her|them|itself|himself|herself|themselves)\b",
+            normalized,
+        )
+        or re.search(
+            r"\b(?:it|he|she|they)\s+(?:gets?|gains?|loses?|becomes?|has|is|can(?:not|'t)?|does(?: not|n't)?)\b",
+            normalized,
+        )
+    )
+
+
+def _clause_modifies_source(
+    clause: str,
+    source: str,
+    *,
+    pronoun_source: bool = False,
+) -> bool:
+    explicit = bool(
         re.search(
             rf"{source}\s+(?:gets?|gains?|loses?|becomes?|has|is|can(?:'t| not)?|doesn't|does not)\b",
             clause,
@@ -430,18 +528,52 @@ def _clause_modifies_source(clause: str, source: str) -> bool:
             clause,
         )
         or re.search(
-            rf"\b(?:tap|untap|transform|regenerate|sacrifice|exile|destroy|return|put|shuffle)\s+{source}\b",
+            rf"\b(?:tap|untap|transform|regenerate|sacrifice|exile|destroy|return|put|shuffle|attach)\s+{source}\b",
             clause,
         )
-        or re.search(r"^(?:return|exile|sacrifice|destroy|put|tap|untap)\s+it\b", clause)
+    )
+    if explicit:
+        return True
+    if not pronoun_source:
+        return False
+    return bool(
+        re.search(
+            r"^(?:then\s+)?(?:it|he|she|they)\s+"
+            r"(?:gets?|gains?|loses?|becomes?|has|is|can(?:not|'t)?|does(?: not|n't)?)\b",
+            clause,
+        )
+        or re.search(
+            r"\b(?:regenerate|tap|untap|transform|sacrifice|exile|destroy|return|shuffle|attach)\s+"
+            r"(?:it|him|her|them|itself|himself|herself|themselves)\b",
+            clause,
+        )
+        or re.search(
+            r"\bput\b[^.]{0,100}\b(?:counter|counters)?[^.]{0,40}\b(?:on|onto|under)\s+"
+            r"(?:it|him|her|them|itself|himself|herself|themselves)\b",
+            clause,
+        )
     )
 
 
-def _clause_creates_source_bound_effect(clause: str, source: str) -> bool:
+def _clause_creates_source_bound_effect(
+    clause: str,
+    source: str,
+    *,
+    pronoun_source: bool = False,
+) -> bool:
     return bool(
         re.search(rf"damage\s+that\s+would\s+be\s+dealt\s+to\s+{source}", clause)
         or re.search(rf"prevent\b[^.]*\b(?:to|by)\s+{source}", clause)
         or re.search(rf"the next\b[^.]*\b{source}\b", clause)
+        or re.search(rf"\battacks?\s+{source}\b", clause)
+        or re.search(rf"\bcan(?:not|'t)?\s+attack\s+{source}\b", clause)
+        or (
+            pronoun_source
+            and re.search(
+                r"\b(?:attack|block|be attacked|be blocked|this effect)\b",
+                clause,
+            )
+        )
     )
 
 

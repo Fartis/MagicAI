@@ -37,7 +37,7 @@ def test_source_dependency_c14_regressions_are_generic():
             "{0}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature you control instead.",
             "Lancer",
             "Creature — Kor Soldier",
-            "source_object",
+            "source_bound_effect",
         ),
         (
             "{8}: This creature and up to one other target creature each get +3/+3 until end of turn.",

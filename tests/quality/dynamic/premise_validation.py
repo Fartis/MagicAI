@@ -4,7 +4,9 @@ from magicai.oracle_abilities import extract_activated_abilities
 from tests.quality.dynamic.models import DynamicScenario
 
 
-_VALID_DEPENDENCIES = {"independent", "source_object", "information", "partial"}
+_VALID_DEPENDENCIES = {
+    "independent", "source_object", "information", "source_bound_effect", "partial"
+}
 
 
 def validate_dynamic_premise(scenario: DynamicScenario) -> list[str]:

@@ -700,6 +700,14 @@ def contract_for_scenario(
             "ultima informacion conocida",
             "last known information",
         ))
+    elif source_dependency == "source_bound_effect":
+        required_any.append((
+            "efecto está ligado",
+            "efecto esta ligado",
+            "objeto identificable",
+            "puede resultar imposible",
+            "source-bound",
+        ))
     elif source_dependency == "partial":
         required_any.append((
             "parte",

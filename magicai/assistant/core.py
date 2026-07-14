@@ -1,3 +1,4 @@
+import os
 import time
 
 from magicai.context_builder import build_context
@@ -60,7 +61,8 @@ class MagicAI:
         )
 
         timings["context_builder"] = time.perf_counter() - t
-        print(f"Context Builder : {timings['context_builder']:.3f}s")
+        if not _evaluation_quiet():
+            print(f"Context Builder : {timings['context_builder']:.3f}s")
 
         #
         # Enricher
@@ -71,7 +73,8 @@ class MagicAI:
         context = enrich(context)
 
         timings["context_enricher"] = time.perf_counter() - t
-        print(f"Context Enricher: {timings['context_enricher']:.3f}s")
+        if not _evaluation_quiet():
+            print(f"Context Enricher: {timings['context_enricher']:.3f}s")
 
         #
         # Conversación
@@ -91,7 +94,8 @@ class MagicAI:
         knowledge = build_knowledge(context)
 
         timings["knowledge_builder"] = time.perf_counter() - t
-        print(f"Knowledge Builder: {timings['knowledge_builder']:.3f}s")
+        if not _evaluation_quiet():
+            print(f"Knowledge Builder: {timings['knowledge_builder']:.3f}s")
 
         #
         # LLM
@@ -105,7 +109,8 @@ class MagicAI:
         )
 
         timings["answer_generator"] = time.perf_counter() - t
-        print(f"Answer Generator : {timings['answer_generator']:.3f}s")
+        if not _evaluation_quiet():
+            print(f"Answer Generator : {timings['answer_generator']:.3f}s")
 
         #
         # Historial
@@ -115,9 +120,11 @@ class MagicAI:
 
         timings["total"] = time.perf_counter() - total
         result.timings.update(timings)
-        print(f"TOTAL            : {timings['total']:.3f}s")
+        if not _evaluation_quiet():
+            print(f"TOTAL            : {timings['total']:.3f}s")
 
-        print()
+        if not _evaluation_quiet():
+            print()
 
         return result
 
@@ -144,3 +151,9 @@ def _rule_identifiers(rules: list) -> list[str]:
             identifiers.append(str(identifier))
 
     return identifiers
+
+
+def _evaluation_quiet() -> bool:
+    return os.getenv("MAGICAI_QUIET_EVALUATION", "").strip().casefold() in {
+        "1", "true", "yes", "on"
+    }

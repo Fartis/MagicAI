@@ -463,3 +463,12 @@ Criterio de cierre:
 - errores HTTP se presentan al usuario;
 - tests de rutas y assets pasan;
 - API y Gauntlets anteriores no sufren regresiones.
+
+### Research C1.5 — barrido exhaustivo de candidatos Oracle ✅
+
+- corregir referencias pronominales a la fuente que quedaban camufladas como efectos independientes;
+- distinguir efectos ligados a la existencia futura de la fuente de la última información conocida;
+- sustituir el muestreo aleatorio como método principal de cobertura por un inventario exhaustivo;
+- ejecutar una situación por cada habilidad de maná, Ward, Undying y habilidad activada candidata;
+- registrar fallbacks deterministas como fallos de cobertura, sin consultar automáticamente al LLM;
+- preparar la siguiente línea de investigación: Shadow LLM sobre una muestra de alto riesgo y, después, soak aleatorio de 10.000/100.000 casos.

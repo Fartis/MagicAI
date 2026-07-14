@@ -464,6 +464,14 @@ def render_rule_answer(knowledge: str) -> str | None:
                 "necesita información de la fuente, puede usar su última "
                 "información conocida."
             )
+        elif dependency == "source_bound_effect":
+            answer += (
+                "La habilidad seguirá resolviéndose, pero el efecto está ligado "
+                "a que la fuente exista como un objeto identificable. Si ya no "
+                "existe, esa instrucción puede resultar imposible o no afectar "
+                "al juego; no se recupera el objeto mediante última información "
+                "conocida."
+            )
         elif dependency == "partial":
             answer += (
                 "La habilidad seguirá resolviéndose y hará todo lo posible: las "

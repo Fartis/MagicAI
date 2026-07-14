@@ -439,3 +439,16 @@ Puedes usarlo, estudiarlo, modificarlo y redistribuirlo bajo los términos de es
 
 Consulta [LICENSE](LICENSE) y [docs/LICENSING.md](docs/LICENSING.md).
 
+
+### Exhaustive Oracle audit
+
+Research C1.5 can enumerate every supported Oracle candidate instead of relying on random sampling:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --workers 4 \
+  --shard-size 250 \
+  --output-dir quality-results/oracle-exhaustive-C15
+```
+
+The default sweep is deterministic-only, resumable, evaluation-only, and stores compact `jsonl.gz` results. See `docs/DEV_COMMANDS.md` for static audits, family filters, smoke runs, packaging, and the deliberately separate LLM audit mode.

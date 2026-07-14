@@ -956,3 +956,191 @@ PYTHONPATH=. python -u -m tests.quality.dynamic_campaign_test \
 ```
 
 La ruta y el SHA-256 del snapshot quedan registrados en `campaign_manifest.json`.
+
+---
+
+## 18. Research C1.5 — barrido exhaustivo de Oracle
+
+El Dynamic Gauntlet aleatorio sirve para detectar regresiones y combinaciones de
+semillas, pero no garantiza recorrer todas las habilidades candidatas. C1.5 añade
+un barrido determinista que construye una situación vinculada por cada candidato
+Oracle soportado.
+
+Familias cubiertas:
+
+```text
+mana_ability
+ward
+undying_exile
+source_independence
+```
+
+Con el snapshot Oracle utilizado durante C1.5, el plan completo contiene:
+
+```text
+Cartas soportadas              29.308
+Habilidades de maná             1.794
+Cartas con Ward                   163
+Cartas con Undying                 22
+Habilidades source-independence 5.958
+Total                            7.937
+```
+
+Los recuentos pueden cambiar cuando se actualice Oracle o mejore el parser. El
+manifest guarda el SHA-256 exacto del archivo utilizado.
+
+### Auditoría estática previa
+
+Genera el inventario completo y las anomalías del parser sin consultar al Juez:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --static-only \
+  --output-dir quality-results/oracle-exhaustive-C15-static
+```
+
+Archivos principales:
+
+```text
+campaign_manifest.json
+static_summary.json
+static_findings.jsonl.gz
+scenarios.jsonl.gz
+```
+
+Un `static_findings` distinto de cero requiere revisión antes del barrido dinámico.
+
+### Barrido exhaustivo recomendado
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --workers 4 \
+  --shard-size 250 \
+  --output-dir quality-results/oracle-exhaustive-C15
+```
+
+El modo predeterminado es **determinista únicamente**. Si una pregunta no puede
+resolverse mediante las rutas deterministas, el runner bloquea el fallback a Ollama
+y guarda el caso como fallo de cobertura. Esto evita que una ejecución de miles de
+casos se quede esperando al modelo y separa claramente dos auditorías distintas:
+
+```text
+barrido exhaustivo → cobertura determinista
+shadow LLM         → comportamiento del modelo
+```
+
+No se generan targets de entrenamiento ni se modifica el modelo.
+
+### Reanudar
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --workers 4 \
+  --shard-size 250 \
+  --output-dir quality-results/oracle-exhaustive-C15 \
+  --resume
+```
+
+Solo se omiten shards con `shard_complete.json`. La reanudación se rechaza si
+cambian:
+
+- Oracle o su SHA-256;
+- código del parser, Juez, contratos o runner;
+- lista u orden de escenarios;
+- familias seleccionadas;
+- modo de plantillas;
+- tamaño de shard;
+- permiso de fallback al LLM.
+
+El número de workers sí puede modificarse al reanudar.
+
+### Prueba corta antes del barrido completo
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --workers 4 \
+  --shard-size 25 \
+  --max-cases 100 \
+  --output-dir quality-results/oracle-exhaustive-C15-smoke
+```
+
+`--max-cases` es solo una herramienta de desarrollo. No debe usarse para presentar
+el barrido como exhaustivo.
+
+### Ejecutar las tres plantillas por candidato
+
+El barrido normal rota una de las tres plantillas por candidato. Para ejecutar las
+tres variantes:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --template-mode all \
+  --workers 4 \
+  --shard-size 250 \
+  --output-dir quality-results/oracle-exhaustive-C15-all-templates
+```
+
+Esto triplica el número de casos y debe hacerse después de que el barrido de una
+plantilla quede limpio.
+
+### Restringir familias
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --family source_independence \
+  --workers 4 \
+  --output-dir quality-results/oracle-exhaustive-C15-source
+```
+
+`--family` puede repetirse.
+
+### Permitir Ollama deliberadamente
+
+No debe usarse para el primer barrido exhaustivo. Solo para una campaña separada y
+con Ollama disponible:
+
+```bash
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --allow-llm \
+  --workers 2 \
+  --output-dir quality-results/oracle-exhaustive-C15-llm
+```
+
+Para una auditoría del modelo será preferible el futuro modo `shadow-llm`, que
+comparará la respuesta de Qwen con la autoridad determinista sin sustituirla.
+
+### Formato compacto
+
+Cada shard produce:
+
+```text
+shard_0001/
+├── results.jsonl.gz
+├── failures/
+├── run.log
+└── shard_complete.json
+```
+
+No se generan informes HTML/XML completos por shard. El formato compacto conserva:
+
+- pregunta y respuesta;
+- escenario y habilidad Oracle exacta;
+- estado, fallos y avisos;
+- origen del Juez;
+- si se llamó al LLM;
+- reglas y tiempos registrados.
+
+### Empaquetar para auditoría
+
+```bash
+cd ~/MagicAI
+
+tar -czf MagicAI-oracle-exhaustive-C15.tar.gz \
+  quality-results/oracle-exhaustive-C15
+
+sha256sum MagicAI-oracle-exhaustive-C15.tar.gz \
+  > MagicAI-oracle-exhaustive-C15.tar.gz.sha256
+```
+
+Facilita ambos archivos. No elimines los `PASS`: también se revisan para buscar
+falsos positivos compartidos por generador y validador.

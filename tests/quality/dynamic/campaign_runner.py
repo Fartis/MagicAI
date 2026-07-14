@@ -37,6 +37,7 @@ DYNAMIC_CAMPAIGN_MANIFEST_VERSION = 2
 RUN_COMPLETE_VERSION = 1
 CODE_FINGERPRINT_PATHS = (
     "magicai/assistant/core.py",
+    "magicai/answer_generator.py",
     "magicai/context_enricher.py",
     "magicai/judge_result.py",
     "magicai/oracle_abilities.py",

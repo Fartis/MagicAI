@@ -103,6 +103,13 @@ def _validate_source_independence(
         "last known information",
     )):
         failures.append("An information-dependent effect does not mention last known information.")
+    elif dependency == "source_bound_effect" and not any(marker in text for marker in (
+        "efecto esta ligado",
+        "objeto identificable",
+        "puede resultar imposible",
+        "source-bound",
+    )):
+        failures.append("A source-bound effect is not qualified for the missing source object.")
     elif dependency == "partial" and not any(marker in text for marker in (
         "parte",
         "todo lo posible",

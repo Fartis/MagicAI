@@ -1,3 +1,5 @@
+import os
+
 from magicai.llm.ollama import generate
 from magicai.prompts.answer import SYSTEM_PROMPT
 from magicai.validation import build_fallback_answer, validate_answer
@@ -26,11 +28,13 @@ def generate_answer(knowledge: str) -> str:
 def generate_judge_result(knowledge: str, context=None):
     """Generate a structured, source-grounded Judge result."""
 
-    print("=" * 80)
-    print("KNOWLEDGE SENT TO ANSWER GENERATOR")
-    print("=" * 80)
-    print(knowledge)
-    print("=" * 80)
+    verbose = not _evaluation_quiet()
+    if verbose:
+        print("=" * 80)
+        print("KNOWLEDGE SENT TO ANSWER GENERATOR")
+        print("=" * 80)
+        print(knowledge)
+        print("=" * 80)
 
     question = getattr(context, "question", None) or _extract_question(knowledge)
 
@@ -102,6 +106,22 @@ def generate_judge_result(knowledge: str, context=None):
             ],
         )
 
+    if _deterministic_evaluation_only():
+        return build_judge_result(
+            question=question,
+            answer=(
+                "La auditoría determinista no encontró una respuesta verificable "
+                "para este caso y bloqueó deliberadamente el fallback al LLM."
+            ),
+            status=JudgeStatus.INSUFFICIENT_EVIDENCE,
+            origin=JudgeOrigin.SAFE_FALLBACK,
+            confidence=JudgeConfidence.LOW,
+            context=context,
+            warnings=[
+                "Deterministic evaluation blocked the LLM fallback. This is a coverage finding, not a factual answer."
+            ],
+        )
+
     last_violations: list[str] = []
     prompt = knowledge
 
@@ -129,14 +149,15 @@ def generate_judge_result(knowledge: str, context=None):
 
         last_violations = violations
 
-        print("=" * 80)
-        print(f"VALIDATION FAILED attempt {attempt}")
-        print("=" * 80)
+        if verbose:
+            print("=" * 80)
+            print(f"VALIDATION FAILED attempt {attempt}")
+            print("=" * 80)
 
-        for violation in violations:
-            print(f"- {violation}")
+            for violation in violations:
+                print(f"- {violation}")
 
-        print("=" * 80)
+            print("=" * 80)
 
         prompt = _build_retry_prompt(
             knowledge=knowledge,
@@ -213,3 +234,15 @@ def _build_retry_prompt(
         + "\n".join(f"- {violation}" for violation in violations)
         + "\n"
     )
+
+
+def _deterministic_evaluation_only() -> bool:
+    return os.getenv("MAGICAI_EVALUATION_DETERMINISTIC_ONLY", "").strip().casefold() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def _evaluation_quiet() -> bool:
+    return os.getenv("MAGICAI_QUIET_EVALUATION", "").strip().casefold() in {
+        "1", "true", "yes", "on"
+    }

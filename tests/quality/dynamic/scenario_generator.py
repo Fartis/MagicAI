@@ -62,45 +62,13 @@ class ScenarioGenerator:
             if concept.id == "source_independence" and ability is not None:
                 question += _source_premise_qualifier(card_name, ability)
             scenarios.append(
-                DynamicScenario(
-                    id=f"DG-{index:03d}",
+                build_bound_scenario(
+                    scenario_id=f"DG-{index:03d}",
                     seed=self.seed,
-                    concept_id=concept.id,
-                    concept_name=concept.name,
-                    card_name=card_name,
-                    template_id=template.id,
-                    question=question,
-                    tags=concept.tags + (f"template:{template.id}",),
-                    contract=contract_for_scenario(
-                        concept,
-                        source_dependency=ability.source_dependency if ability else "",
-                        source_may_be_removed_as_cost=(
-                            ability.source_may_be_removed_as_cost if ability else False
-                        ),
-                        source_may_be_target=(
-                            ability.source_may_be_target if ability else False
-                        ),
-                    ),
-                    oracle_evidence=card.oracle_text if card else "",
-                    card_type_line=card.type_line if card else "",
-                    card_keywords=card.keywords if card else (),
-                    card_set_code=card.set_code if card else "",
-                    card_set_name=card.set_name if card else "",
-                    card_set_type=card.set_type if card else "",
-                    card_legal_formats=card.legal_formats if card else (),
-                    source_kind="card" if card else "rules",
-                    ability_index=ability.index if ability else None,
-                    ability_text=ability.text if ability else "",
-                    ability_cost=ability.cost if ability else "",
-                    ability_effect=ability.effect if ability else "",
-                    ability_is_mana=ability.is_mana if ability else None,
-                    ability_source_zone=ability.source_zone if ability else "",
-                    source_removed_as_cost=ability.source_removed_as_cost if ability else None,
-                    source_may_be_removed_as_cost=(
-                        ability.source_may_be_removed_as_cost if ability else None
-                    ),
-                    source_dependency=ability.source_dependency if ability else "",
-                    source_may_be_target=ability.source_may_be_target if ability else None,
+                    concept=concept,
+                    template=template,
+                    card=card,
+                    ability=ability,
                 )
             )
         return scenarios
@@ -133,6 +101,67 @@ class ScenarioGenerator:
             self._remaining_templates[concept.id] = remaining
         return remaining.pop()
 
+
+
+def build_bound_scenario(
+    *,
+    scenario_id: str,
+    seed: int,
+    concept: DynamicConcept,
+    template,
+    card: CardCandidate | None = None,
+    ability: ActivatedAbility | None = None,
+    extra_tags: tuple[str, ...] = (),
+) -> DynamicScenario:
+    """Build one scenario from an explicitly selected Oracle candidate.
+
+    Random campaigns and exhaustive sweeps share this function so they cannot
+    drift in premise qualifiers, contracts, or stored Oracle metadata.
+    """
+
+    card_name = card.name if card else ""
+    ability_text = ability.text if ability else ""
+    question = template.render(card_name, ability_text)
+    if concept.id == "source_independence" and ability is not None:
+        question += _source_premise_qualifier(card_name, ability)
+    return DynamicScenario(
+        id=scenario_id,
+        seed=seed,
+        concept_id=concept.id,
+        concept_name=concept.name,
+        card_name=card_name,
+        template_id=template.id,
+        question=question,
+        tags=concept.tags + (f"template:{template.id}",) + extra_tags,
+        contract=contract_for_scenario(
+            concept,
+            source_dependency=ability.source_dependency if ability else "",
+            source_may_be_removed_as_cost=(
+                ability.source_may_be_removed_as_cost if ability else False
+            ),
+            source_may_be_target=(ability.source_may_be_target if ability else False),
+        ),
+        oracle_evidence=card.oracle_text if card else "",
+        card_type_line=card.type_line if card else "",
+        card_keywords=card.keywords if card else (),
+        card_set_code=card.set_code if card else "",
+        card_set_name=card.set_name if card else "",
+        card_set_type=card.set_type if card else "",
+        card_legal_formats=card.legal_formats if card else (),
+        source_kind="card" if card else "rules",
+        ability_index=ability.index if ability else None,
+        ability_text=ability.text if ability else "",
+        ability_cost=ability.cost if ability else "",
+        ability_effect=ability.effect if ability else "",
+        ability_is_mana=ability.is_mana if ability else None,
+        ability_source_zone=ability.source_zone if ability else "",
+        source_removed_as_cost=ability.source_removed_as_cost if ability else None,
+        source_may_be_removed_as_cost=(
+            ability.source_may_be_removed_as_cost if ability else None
+        ),
+        source_dependency=ability.source_dependency if ability else "",
+        source_may_be_target=ability.source_may_be_target if ability else None,
+    )
 
 def _source_premise_qualifier(card_name: str, ability: ActivatedAbility) -> str:
     qualifiers: list[str] = []

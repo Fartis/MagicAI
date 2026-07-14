@@ -230,3 +230,6 @@ node_modules/
 
 # Large dynamic development campaigns generated locally.
 /resultado_dynamic-giant-*/
+
+# Exhaustive Oracle evaluation sweeps.
+/resultado_oracle_exhaustive*/

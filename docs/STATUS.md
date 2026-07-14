@@ -299,3 +299,17 @@ Pendiente para cerrar 11.1: revisión visual en navegador real, captura para REA
 - `findings_by_family.json`, `replay_commands.txt` y progreso recuperable;
 - decisiones humanas de los paquetes de revisión preservadas entre checkpoints;
 - UI consolidada con historial SQLite, cancelación y exportación segura al Gauntlet.
+
+## Research C1.5 — Exhaustive Oracle Candidate Audit ✅
+
+- resolución de pronombres de la fuente entre coste, cláusulas y oraciones;
+- alias Oracle para nombres abreviados de permanentes legendarios y subtipos de planeswalker;
+- nueva categoría `source_bound_effect` para requisitos y efectos futuros ligados al objeto fuente;
+- contratos y renderizado diferenciados para `independent`, `source_object`, `information`, `source_bound_effect` y `partial`;
+- inventario estático exhaustivo de las cartas y habilidades candidatas;
+- barrido dinámico determinista, compacto, fragmentado, paralelo y reanudable;
+- fallback al LLM bloqueado por defecto para convertirlo en un hallazgo de cobertura explícito;
+- salida `jsonl.gz` por shard, sin multiplicar informes HTML/XML repetitivos;
+- snapshot de referencia: 29.308 cartas soportadas y 7.937 candidatos Oracle.
+
+Los resultados son exclusivamente artefactos de evaluación. No se generan datos de entrenamiento ni se modifica el modelo.
