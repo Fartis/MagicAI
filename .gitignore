@@ -227,3 +227,6 @@ node_modules/
 /community_feedback/reports/*
 !/community_feedback/reports/.gitkeep
 /resultado_community_feedback/
+
+# Large dynamic development campaigns generated locally.
+/resultado_dynamic-giant-*/

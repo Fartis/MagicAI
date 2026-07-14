@@ -81,7 +81,16 @@ Comando principal:
 python -m tests.quality.community_feedback_test
 ```
 
-Este segundo runner sí dispone de:
+El Dynamic Gauntlet dispone de:
+
+```text
+--workers
+--resume
+```
+
+Cada worker es un **proceso independiente**, no un hilo de Python. Cada proceso ejecuta una semilla completa en su propio directorio y el resumen final se agrega en orden determinista.
+
+El Community Feedback Gauntlet dispone además de:
 
 ```text
 --campaign-id
@@ -103,6 +112,7 @@ python -m tests.quality.dynamic_campaign_test \
   --base-seed 20260714 \
   --runs 3 \
   --cases 10 \
+  --workers 1 \
   --output-dir quality-results/dynamic-smoke-30 \
   --require-full-coverage
 ```
@@ -153,6 +163,7 @@ CAMPAIGN="dynamic-giant-1000-$(date +%Y%m%d-%H%M%S)"
 BASE_SEED=20260714
 RUNS=20
 CASES=50
+WORKERS=4
 REPO="$(pwd)"
 ROOT="$REPO/quality-results/$CAMPAIGN"
 OUTPUT="$ROOT/results"
@@ -174,6 +185,7 @@ mkdir -p "$OUTPUT"
   echo "Base seed: $BASE_SEED"
   echo "Runs: $RUNS"
   echo "Cases per run: $CASES"
+  echo "Workers: $WORKERS"
   echo "Expected cases: $((RUNS * CASES))"
   echo
   echo "Git status:"
@@ -194,6 +206,7 @@ python -u -m tests.quality.dynamic_campaign_test \\
   --base-seed $BASE_SEED \\
   --runs $RUNS \\
   --cases $CASES \\
+  --workers $WORKERS \\
   --output-dir "$OUTPUT" \\
   --require-full-coverage
 
@@ -220,7 +233,10 @@ Se omiten intencionadamente:
 
 Se mantiene:
 
-- `--require-full-coverage`, para detectar si la campaña no recorrió todos los conceptos y plantillas seleccionados.
+- `--require-full-coverage`, para detectar si la campaña no recorrió todos los conceptos y plantillas seleccionados;
+- `--workers 4`, punto inicial recomendado para campañas deterministas en un Ryzen 5 5600 con 32 GB de RAM.
+
+Para campañas que fuercen el LLM local, comenzar con `--workers 2`, porque la VRAM y Ollama serán el límite. La campaña dinámica normal suele resolverse mediante rutas deterministas y aprovecha principalmente CPU.
 
 ### 4.2 Localizar la campaña más reciente
 
@@ -310,6 +326,8 @@ results/
 │   ├── report.txt
 │   ├── report.xml
 │   ├── report.html
+│   ├── run.log
+│   ├── run_complete.json
 │   └── failures/
 ├── run_02_seed_.../
 └── ...
@@ -317,33 +335,46 @@ results/
 
 ---
 
-## 5. Limitación actual: la campaña dinámica no tiene `--resume`
+## 5. Reanudar una campaña dinámica
 
-El comando:
+El runner guarda cada ejecución terminada mediante un `run_complete.json` escrito atómicamente. Para reanudar una campaña interrumpida, se utiliza exactamente el mismo directorio, semillas, número de casos, conceptos y snapshots de fuentes:
 
 ```bash
-python -m tests.quality.dynamic_campaign_test
+python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260714 \
+  --runs 20 \
+  --cases 50 \
+  --workers 4 \
+  --output-dir quality-results/mi-campana/results \
+  --require-full-coverage \
+  --resume
 ```
 
-no admite actualmente:
+La reanudación:
 
-```text
---resume
---retry-errors
---checkpoint-every
+- omite las ejecuciones que ya tengan un marcador completo y válido;
+- vuelve a ejecutar un bloque incompleto desde el principio;
+- permite cambiar el número de workers;
+- rechaza mezclar cambios de código, modelo, semillas, casos, conceptos, Comprehensive Rules u Oracle;
+- conserva un log independiente dentro de cada `run_*`.
+
+El Dynamic Gauntlet reanuda por **bloques/semillas completos**. No reanuda a mitad de los 50 casos de una misma semilla. El Community Feedback Gauntlet sí tiene checkpoints por caso y `--retry-errors`.
+
+Para reanudar el lanzamiento desatendido del apartado anterior:
+
+```bash
+LATEST=$(find quality-results -mindepth 1 -maxdepth 1 \
+  -type d -name 'dynamic-giant-1000-*' | sort | tail -n 1)
+
+python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260714 \
+  --runs 20 \
+  --cases 50 \
+  --workers 4 \
+  --output-dir "$LATEST/results" \
+  --require-full-coverage \
+  --resume
 ```
-
-Consecuencias:
-
-- los directorios de ejecuciones completadas permanecen en disco;
-- el resumen final solo queda completo cuando termina la campaña;
-- si el proceso se interrumpe durante una ejecución, esa ejecución puede quedar incompleta;
-- no se debe volver a lanzar sobre el mismo directorio esperando una reanudación automática;
-- para evitar mezclar resultados, una repetición debe usar un nombre de campaña nuevo.
-
-No confundir esta limitación con el Community Feedback Gauntlet, que sí implementa reanudación nativa.
-
-Si una campaña dinámica se interrumpe, conservar el directorio y el log para el diagnóstico. Después, iniciar una campaña nueva con el mismo `BASE_SEED` si se desea repetir exactamente la selección de semillas.
 
 ---
 
@@ -435,6 +466,8 @@ El total será:
 50 ejecuciones × 100 casos = 5.000 casos
 ```
 
+Mantener inicialmente `WORKERS=4`. Comparar casos por minuto y memoria antes de aumentarlo; más procesos no garantizan más rendimiento.
+
 Para localizarla posteriormente:
 
 ```bash
@@ -461,6 +494,7 @@ python -m tests.quality.dynamic_campaign_test \
   --base-seed 2026071401 \
   --runs 10 \
   --cases 30 \
+  --workers 4 \
   --concept mana_ability \
   --concept ward \
   --concept source_independence \
@@ -487,6 +521,7 @@ python -m tests.quality.dynamic_campaign_test \
   --base-seed 2026071402 \
   --runs 5 \
   --cases 50 \
+  --workers 4 \
   --oracle-file sources/scryfall/oracle-cards.json \
   --output-dir quality-results/dynamic-oracle-check-250 \
   --require-full-coverage
@@ -594,9 +629,12 @@ git diff --check
 Ejecutar las pruebas de generación dinámica:
 
 ```bash
+python -m tests.quality.dynamic_ability_premise_test
 python -m tests.quality.dynamic_gauntlet_generator_test
 python -m tests.quality.dynamic_campaign_planner_test
+python -m tests.quality.dynamic_campaign_parallel_test
 python -m tests.quality.dynamic_concept_contract_test
+python -m tests.retrieval.rule_service_index_test
 ```
 
 Ejecutar las pruebas del Community Feedback Gauntlet:
@@ -728,3 +766,64 @@ campaña de evaluación
 ```
 
 Los informes pueden conservarse para comparar versiones. No son memoria factual del modelo ni archivos de aprendizaje.
+
+
+Resumen, lanza este comando para 1000 casos:
+```bash
+cd ~/MagicAI
+source .venv/bin/activate
+
+CAMPAIGN="dynamic-giant-1000-20260714"
+OUTPUT="resultado_${CAMPAIGN}"
+LOG="logs/${CAMPAIGN}.log"
+PIDFILE="logs/${CAMPAIGN}.pid"
+
+mkdir -p "$OUTPUT" logs
+
+{
+  echo "Campaign: $CAMPAIGN"
+  echo "Started: $(date --iso-8601=seconds)"
+  echo "Branch: $(git branch --show-current)"
+  echo "Commit: $(git rev-parse HEAD)"
+  echo
+  echo "Git status:"
+  git status --short
+  echo
+  python --version
+  ollama --version
+} > "$OUTPUT/RUN_INFO.txt"
+
+nohup env PYTHONPATH=. python -u -m tests.quality.dynamic_campaign_test \
+  --base-seed 20260714 \
+  --runs 20 \
+  --cases 50 \
+  --output-dir "$OUTPUT" \
+  --require-full-coverage \
+  > "$LOG" 2>&1 &
+
+echo $! | tee "$PIDFILE"
+
+echo
+echo "Campaña iniciada."
+echo "Salida: $OUTPUT"
+echo "Log: $LOG"
+echo "PID: $(cat "$PIDFILE")"
+```
+
+Y estos comandos para:
+
+Ver el progreso:
+```bash
+tail -f logs/dynamic-giant-1000-20260714.log
+```
+
+Ver si sigue activo:
+```bash
+PID=$(cat logs/dynamic-giant-1000-20260714.pid)
+
+if kill -0 "$PID" 2>/dev/null; then
+  echo "El Gauntlet sigue ejecutándose con PID $PID"
+else
+  echo "El proceso ha terminado"
+fi
+```

@@ -595,6 +595,65 @@ def test_command_zone_reference_is_enough_for_commander_zone_rules():
     )
 
 
+
+def test_exact_quoted_mana_ability_prioritizes_rule_numbers():
+    queries = build_rule_queries(
+        question=(
+            "Activo en Real Mana Rock exactamente «{T}: Add {C}.». "
+            "¿Se pone esa habilidad en la pila y recibimos prioridad?"
+        ),
+        keywords=[],
+        action_terms=[],
+    )
+    assert queries[:3] == ["605", "405", "117"], queries[:6]
+
+
+def test_exact_source_independence_prioritizes_resolution_nuance():
+    queries = build_rule_queries(
+        question=(
+            "La habilidad «{B}: This creature gets +1/+1 until end of turn.» "
+            "ya está en la pila y destruyen la fuente. ¿Qué puede hacer al "
+            "resolverse sin esa fuente?"
+        ),
+        keywords=[],
+        action_terms=[],
+    )
+    assert queries[:4] == ["113.7a", "608.2h", "609.3", "405"], queries[:8]
+
+
+def test_sacrifice_counts_as_dies_prioritizes_exact_rules():
+    queries = build_rule_queries(
+        question="¿Sacrificar una criatura cuenta como morir para sus habilidades?",
+        keywords=[],
+        action_terms=[],
+    )
+    assert queries[:2] == ["701.21", "700.4"], queries[:8]
+
+
+def test_power_toughness_set_then_modify_prioritizes_layers_7b_and_7c():
+    queries = build_rule_queries(
+        question=(
+            "Si un efecto fija la fuerza y resistencia de una criatura en 3/3 "
+            "y otro le da +1/+1, ¿cuál se aplica primero?"
+        ),
+        keywords=[],
+        action_terms=[],
+    )
+    assert queries[:2] == ["613.4b", "613.4c"], queries[:8]
+
+
+def test_exact_source_independence_accepts_natural_mata_wording():
+    queries = build_rule_queries(
+        question=(
+            "Activo la habilidad «{B}: Esta criatura obtiene +1/+1 hasta el "
+            "final del turno.» y después mi rival mata la fuente. "
+            "¿Qué puede hacer al resolverse?"
+        ),
+        keywords=[],
+        action_terms=[],
+    )
+    assert queries[:4] == ["113.7a", "608.2h", "609.3", "405"], queries[:8]
+
 def main():
 
     tests = [
@@ -625,6 +684,11 @@ def main():
         test_bare_zero_zero_persist_is_not_misclassified_as_layers,
         test_sacrifice_as_cost_death_trigger_prioritizes_stack_and_trigger_rules,
         test_command_zone_reference_is_enough_for_commander_zone_rules,
+        test_exact_quoted_mana_ability_prioritizes_rule_numbers,
+        test_exact_source_independence_prioritizes_resolution_nuance,
+        test_sacrifice_counts_as_dies_prioritizes_exact_rules,
+        test_power_toughness_set_then_modify_prioritizes_layers_7b_and_7c,
+        test_exact_source_independence_accepts_natural_mata_wording,
     ]
 
     errors = []

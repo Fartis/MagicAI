@@ -330,14 +330,19 @@ def _merge_unique_queries(
 
     merged = []
 
-    for query in preferred + existing:
+    # Exact rule numbers derived from the question are decisive and must not
+    # be displaced by incidental Oracle expansions when MAX_RULES is reached.
+    exact_existing = [query for query in existing if _is_rule_number_query(query)]
+    broad_existing = [query for query in existing if not _is_rule_number_query(query)]
 
-        _add_unique_query(
-            merged,
-            query,
-        )
+    for query in exact_existing + preferred + broad_existing:
+        _add_unique_query(merged, query)
 
     return merged
+
+
+def _is_rule_number_query(query: str) -> bool:
+    return re.fullmatch(r"\d{3}(?:\.\d+[a-z]?)?", (query or "").strip()) is not None
 
 
 def _prefer_exact_keyword_rules(context) -> bool:

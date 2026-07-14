@@ -1,5 +1,10 @@
 import re
 
+from magicai.oracle_abilities import (
+    contains_quoted_mana_ability,
+    extract_activated_abilities,
+)
+
 
 """
 Temporary deterministic renderer for high-risk MTG rule concepts.
@@ -19,6 +24,8 @@ Preferred direction:
 _RULE_MARKERS = {
     "abilities": ["113", "113."],
     "source_independence": ["113.7a"],
+    "source_information": ["608.2h"],
+    "do_possible": ["609.3"],
     "priority": ["117", "117."],
     "stack": ["405", "405."],
     "untap": ["502", "502."],
@@ -48,6 +55,7 @@ _RULE_MARKERS = {
     "type_layer": ["613.1d"],
     "ability_layer": ["613.1f"],
     "pt_set_layer": ["613.4b"],
+    "pt_modify_layer": ["613.4c"],
     "layer_continuity": ["613.6"],
     "dependency": ["613.8"],
     "basic_land_type": ["305.7"],
@@ -217,9 +225,11 @@ def render_rule_answer(knowledge: str) -> str | None:
             return (
                 "Son efectos de reemplazo, no habilidades disparadas, y no van a "
                 "la pila. Si ambos intentan modificar el mismo evento de poner "
-                "contadores, el controlador del objeto afectado o el jugador "
-                "afectado elige el orden en que se aplican. Se aplica uno, se "
-                "recalcula el evento y después puede aplicarse el otro. Si los dos "
+                "contadores, se respeta primero la precedencia de categorías de "
+                "la regla 616.1. Entre los efectos aplicables de la misma categoría, "
+                "el controlador del objeto afectado o el jugador afectado elige el "
+                "orden. Se aplica uno, se recalcula el evento y después puede "
+                "aplicarse el otro. Si los dos "
                 "duplican ese mismo evento, N contadores pasan a 2N y luego a 4N."
             )
 
@@ -229,9 +239,11 @@ def render_rule_answer(knowledge: str) -> str | None:
                 "al entrar son efectos de reemplazo. No se disparan; se aplican "
                 "sin utilizar la pila y modifican el propio evento de entrada. "
                 "Si hay varios "
-                "aplicables, el controlador del permanente que entra —o su "
-                "propietario si aún no tiene controlador— elige el "
-                "orden; se aplica uno y después se vuelve a comprobar cuáles "
+                "aplicables, primero se respeta la precedencia de categorías de "
+                "la regla 616.1. Entre efectos de la misma categoría, el controlador "
+                "del permanente que entra —o su propietario si aún no tiene "
+                "controlador— elige el orden; se aplica uno y después se vuelve a "
+                "comprobar cuáles "
                 "siguen siendo aplicables. Por tanto, no se limitan a sumarse ni "
                 "se anulan entre sí por defecto: cada uno reemplaza sucesivamente "
                 "el evento modificado."
@@ -239,9 +251,11 @@ def render_rule_answer(knowledge: str) -> str | None:
 
         return (
             "Son efectos de reemplazo que modifican el mismo evento de poner "
-            "contadores. El controlador del objeto afectado o el jugador afectado "
-            "elige el orden: se aplica uno, se recalcula el evento y después se "
-            "aplican sucesivamente los que sigan siendo válidos. No son "
+            "contadores. Primero se respeta la precedencia de categorías de la "
+            "regla 616.1; entre los efectos aplicables de la misma categoría, el "
+            "controlador del objeto afectado o el jugador afectado elige el orden. "
+            "Se aplica uno, se recalcula el evento y después se aplican "
+            "sucesivamente los que sigan siendo válidos. No son "
             "habilidades disparadas."
         )
 
@@ -312,6 +326,29 @@ def render_rule_answer(knowledge: str) -> str | None:
             "sacrificio."
         )
 
+    if _is_sacrifice_counts_as_dies_question(q) and _has_rules(
+        knowledge,
+        ["sacrifice", "dies"],
+    ):
+        return (
+            "Sí. Sacrificar una criatura hace que su controlador la mueva del "
+            "campo de batalla al cementerio. Como «muere» significa ir del "
+            "campo de batalla a un cementerio, esa criatura muere y las "
+            "habilidades apropiadas de «cuando muera» pueden dispararse. "
+            "Sacrificarla sigue sin ser lo mismo que destruirla."
+        )
+
+    if _is_power_toughness_set_then_modify_question(q) and _has_rules(
+        knowledge,
+        ["pt_set_layer", "pt_modify_layer"],
+    ):
+        return (
+            "Primero se aplica el efecto que fija o establece la fuerza y la "
+            "resistencia en la capa 7b. Después se aplica el modificador +1/+1 "
+            "en la capa 7c. Por tanto, el valor fijado se calcula antes y luego "
+            "recibe la modificación +1/+1."
+        )
+
     if _is_commander_copy_zone_question(q) and _has_rules(
         knowledge,
         ["commander_designation"],
@@ -319,9 +356,12 @@ def render_rule_answer(knowledge: str) -> str | None:
         return (
             "No. La designación de comandante pertenece a la carta concreta "
             "elegida al construir el mazo y no es un valor copiable. Un permanente "
-            "que solo es una copia de tu comandante no es esa carta comandante, "
-            "así que esa copia no puede moverse a la zona de mando mediante la "
-            "regla de comandante; si muere, va al cementerio normalmente."
+            "que solo es una copia de tu comandante no se convierte por ello en "
+            "comandante, así que no puede ir a la zona de mando por copiar esa "
+            "condición; si muere, va al cementerio normalmente. La salvedad es que "
+            "la carta que está copiando podría haber sido ya designada como "
+            "comandante: en ese caso sigue siéndolo por su propia designación, no "
+            "por la copia."
         )
 
     if _is_commander_hand_library_question(q) and _has_rules(
@@ -329,12 +369,12 @@ def render_rule_answer(knowledge: str) -> str | None:
         ["commander_hand_library", "commander_graveyard_exile"],
     ):
         return (
-            "No exactamente: funciona de forma diferente. Si tu comandante fuera "
-            "a tu mano o biblioteca desde cualquier zona, puedes aplicar un efecto "
-            "de reemplazo y ponerlo en la zona de mando en su lugar, por lo que no "
-            "llega a la mano o biblioteca. En cambio, si va al cementerio o al "
-            "exilio, primero llega a esa zona y después puedes moverlo a la zona "
-            "de mando cuando se comprueban las acciones basadas en estado."
+            "Sí. Si tu comandante fuera a tu mano o biblioteca desde cualquier "
+            "zona, puedes aplicar un efecto de reemplazo y ponerlo en la zona de "
+            "mando en su lugar, por lo que no llega a la mano o biblioteca. En "
+            "cambio, si va al cementerio o al exilio, primero llega a esa zona y "
+            "después puedes moverlo a la zona de mando cuando se comprueban las "
+            "acciones basadas en estado."
         )
 
     if _is_commander_death_zone_question(q) and _has_rules(
@@ -402,13 +442,16 @@ def render_rule_answer(knowledge: str) -> str | None:
 
     if _is_source_independence_question(q) and _has_rules(
         knowledge,
-        ["abilities", "stack"],
+        ["source_independence", "stack", "source_information", "do_possible"],
     ):
         return (
             "No. La habilidad no se contrarresta por destruir o retirar su "
-            "fuente. Una vez activada, existe en la pila de forma independiente "
-            "de su fuente; permanece en la pila y normalmente seguirá "
-            "resolviéndose."
+            "fuente. Una vez activada, existe de forma independiente de su "
+            "fuente y permanece en la pila. Normalmente seguirá resolviéndose y "
+            "hará todo lo posible: si necesita "
+            "información de la fuente puede usar su última información conocida, "
+            "pero si intenta modificar a la propia fuente y ese objeto ya no está, "
+            "esa parte puede no hacer nada."
         )
 
     if _is_no_priority_during_resolution(q) and _has_rules(
@@ -812,6 +855,23 @@ def _supports_mana_ability(
     knowledge: str,
     question: str,
 ) -> bool:
+    cards_block = _extract_cards_block(knowledge)
+    card_entries = _extract_card_entries(knowledge)
+    oracle_sources = [entry_text for _name, entry_text in card_entries]
+    if not oracle_sources and cards_block:
+        oracle_sources = [cards_block]
+    oracle_abilities = [
+        ability
+        for source in oracle_sources
+        for ability in extract_activated_abilities(source)
+    ]
+    mana_abilities = [ability for ability in oracle_abilities if ability.is_mana]
+
+    # Exact quoted ability wording is preferred for generated scenarios. The
+    # quoted parser ignores reminder text and abilities granted to other objects.
+    if contains_quoted_mana_ability(question):
+        return bool(mana_abilities)
+
     explicit_mana_reference = any(
         marker in question
         for marker in [
@@ -823,49 +883,11 @@ def _supports_mana_ability(
             "produce mana",
         ]
     )
-
-    cards_block = _extract_cards_block(knowledge)
-
     if not cards_block:
         return explicit_mana_reference
-
-    activated_lines = []
-    mana_lines = []
-
-    for raw_line in cards_block.splitlines():
-        line = _normalize(raw_line)
-
-        if not _looks_like_oracle_activated_ability(line):
-            continue
-
-        activated_lines.append(line)
-
-        if not any(
-            marker in line
-            for marker in [
-                "add ",
-                "anade ",
-                "agrega ",
-                "produce ",
-            ]
-        ):
-            continue
-
-        if "target" in line or "objetivo" in line:
-            continue
-
-        if re.match(r"^[+-]\d+\s*:", line):
-            continue
-
-        mana_lines.append(line)
-
     if explicit_mana_reference:
-        return bool(mana_lines)
-
-    # When the user refers only to "the ability" of a recovered card, avoid
-    # selecting a mana ability if the card has several activated abilities.
-    return len(activated_lines) == 1 and len(mana_lines) == 1
-
+        return bool(mana_abilities)
+    return len(oracle_abilities) == 1 and len(mana_abilities) == 1
 
 def _looks_like_oracle_activated_ability(line: str) -> bool:
     if ":" not in line:
@@ -1036,6 +1058,8 @@ def _is_source_independence_question(question: str) -> bool:
             "activo una habilidad",
             "activa una habilidad",
             "activar una habilidad",
+            "activo en",
+            "habilidad «",
             "activated ability",
         ]
     )
@@ -1063,6 +1087,10 @@ def _is_source_independence_question(question: str) -> bool:
             "permanece",
             "que pasa",
             "qué pasa",
+            "que puede hacer",
+            "qué puede hacer",
+            "resolverse",
+            "resuelve",
         ]
     )
 
@@ -1433,6 +1461,33 @@ def _is_cleanup_priority_question(question: str) -> bool:
         and "prioridad" in question
     )
 
+
+
+def _is_sacrifice_counts_as_dies_question(question: str) -> bool:
+    return (
+        "sacrific" in question
+        and not any(marker in question for marker in ["coste", "costo", "cost"])
+        and any(marker in question for marker in ["muere", "morir", "dies"])
+        and any(marker in question for marker in ["cuenta", "considera", "es "])
+    )
+
+
+def _is_power_toughness_set_then_modify_question(question: str) -> bool:
+    mentions_set = any(
+        marker in question
+        for marker in [
+            "fija su fuerza y resistencia",
+            "fija la fuerza y resistencia",
+            "establece su fuerza y resistencia",
+            "set power and toughness",
+            "base power and toughness",
+        ]
+    )
+    mentions_modify = any(
+        marker in question
+        for marker in ["+1/+1", "-1/-1", "gets +", "gets -"]
+    )
+    return mentions_set and mentions_modify
 
 def _is_sacrifice_not_destroy_question(question: str) -> bool:
     return (

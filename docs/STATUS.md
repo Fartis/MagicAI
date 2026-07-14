@@ -16,7 +16,7 @@ No se considera un producto final porque aún faltan mayor cobertura guiada por 
 ### Capacidades implementadas
 
 - Oracle y rulings locales de Scryfall.
-- Comprehensive Rules locales y búsqueda por secciones.
+- Comprehensive Rules locales con índice precalculado, postings y caché de consultas.
 - Índice de cartas en memoria.
 - Detección de cartas, aliases, keywords, acciones y reglas explícitas.
 - Desambiguación conversacional de cartas con selección interactiva en la UI.
@@ -30,14 +30,15 @@ No se considera un producto final porque aún faltan mayor cobertura guiada por 
 - UI beta local con chat, evidencia, estados, salud del servicio, copia y exportación.
 - Informes TXT, XML y HTML.
 - Replay de fallos dinámicos.
-- Campañas multisemilla y cobertura acumulada.
+- Campañas multisemilla reanudables, paralelismo por procesos y cobertura acumulada.
 - Open Judge Gauntlet con 11 conversaciones, 27 turnos y contratos semánticos.
 - Community Feedback Gauntlet con entrada manual parafraseada, modo exploratorio `REVIEW_REQUIRED` y promoción posterior a contrato validado.
 - Evaluation Campaign Runner reanudable, con checkpoints atómicos, reintento de errores y manifiesto reproducible.
 - Exportación desde la UI de los turnos del usuario como caso exploratorio seguro, marcado como evaluación y sin respuestas objetivo.
 - Clasificación separada de fallos de contexto, retrieval, contradicción y alucinación.
 - `JudgeResult` con estado, origen, confianza, autoridad y evidencia de cartas y reglas.
-- Trazabilidad del origen de respuesta en informes Open Judge.
+- Trazabilidad del origen de respuesta, llamadas al LLM y tiempos por etapa en informes dinámicos.
+- Escenarios de habilidades vinculados a una línea Oracle exacta y validados antes de ejecutar el Juez.
 
 ### Conceptos dinámicos cubiertos
 
@@ -75,6 +76,16 @@ FAIL                       0
 ```
 
 La campaña incluye escenarios `rules-only` y escenarios respaldados por cartas reales del Oracle local.
+
+### Auditoría exploratoria de 1.000 casos
+
+Una campaña posterior de 20 semillas × 50 casos obtuvo `1000 PASS` en el harness, pero la revisión humana detectó falsos positivos del generador. Por ello **no se incorpora como 1.000 respuestas validadas** a la matriz de regresión. La auditoría motivó Research C1.2:
+
+- texto recordatorio y habilidades concedidas a tokens ya no se confunden con habilidades de maná de la carta;
+- cada pregunta de habilidad guarda la línea Oracle exacta, coste, efecto, zona y dependencia de la fuente;
+- premisas imposibles se marcan `FAIL` antes de consultar al Juez;
+- la independencia de la fuente distingue permanencia en la pila, última información conocida y partes del efecto que pueden no hacer nada;
+- se corrigieron matices de comandante y precedencia de efectos de reemplazo.
 
 ### Matriz de regresión validada
 

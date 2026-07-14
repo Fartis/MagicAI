@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 
-SCENARIO_SCHEMA_VERSION = 1
+SCENARIO_SCHEMA_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -30,24 +30,15 @@ class EvaluationContract:
     def from_dict(cls, payload: dict[str, Any]) -> "EvaluationContract":
         return cls(
             required_all=tuple(payload.get("required_all", [])),
-            required_any=tuple(
-                tuple(group)
-                for group in payload.get("required_any", [])
-            ),
+            required_any=tuple(tuple(group) for group in payload.get("required_any", [])),
             forbidden=tuple(payload.get("forbidden", [])),
             recommended_all=tuple(payload.get("recommended_all", [])),
-            recommended_any=tuple(
-                tuple(group)
-                for group in payload.get("recommended_any", [])
-            ),
+            recommended_any=tuple(tuple(group) for group in payload.get("recommended_any", [])),
             soft_forbidden=tuple(payload.get("soft_forbidden", [])),
         )
 
     def to_step(self, question: str) -> dict[str, Any]:
-        return {
-            "question": question,
-            **self.to_dict(),
-        }
+        return {"question": question, **self.to_dict()}
 
 
 @dataclass(frozen=True)
@@ -55,8 +46,8 @@ class QuestionTemplate:
     id: str
     text: str
 
-    def render(self, card_name: str = "") -> str:
-        return self.text.format(card=card_name)
+    def render(self, card_name: str = "", ability_text: str = "") -> str:
+        return self.text.format(card=card_name, ability=ability_text)
 
 
 @dataclass(frozen=True)
@@ -88,13 +79,19 @@ class DynamicScenario:
     card_set_type: str = ""
     card_legal_formats: tuple[str, ...] = ()
     source_kind: str = "card"
+    ability_index: int | None = None
+    ability_text: str = ""
+    ability_cost: str = ""
+    ability_effect: str = ""
+    ability_is_mana: bool | None = None
+    ability_source_zone: str = ""
+    source_removed_as_cost: bool | None = None
+    source_dependency: str = ""
 
     def to_case(self) -> dict[str, Any]:
         case_name = self.concept_name
-
         if self.card_name:
             case_name += f" · {self.card_name}"
-
         return {
             "id": self.id,
             "name": case_name,
@@ -122,24 +119,33 @@ class DynamicScenario:
             "card_set_type": self.card_set_type,
             "card_legal_formats": list(self.card_legal_formats),
             "source_kind": self.source_kind,
+            "ability_index": self.ability_index,
+            "ability_text": self.ability_text,
+            "ability_cost": self.ability_cost,
+            "ability_effect": self.ability_effect,
+            "ability_is_mana": self.ability_is_mana,
+            "ability_source_zone": self.ability_source_zone,
+            "source_removed_as_cost": self.source_removed_as_cost,
+            "source_dependency": self.source_dependency,
         }
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "DynamicScenario":
-        schema_version = payload.get("schema_version", SCENARIO_SCHEMA_VERSION)
-
-        if schema_version != SCENARIO_SCHEMA_VERSION:
+        schema_version = int(payload.get("schema_version", 1))
+        if schema_version not in {1, SCENARIO_SCHEMA_VERSION}:
             raise ValueError(
                 "Unsupported dynamic scenario schema version: "
                 f"{schema_version!r}"
             )
-
+        ability_index = payload.get("ability_index")
+        ability_is_mana = payload.get("ability_is_mana")
+        source_removed = payload.get("source_removed_as_cost")
         return cls(
             id=str(payload["id"]),
             seed=int(payload["seed"]),
             concept_id=str(payload["concept_id"]),
             concept_name=str(payload["concept_name"]),
-            card_name=str(payload["card_name"]),
+            card_name=str(payload.get("card_name", "")),
             template_id=str(payload["template_id"]),
             question=str(payload["question"]),
             tags=tuple(payload.get("tags", [])),
@@ -151,10 +157,13 @@ class DynamicScenario:
             card_set_name=str(payload.get("card_set_name", "")),
             card_set_type=str(payload.get("card_set_type", "")),
             card_legal_formats=tuple(payload.get("card_legal_formats", [])),
-            source_kind=str(
-                payload.get(
-                    "source_kind",
-                    "card" if payload.get("card_name") else "rules",
-                )
-            ),
+            source_kind=str(payload.get("source_kind", "card" if payload.get("card_name") else "rules")),
+            ability_index=int(ability_index) if ability_index is not None else None,
+            ability_text=str(payload.get("ability_text", "")),
+            ability_cost=str(payload.get("ability_cost", "")),
+            ability_effect=str(payload.get("ability_effect", "")),
+            ability_is_mana=bool(ability_is_mana) if ability_is_mana is not None else None,
+            ability_source_zone=str(payload.get("ability_source_zone", "")),
+            source_removed_as_cost=bool(source_removed) if source_removed is not None else None,
+            source_dependency=str(payload.get("source_dependency", "")),
         )

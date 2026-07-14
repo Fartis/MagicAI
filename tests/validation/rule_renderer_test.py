@@ -573,6 +573,12 @@ Once activated or triggered, an ability exists on the stack independently of its
 
 405
 Stack
+
+608.2h
+An effect may use last known information about a source no longer in the expected zone.
+
+609.3
+An effect attempts to do as much as possible.
 """
 
     answer = render_rule_answer(knowledge)
@@ -609,6 +615,12 @@ Once activated or triggered, an ability exists on the stack independently of its
 
 405
 Stack
+
+608.2h
+An effect may use last known information about a source no longer in the expected zone.
+
+609.3
+An effect attempts to do as much as possible.
 """
 
     answer = render_rule_answer(knowledge)
@@ -643,6 +655,12 @@ Once activated or triggered, an ability exists on the stack independently of its
 
 405
 Stack
+
+608.2h
+An effect may use last known information about a source no longer in the expected zone.
+
+609.3
+An effect attempts to do as much as possible.
 
 117
 Timing and Priority
@@ -834,7 +852,7 @@ If a commander would be put into its owner's hand or library from anywhere, its 
     assert_contains(
         answer,
         [
-            "No exactamente",
+            "Sí",
             "mano",
             "biblioteca",
             "efecto de reemplazo",
@@ -870,6 +888,8 @@ Each deck has a legendary card designated as its commander. This designation is 
             "comandante",
             "carta",
             "zona de mando",
+            "propia designación",
+            "no por la copia",
         ],
         "copy commander designation",
     )
@@ -961,6 +981,71 @@ The term dies means “is put into a graveyard from the battlefield.”
         "sacrifice as cost death trigger",
     )
 
+
+def test_sacrifice_counts_as_dies_is_rendered_deterministically():
+    knowledge = """
+QUESTION
+
+¿Sacrificar una criatura cuenta como morir para sus habilidades?
+
+============================================================
+RULES
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner's graveyard.
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "Sí",
+            "campo de batalla",
+            "cementerio",
+            "muere",
+            "cuando muera",
+            "sin ser lo mismo que destruir",
+        ],
+        "sacrifice counts as dies",
+    )
+
+
+def test_power_toughness_set_then_modify_uses_layers_7b_and_7c():
+    knowledge = """
+QUESTION
+
+Si un efecto fija la fuerza y resistencia de una criatura en 3/3 y otro le da +1/+1, ¿cuál se aplica primero?
+
+============================================================
+RULES
+
+613.4b
+Layer 7b: Effects that set power and/or toughness to a specific number or value are applied.
+
+613.4c
+Layer 7c: Effects and counters that modify power and/or toughness are applied.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "capa 7b",
+            "capa 7c",
+            "primero",
+            "+1/+1",
+            "después",
+        ],
+        "power toughness set then modify",
+    )
+
 def test_undying_sacrifice_is_rendered_deterministically():
     knowledge = """
 QUESTION
@@ -1047,7 +1132,17 @@ After applying one effect, repeat the process until none remain.
     assert answer
     assert_contains(
         answer,
-        ["efectos de reemplazo", "contadores", "controlador", "elige", "orden", "4N"],
+        [
+            "efectos de reemplazo",
+            "contadores",
+            "precedencia",
+            "616.1",
+            "misma categoría",
+            "controlador",
+            "elige",
+            "orden",
+            "4N",
+        ],
         "counter replacement order",
     )
 
@@ -1440,6 +1535,8 @@ def main():
         test_copy_of_commander_is_not_commander,
         test_elenda_commander_death_uses_recovered_card_name,
         test_sacrifice_as_cost_death_trigger_is_rendered_deterministically,
+        test_sacrifice_counts_as_dies_is_rendered_deterministically,
+        test_power_toughness_set_then_modify_uses_layers_7b_and_7c,
         test_undying_sacrifice_is_rendered_deterministically,
         test_exile_does_not_trigger_undying,
         test_multiple_counter_replacement_effects_choose_order,

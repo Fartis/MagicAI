@@ -1,3 +1,4 @@
+from magicai.oracle_abilities import contains_quoted_mana_ability
 import re
 
 
@@ -424,6 +425,27 @@ def _rule_number_queries(question: str) -> list[str]:
             "117.3b",
         )
 
+    if contains_quoted_mana_ability(q):
+        add(
+            "605",
+            "405",
+            "117",
+        )
+
+    if _is_exact_source_independence_question(q):
+        add(
+            "113.7a",
+            "608.2h",
+            "609.3",
+            "405",
+        )
+
+    if _is_power_toughness_set_then_modify_question(q):
+        add(
+            "613.4b",
+            "613.4c",
+        )
+
     # Las interacciones que cambian tipos, habilidades o fuerza/resistencia
     # necesitan capas antes que reglas incidentales de lanzamiento o Commander.
     if _is_characteristic_continuous_effect_question(q):
@@ -629,7 +651,7 @@ def _rule_number_queries(question: str) -> list[str]:
             "117",
         )
 
-    if _contains_any(q, ["sacrificar", "sacrificio", "sacrifice"]):
+    if _contains_any(q, ["sacrific"]):
 
         add(
             "701.21",
@@ -779,6 +801,8 @@ def _rule_number_queries(question: str) -> list[str]:
             "fuente",
             "origen",
             "mato",
+            "mata",
+            "matado",
             "matar",
             "destruyen esa criatura",
             "destruir esa criatura",
@@ -1079,6 +1103,15 @@ def _specialized_queries(question: str) -> list[str]:
             ]
         )
 
+
+    if contains_quoted_mana_ability(q):
+        queries.extend(
+            [
+                "605 activated mana ability could add mana no target not loyalty ability",
+                "605.3 mana ability resolves immediately without using the stack",
+            ]
+        )
+
     if _contains_any(
         q,
         [
@@ -1205,6 +1238,8 @@ def _specialized_queries(question: str) -> list[str]:
             "fuente",
             "origen",
             "mato",
+            "mata",
+            "matado",
             "matar",
             "destruyen esa criatura",
             "destruir esa criatura",
@@ -1217,6 +1252,16 @@ def _specialized_queries(question: str) -> list[str]:
             [
                 "activated ability on the stack exists independently of its source",
                 "removing source of activated ability from battlefield does not counter ability",
+            ]
+        )
+
+
+    if _is_exact_source_independence_question(_normalize_question(q)):
+        queries.extend(
+            [
+                "113.7a ability on stack exists independently of its source last known information",
+                "608.2h effect uses last known information for missing source",
+                "609.3 effect does only as much as possible",
             ]
         )
 
@@ -1371,6 +1416,68 @@ def _mentions_basic_land_type_interaction(question: str) -> bool:
         ],
     )
 
+
+
+
+def _is_power_toughness_set_then_modify_question(question: str) -> bool:
+    q = _normalize_question(question)
+    mentions_set = _contains_any(
+        q,
+        [
+            "fija su fuerza y resistencia",
+            "fija la fuerza y resistencia",
+            "establece su fuerza y resistencia",
+            "set power and toughness",
+            "base power and toughness",
+        ],
+    )
+    mentions_modify = _contains_any(
+        q,
+        [
+            "+1/+1",
+            "-1/-1",
+            "modifica su fuerza",
+            "gets +",
+            "gets -",
+        ],
+    )
+    return mentions_set and mentions_modify
+
+def _is_exact_source_independence_question(question: str) -> bool:
+    q = _normalize_question(question)
+    mentions_ability = "habilidad" in q or "ability" in q
+    source_removed = _contains_any(
+        q,
+        [
+            "fuente",
+            "source",
+            "destruyen",
+            "destruido",
+            "destruida",
+            "eliminan",
+            "mato",
+            "mata",
+            "matado",
+            "matar",
+            "retiran",
+            "removed",
+            "destroyed",
+        ],
+    )
+    asks_stack_result = _contains_any(
+        q,
+        [
+            "pila",
+            "stack",
+            "contrarresta",
+            "counter",
+            "resolverse",
+            "resuelve",
+            "disappears",
+            "desaparece",
+        ],
+    )
+    return mentions_ability and source_removed and asks_stack_result
 
 def _mentions_mana_value(question: str) -> bool:
 

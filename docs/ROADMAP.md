@@ -339,6 +339,20 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - progreso recuperable, comandos de replay y agrupación diagnóstica por familia;
 - preservación de las decisiones humanas al regenerar paquetes de revisión.
 
+### Research C1.2 — Dynamic Audit Hardening & Performance ✅
+
+- auditoría humana de la campaña exploratoria de 1.000 casos, incluidos los `PASS`;
+- vinculación de cada escenario de habilidad a una línea Oracle exacta;
+- validación previa de premisas y bloqueo de secuencias imposibles;
+- clasificación de habilidades de maná sin texto recordatorio ni habilidades citadas de otros objetos;
+- matices de última información conocida, “hacer todo lo posible”, comandante y CR 616.1;
+- índice precalculado y caché para Comprehensive Rules;
+- campañas dinámicas reanudables por semilla mediante marcadores atómicos;
+- paralelismo configurable por procesos con `--workers`;
+- diagnósticos estructurados de origen, uso de LLM y tiempos por etapa.
+
+Los resultados siguen siendo artefactos de evaluación. No se generan targets de entrenamiento ni se modifica el modelo.
+
 La ingestión automatizada de JudgeApps o Reddit queda separada y condicionada a permisos explícitos. Este track no sustituye la hoja de ruta de UI y solo genera interrupciones cuando detecta fallos críticos o de prioridad media-alta.
 
 Los cambios fuera de esta ruta solo interrumpirán el sprint cuando sean críticos o de prioridad media-alta.

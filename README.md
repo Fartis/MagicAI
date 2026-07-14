@@ -42,7 +42,9 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 - Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
 - Open Judge Gauntlet con contratos semánticos para conversaciones reales.
 - Community Feedback Gauntlet para ejecutar casos manuales y parafraseados antes de promoverlos a regresiones validadas.
-- Campañas de evaluación reanudables, con persistencia atómica, reintento de excepciones y manifiesto de fuentes.
+- Campañas de evaluación reanudables, con persistencia atómica, manifiesto de fuentes y paralelismo dinámico por procesos.
+- Índice precalculado y caché de Comprehensive Rules, con métricas por etapa y origen de respuesta.
+- Escenarios de habilidades vinculados a Oracle exacto y validados antes de ejecutar el Juez.
 - Exportación directa desde la UI de una conversación problemática como caso exploratorio reproducible, sin respuestas objetivo ni aprendizaje automático.
 
 ### Alcance de cartas
@@ -78,7 +80,7 @@ WARN                           0
 FAIL                           0
 ```
 
-Esta cifra describe una matriz controlada y reproducible sin regresiones. No significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic.
+Esta cifra describe una matriz controlada y reproducible sin regresiones. No significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic. Una campaña exploratoria adicional de 1.000 casos obtuvo `PASS` del harness, pero la auditoría humana encontró falsos positivos; por ello no se suma a esta matriz y se utiliza como origen de Research C1.2.
 
 Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado, [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta y [docs/COMMUNITY_FEEDBACK_GAUNTLET.md](docs/COMMUNITY_FEEDBACK_GAUNTLET.md) para incorporar manualmente escenarios reales sin rastrear foros.
 
@@ -291,9 +293,12 @@ Consulta [docs/JUDGE_RESULT.md](docs/JUDGE_RESULT.md) para el contrato completo.
 Pruebas rápidas sin campaña completa:
 
 ```bash
+PYTHONPATH=. python -m tests.quality.dynamic_ability_premise_test
 PYTHONPATH=. python -m tests.quality.dynamic_gauntlet_generator_test
 PYTHONPATH=. python -m tests.quality.dynamic_campaign_planner_test
+PYTHONPATH=. python -m tests.quality.dynamic_campaign_parallel_test
 PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
+PYTHONPATH=. python -m tests.retrieval.rule_service_index_test
 PYTHONPATH=. python -m tests.retrieval.rule_queries_test
 PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
@@ -344,15 +349,25 @@ Campaña multisemilla:
 
 ```bash
 python -m tests.quality.dynamic_campaign_test \
-  --seed 184729 \
-  --seed 987654 \
-  --seed 424242 \
+  --base-seed 184729 \
+  --runs 3 \
   --cases 42 \
+  --workers 4 \
+  --output-dir quality-results/dynamic-campaign \
+  --require-full-coverage
+
+# Reanudar el mismo directorio después de una interrupción:
+python -m tests.quality.dynamic_campaign_test \
+  --base-seed 184729 \
+  --runs 3 \
+  --cases 42 \
+  --workers 4 \
+  --output-dir quality-results/dynamic-campaign \
   --require-full-coverage \
-  --fail-on-warn
+  --resume
 ```
 
-Consulta [docs/COMMANDS.md](docs/COMMANDS.md) para la referencia completa.
+Consulta [docs/COMMANDS.md](docs/COMMANDS.md) para la referencia general y [docs/DEV_COMMANDS.md](docs/DEV_COMMANDS.md) para campañas grandes, workers, reanudación y empaquetado de resultados.
 
 ---
 

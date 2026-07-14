@@ -102,6 +102,7 @@ class JudgeResult:
     source_versions: dict[str, str] = field(default_factory=dict)
     source_health: dict[str, Any] = field(default_factory=dict)
     validation_attempts: int = 0
+    timings: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -122,6 +123,11 @@ class JudgeResult:
             "source_versions": dict(self.source_versions),
             "source_health": dict(self.source_health),
             "validation_attempts": self.validation_attempts,
+            "llm_called": self.origin in {
+                JudgeOrigin.LLM_VALIDATED,
+                JudgeOrigin.SAFE_FALLBACK,
+            },
+            "timings": dict(self.timings),
         }
 
 

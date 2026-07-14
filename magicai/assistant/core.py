@@ -19,6 +19,7 @@ class MagicAI:
         """Return the structured Judge result used by the API and future UI."""
 
         total = time.perf_counter()
+        timings: dict[str, float] = {}
 
         disambiguation_answer, resolved_question = handle_card_disambiguation(
             conversation,
@@ -58,9 +59,8 @@ class MagicAI:
             question,
         )
 
-        print(
-            f"Context Builder : {time.perf_counter()-t:.3f}s"
-        )
+        timings["context_builder"] = time.perf_counter() - t
+        print(f"Context Builder : {timings['context_builder']:.3f}s")
 
         #
         # Enricher
@@ -70,9 +70,8 @@ class MagicAI:
 
         context = enrich(context)
 
-        print(
-            f"Context Enricher: {time.perf_counter()-t:.3f}s"
-        )
+        timings["context_enricher"] = time.perf_counter() - t
+        print(f"Context Enricher: {timings['context_enricher']:.3f}s")
 
         #
         # Conversación
@@ -91,9 +90,8 @@ class MagicAI:
 
         knowledge = build_knowledge(context)
 
-        print(
-            f"Knowledge Builder: {time.perf_counter()-t:.3f}s"
-        )
+        timings["knowledge_builder"] = time.perf_counter() - t
+        print(f"Knowledge Builder: {timings['knowledge_builder']:.3f}s")
 
         #
         # LLM
@@ -106,9 +104,8 @@ class MagicAI:
             context=context,
         )
 
-        print(
-            f"Answer Generator : {time.perf_counter()-t:.3f}s"
-        )
+        timings["answer_generator"] = time.perf_counter() - t
+        print(f"Answer Generator : {timings['answer_generator']:.3f}s")
 
         #
         # Historial
@@ -116,9 +113,9 @@ class MagicAI:
 
         conversation.add_assistant_message(result.answer)
 
-        print(
-            f"TOTAL            : {time.perf_counter()-total:.3f}s"
-        )
+        timings["total"] = time.perf_counter() - total
+        result.timings.update(timings)
+        print(f"TOTAL            : {timings['total']:.3f}s")
 
         print()
 
