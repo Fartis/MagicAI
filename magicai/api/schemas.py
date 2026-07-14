@@ -56,6 +56,16 @@ class AskResponse(BaseModel):
     source_versions: dict[str, str] = Field(default_factory=dict)
     source_health: dict[str, Any] = Field(default_factory=dict)
     validation_attempts: int = 0
+    reviewed_by: list[str] = Field(default_factory=list)
+    review_challenges: list[dict[str, Any]] = Field(default_factory=list)
+    authority_trace: list[str] = Field(default_factory=list)
+
+
+class TacticianAskResponse(AskResponse):
+    authority: str = "tactician"
+    synergies: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    judge_result: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetaResponse(BaseModel):
@@ -67,6 +77,8 @@ class MetaResponse(BaseModel):
     judge_statuses: list[str]
     judge_origins: list[str]
     confidence_levels: list[str]
+    profiles: list[str] = Field(default_factory=list)
+    tactician_result_schema_version: str = ""
 
 
 class HealthResponse(BaseModel):

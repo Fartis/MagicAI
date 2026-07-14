@@ -8,6 +8,7 @@ from magicai.validation.oracle_renderer import render_oracle_relation_answer
 from magicai.validation.strategy_boundary import render_strategy_boundary_answer
 from magicai.validation.premise_guard import render_false_premise_answer
 from magicai.validation.rulings_renderer import render_rulings_answer
+from magicai.tactician.reviewer import review_judge_candidate
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -102,7 +103,7 @@ def generate_judge_result(knowledge: str, context=None):
             confidence=JudgeConfidence.HIGH,
             context=context,
             warnings=[
-                "A strategic recommendation requires Deck Master; the Judge only validates recovered facts."
+                "A strategic recommendation requires Estratega; the Judge only validates recovered facts."
             ],
         )
 
@@ -135,8 +136,13 @@ def generate_judge_result(knowledge: str, context=None):
             answer,
             knowledge,
         )
+        review = review_judge_candidate(
+            answer,
+            knowledge,
+            context=context,
+        )
 
-        if not violations:
+        if not violations and review.accepted and not review.challenges:
             return build_judge_result(
                 question=question,
                 answer=answer,
@@ -145,8 +151,48 @@ def generate_judge_result(knowledge: str, context=None):
                 confidence=JudgeConfidence.MEDIUM,
                 context=context,
                 validation_attempts=attempt,
+                reviewed_by=["tactician"],
+                authority_trace=[
+                    "judge:factual_evidence",
+                    "tactician:independent_review",
+                    "judge:final_authority",
+                ],
             )
 
+        if not violations and review.repaired_answer:
+            repaired_violations = validate_answer(
+                review.repaired_answer,
+                knowledge,
+            )
+            repaired_review = review_judge_candidate(
+                review.repaired_answer,
+                knowledge,
+                context=context,
+            )
+            if not repaired_violations and repaired_review.accepted:
+                return build_judge_result(
+                    question=question,
+                    answer=review.repaired_answer,
+                    status=JudgeStatus.ANSWERED,
+                    origin=JudgeOrigin.TACTICIAN_REPAIR,
+                    confidence=JudgeConfidence.HIGH,
+                    context=context,
+                    validation_attempts=attempt + 1,
+                    reviewed_by=["tactician"],
+                    review_challenges=[
+                        challenge.to_dict()
+                        for challenge in review.challenges
+                    ],
+                    authority_trace=[
+                        "judge:factual_evidence",
+                        "tactician:challenge",
+                        "judge:source_grounded_repair",
+                    ],
+                )
+
+        violations = list(dict.fromkeys(
+            [*violations, *review.violation_messages()]
+        ))
         last_violations = violations
 
         if verbose:

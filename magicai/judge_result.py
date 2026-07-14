@@ -25,6 +25,7 @@ class JudgeOrigin(str, Enum):
     DETERMINISTIC_RULINGS = "deterministic_rulings"
     STRATEGY_BOUNDARY = "strategy_boundary"
     LLM_VALIDATED = "llm_validated"
+    TACTICIAN_REPAIR = "tactician_repair"
     SAFE_FALLBACK = "safe_fallback"
     PREMISE_GUARD = "premise_guard"
 
@@ -102,6 +103,9 @@ class JudgeResult:
     source_versions: dict[str, str] = field(default_factory=dict)
     source_health: dict[str, Any] = field(default_factory=dict)
     validation_attempts: int = 0
+    reviewed_by: list[str] = field(default_factory=list)
+    review_challenges: list[dict[str, Any]] = field(default_factory=list)
+    authority_trace: list[str] = field(default_factory=list)
     timings: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -123,8 +127,12 @@ class JudgeResult:
             "source_versions": dict(self.source_versions),
             "source_health": dict(self.source_health),
             "validation_attempts": self.validation_attempts,
+            "reviewed_by": list(self.reviewed_by),
+            "review_challenges": list(self.review_challenges),
+            "authority_trace": list(self.authority_trace),
             "llm_called": self.origin in {
                 JudgeOrigin.LLM_VALIDATED,
+                JudgeOrigin.TACTICIAN_REPAIR,
                 JudgeOrigin.SAFE_FALLBACK,
             },
             "timings": dict(self.timings),
@@ -142,6 +150,9 @@ def build_judge_result(
     assumptions: list[str] | None = None,
     warnings: list[str] | None = None,
     validation_attempts: int = 0,
+    reviewed_by: list[str] | None = None,
+    review_challenges: list[dict[str, Any]] | None = None,
+    authority_trace: list[str] | None = None,
 ) -> JudgeResult:
     return JudgeResult(
         question=question,
@@ -170,6 +181,9 @@ def build_judge_result(
         source_versions=get_source_versions(),
         source_health=get_source_health().to_dict(),
         validation_attempts=validation_attempts,
+        reviewed_by=list(reviewed_by or []),
+        review_challenges=list(review_challenges or []),
+        authority_trace=list(authority_trace or ["judge:factual_authority"]),
     )
 
 

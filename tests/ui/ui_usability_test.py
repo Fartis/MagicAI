@@ -116,12 +116,28 @@ def test_quickstart_documents_branches_ui_and_ollama_modes() -> None:
     assert "docs/QUICKSTART.md" in readme
 
 
+
+
+def test_profile_switch_exposes_judge_and_tactician() -> None:
+    parser = ControlCollector()
+    parser.feed(INDEX_FILE.read_text(encoding="utf-8"))
+    javascript = read_javascript()
+
+    assert "judge-profile-button" in parser.attributes_by_id
+    assert "tactician-profile-button" in parser.attributes_by_id
+    assert 'function setProfile(profile)' in javascript
+    assert 'state.profile === "tactician"' in javascript
+    assert '"/tactician/ask"' in javascript
+    assert 'Estratega' in javascript
+
+
 def main() -> int:
     tests = [
         test_disambiguation_candidates_are_interactive_and_persisted,
         test_copy_and_export_controls_use_the_last_structured_result,
         test_evidence_sections_open_from_actual_content,
         test_copy_fallback_and_rendering_remain_local_and_safe,
+        test_profile_switch_exposes_judge_and_tactician,
         test_quickstart_documents_branches_ui_and_ollama_modes,
     ]
     for test in tests:

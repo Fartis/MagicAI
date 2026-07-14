@@ -119,3 +119,15 @@ El frontend construye nodos DOM mediante `textContent`; no inserta las respuesta
 - preferencias de apariencia y densidad;
 - exportación de conversaciones completas en formatos de usuario;
 - soporte posterior para Deck Master y Deckbuilder sobre la misma shell modular.
+
+## Selector de perfiles
+
+La cabecera de conversación permite cambiar entre:
+
+- **Juez:** autoridad factual y reglamentaria.
+- **Estratega:** recomendaciones estratégicas basadas únicamente en la evidencia
+  devuelta por el Juez.
+
+El perfil activo se conserva en `localStorage`. Las conversaciones siguen usando la
+misma persistencia local, pero cada mensaje muestra si fue emitido por el Juez o por
+el Estratega.

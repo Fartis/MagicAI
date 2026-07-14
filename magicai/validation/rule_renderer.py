@@ -85,6 +85,24 @@ def render_rule_answer(knowledge: str) -> str | None:
     if not q:
         return None
 
+    undying_sacrifice_card = _oracle_derived_undying_sacrifice_card(q, knowledge)
+    if undying_sacrifice_card:
+        required_rules = ["undying", "dies", "sacrifice"]
+        if _has_rules(knowledge, required_rules):
+            card_name = undying_sacrifice_card
+            if _question_states_plus_counter(q):
+                return (
+                    f"Al sacrificar {card_name}, pasa del campo de batalla al "
+                    "cementerio y muere. Como ya tenía un contador +1/+1, "
+                    "Undying no se dispara y no vuelve por esa habilidad."
+                )
+            return (
+                f"Al sacrificar {card_name}, pasa del campo de batalla al "
+                "cementerio y muere. Si no tenía contadores +1/+1, Undying se "
+                "dispara y, cuando esa habilidad se resuelve, vuelve al campo "
+                "de batalla bajo el control de su propietario con un contador +1/+1."
+            )
+
     if _is_undying_existing_counter_question(q) and _has_rules(
         knowledge,
         ["undying"],
@@ -1630,4 +1648,59 @@ def _is_commander_death_zone_question(question: str) -> bool:
         and mentions_command_zone
         and mentions_death_or_graveyard
         and asks_about_consequence
+    )
+
+
+def _oracle_derived_undying_sacrifice_card(
+    question: str,
+    knowledge: str,
+) -> str | None:
+    """Return the sacrificed Undying card using question + recovered Oracle."""
+
+    if "persist" in question:
+        return None
+    if not any(marker in question for marker in ("sacrific", "sacrifice")):
+        return None
+
+    candidates: list[tuple[str, str]] = []
+    for name, card_text in _extract_card_entries(knowledge):
+        normalized_text = _normalize(card_text)
+        if "creature" in normalized_text and "undying" in normalized_text:
+            candidates.append((name, _normalize(name)))
+
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        candidate_name, normalized_name = candidates[0]
+        all_named_cards = [
+            (_normalize(name), name)
+            for name, _ in _extract_card_entries(knowledge)
+            if _normalize(name) in question
+        ]
+        sacrifice_tail = re.split(r"sacrific(?:o|as|a|ar|e|ed|ing)?", question, maxsplit=1)[-1]
+        explicitly_sacrificed = [
+            original
+            for normalized, original in all_named_cards
+            if normalized in sacrifice_tail[:120]
+        ]
+        if explicitly_sacrificed and candidate_name not in explicitly_sacrificed:
+            return None
+        return candidate_name
+
+    sacrifice_tail = re.split(r"sacrific(?:o|as|a|ar|e|ed|ing)?", question, maxsplit=1)[-1]
+    for name, normalized_name in candidates:
+        if normalized_name in sacrifice_tail[:120]:
+            return name
+
+    return None
+
+
+def _question_states_plus_counter(question: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:con|tiene|tenia|had|with)\s+(?:un|a|one)?\s*"
+            r"(?:contador\s*)?\+1/\+1|"
+            r"with\s+(?:a|one)\s*\+1/\+1\s+counter",
+            question,
+        )
     )

@@ -67,3 +67,24 @@ Known codes include:
 - `internal_error`
 
 The UI should use `code` for behavior and `message` for display.
+
+---
+
+## TacticianResult 0.1
+
+El perfil estratégico se expone mediante `POST /tactician/ask`. Tactician no
+recupera fuentes por sí mismo: ejecuta primero al Juez sobre una copia de la sesión y
+consume el `JudgeResult` resultante.
+
+Campos adicionales:
+
+- `authority: tactician`
+- `origin: tactician_strategy`
+- `synergies`
+- `risks`
+- `authority_trace`
+- `judge_result`
+
+El endpoint factual `POST /ask` sigue siendo compatible. Los resultados del Juez
+pueden incluir además `reviewed_by`, `review_challenges` y `authority_trace` cuando
+una respuesta LLM haya pasado por revisión del Estratega.

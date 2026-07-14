@@ -472,3 +472,14 @@ Criterio de cierre:
 - ejecutar una situación por cada habilidad de maná, Ward, Undying y habilidad activada candidata;
 - registrar fallbacks deterministas como fallos de cobertura, sin consultar automáticamente al LLM;
 - preparar la siguiente línea de investigación: Shadow LLM sobre una muestra de alto riesgo y, después, soak aleatorio de 10.000/100.000 casos.
+
+### Sprint 12.0 — Tactician / Estratega v0.1 🚧
+
+Primera vertical de la antigua Fase 4 "Deck Master":
+
+- challenge protocol para revisar conclusiones del Juez;
+- paquete factual firmado por el Juez;
+- selector de perfil en la UI;
+- análisis determinista de roles y sinergias de dos cartas;
+- distinción entre sinergia y ciclo infinito;
+- base para estado de partida y líneas de juego posteriores.

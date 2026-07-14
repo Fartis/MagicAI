@@ -50,10 +50,16 @@
     <section class="chat-panel" aria-labelledby="conversation-title">
       <div class="panel-heading chat-heading">
         <div>
-          <p class="eyebrow">Autoridad factual</p>
+          <p id="profile-eyebrow" class="eyebrow">Autoridad factual</p>
           <h2 id="conversation-title">Consulta al Juez</h2>
         </div>
-        <span id="session-label" class="session-label">Sesión nueva</span>
+        <div class="chat-heading-actions">
+          <div class="profile-switch" role="group" aria-label="Perfil de MagicAI">
+            <button id="judge-profile-button" class="profile-button is-active" type="button" data-profile="judge" aria-pressed="true">Juez</button>
+            <button id="tactician-profile-button" class="profile-button" type="button" data-profile="tactician" aria-pressed="false">Estratega</button>
+          </div>
+          <span id="session-label" class="session-label">Sesión nueva</span>
+        </div>
       </div>
 
       <div id="message-list" class="message-list" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false">
@@ -62,7 +68,7 @@
           <h3>Pregunta por cartas, reglas o interacciones.</h3>
           <p>
             El Juez recupera Oracle, Comprehensive Rules y rulings locales antes de responder.
-            Las consultas estratégicas se reservan para el futuro Deck Master.
+            El Estratega usa únicamente el paquete factual validado por el Juez para proponer líneas, sinergias y riesgos.
           </p>
           <div class="suggestion-grid" aria-label="Preguntas de ejemplo">
             <button class="suggestion" type="button">¿Puedo responder durante la resolución de una habilidad?</button>
@@ -73,7 +79,7 @@
       </div>
 
       <form id="question-form" class="composer" aria-busy="false">
-        <label class="sr-only" for="question-input">Escribe tu pregunta para el Juez</label>
+        <label id="question-label" class="sr-only" for="question-input">Escribe tu pregunta para el Juez</label>
         <textarea
           id="question-input"
           name="question"

@@ -13,8 +13,10 @@ from magicai.api.schemas import (
     ConversationSummaryResponse,
     HealthResponse,
     MetaResponse,
+    TacticianAskResponse,
 )
 from magicai.conversation.manager import ConversationManager
+from magicai.tactician.core import Tactician
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -24,12 +26,14 @@ from magicai.versioning import (
     API_CONTRACT_VERSION,
     JUDGE_RESULT_SCHEMA_VERSION,
     get_project_version,
+    TACTICIAN_RESULT_SCHEMA_VERSION,
 )
 
 
 router = APIRouter()
 
 assistant = MagicAI()
+tactician = Tactician(judge=assistant)
 conversation_manager = ConversationManager()
 
 
@@ -56,6 +60,8 @@ def meta():
         "judge_statuses": [item.value for item in JudgeStatus],
         "judge_origins": [item.value for item in JudgeOrigin],
         "confidence_levels": [item.value for item in JudgeConfidence],
+        "profiles": ["judge", "tactician"],
+        "tactician_result_schema_version": TACTICIAN_RESULT_SCHEMA_VERSION,
     }
 
 
@@ -92,6 +98,41 @@ def ask(request: AskRequest):
         ]
 
     return AskResponse(
+        session_id=session_id,
+        **payload,
+    )
+
+
+
+
+@router.post("/tactician/ask", response_model=TacticianAskResponse)
+def tactician_ask(request: AskRequest):
+    session_id, conversation = conversation_manager.get_or_create(
+        request.session_id
+    )
+
+    result = tactician.ask_result(
+        conversation,
+        request.question,
+    )
+    payload = result.to_dict()
+
+    try:
+        conversation_manager.save(
+            session_id,
+            conversation,
+            last_result={
+                "session_id": session_id,
+                **payload,
+            },
+        )
+    except (OSError, sqlite3.Error):
+        payload["warnings"] = [
+            *payload.get("warnings", []),
+            "La respuesta es válida, pero no se pudo guardar esta conversación en el historial local.",
+        ]
+
+    return TacticianAskResponse(
         session_id=session_id,
         **payload,
     )

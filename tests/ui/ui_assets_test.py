@@ -54,6 +54,8 @@ def test_index_exposes_chat_and_evidence_contract() -> None:
         "rules-list",
         "rulings-list",
         "health-badge",
+        "judge-profile-button",
+        "tactician-profile-button",
     }
 
     assert required_ids <= parser.ids
@@ -64,7 +66,8 @@ def test_index_exposes_chat_and_evidence_contract() -> None:
 def test_javascript_uses_structured_api_without_html_injection() -> None:
     javascript = (UI_ROOT / "app.js").read_text(encoding="utf-8")
 
-    assert 'fetchJson("/ask"' in javascript
+    assert '"/tactician/ask"' in javascript
+    assert 'const endpoint = state.profile === "tactician" ? "/tactician/ask" : "/ask"' in javascript
     assert 'fetchJson("/health"' in javascript
     assert 'fetchJson("/meta"' in javascript
     assert "JSON.stringify(payload)" in javascript

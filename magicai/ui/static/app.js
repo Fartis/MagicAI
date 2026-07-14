@@ -4,6 +4,7 @@ const STORAGE = {
   session: "magicai.ui.session.v1",
   transcript: "magicai.ui.transcript.v1",
   lastResult: "magicai.ui.lastResult.v1",
+  profile: "magicai.ui.profile.v1",
 };
 
 const ASK_TIMEOUT_MS = 180000;
@@ -19,7 +20,7 @@ let storageWarningShown = false;
 const STATUS_LABELS = {
   answered: "Respondido",
   needs_clarification: "Necesita aclaración",
-  strategy_required: "Requiere Deck Master",
+  strategy_required: "Requiere Estratega",
   insufficient_evidence: "Evidencia insuficiente",
   false_premise: "Premisa corregida",
 };
@@ -31,6 +32,9 @@ const ORIGIN_LABELS = {
   deterministic_rulings: "Rulings deterministas",
   premise_guard: "Control de premisa",
   strategy_boundary: "Frontera estratégica",
+  tactician_strategy: "Análisis estratégico",
+  tactician_judge_gate: "Respuesta factual del Juez",
+  tactician_repair: "Reparación revisada",
   llm_validated: "LLM validado",
   safe_fallback: "Fallback seguro",
 };
@@ -38,7 +42,7 @@ const ORIGIN_LABELS = {
 const STATUS_EXPLANATIONS = {
   answered: "El Juez ha respondido usando la evidencia recuperada y la ruta indicada.",
   needs_clarification: "Hay varias cartas compatibles. Elige una opción para continuar la pregunta original.",
-  strategy_required: "Los hechos están validados, pero la recomendación final corresponde al futuro Deck Master.",
+  strategy_required: "Los hechos están validados, pero la recomendación final corresponde al Estratega.",
   insufficient_evidence: "Las fuentes disponibles no bastan para responder con seguridad.",
   false_premise: "El Juez ha corregido una premisa incompatible con Oracle o las reglas antes de responder.",
 };
@@ -49,6 +53,7 @@ const state = {
   sessionId: loadStoredSession(),
   messages: loadStoredMessages(),
   lastResult: loadStoredResult(),
+  profile: loadStoredProfile(),
   sending: false,
   metadata: null,
   activeRequest: null,
@@ -78,6 +83,11 @@ function captureElements() {
     "history-status",
     "conversation-list",
     "session-label",
+    "profile-eyebrow",
+    "conversation-title",
+    "question-label",
+    "judge-profile-button",
+    "tactician-profile-button",
     "message-list",
     "welcome-message",
     "question-form",
@@ -134,6 +144,8 @@ function bindEvents() {
   elements["copy-evidence-button"].addEventListener("click", () => void copyLastEvidence());
   elements["export-result-button"].addEventListener("click", exportLastResult);
   elements["export-feedback-button"].addEventListener("click", exportFeedbackCase);
+  elements["judge-profile-button"].addEventListener("click", () => setProfile("judge"));
+  elements["tactician-profile-button"].addEventListener("click", () => setProfile("tactician"));
 
   for (const button of document.querySelectorAll(".suggestion")) {
     button.addEventListener("click", () => {
@@ -156,6 +168,7 @@ function restoreState() {
     renderEvidence(state.lastResult);
   }
 
+  updateProfileUI();
   updateSessionLabel();
   scrollMessagesToEnd();
 }
@@ -251,7 +264,8 @@ async function submitQuestion() {
       payload.session_id = sentSessionId;
     }
 
-    const result = await fetchJson("/ask", {
+    const endpoint = state.profile === "tactician" ? "/tactician/ask" : "/ask";
+    const result = await fetchJson(endpoint, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify(payload),
@@ -273,8 +287,9 @@ async function submitQuestion() {
     const candidates = getClarificationCandidates(result);
     addStoredMessage({
       role: "assistant",
-      text: result.answer || "El Juez no devolvió texto.",
+      text: result.answer || "MagicAI no devolvió texto.",
       status: result.status,
+      profile: state.profile,
       ...(candidates.length ? {candidates} : {}),
     });
     renderEvidence(result);
@@ -364,7 +379,11 @@ function renderMessage(message, shouldScroll = true) {
 
   const header = document.createElement("div");
   header.className = "message-header";
-  header.textContent = message.role === "user" ? "Tú" : message.role === "error" ? "Error" : "Juez";
+  header.textContent = message.role === "user"
+    ? "Tú"
+    : message.role === "error"
+      ? "Error"
+      : message.profile === "tactician" ? "Estratega" : "Juez";
 
   if (message.status) {
     const status = document.createElement("span");
@@ -496,11 +515,14 @@ function renderLoadingMessage() {
   const article = document.createElement("article");
   article.className = "message is-assistant";
   article.setAttribute("role", "status");
-  article.setAttribute("aria-label", "El Juez está consultando las fuentes");
+  const profileLabel = state.profile === "tactician" ? "Estratega" : "Juez";
+  article.setAttribute("aria-label", `${profileLabel} está procesando la consulta`);
 
   const header = document.createElement("div");
   header.className = "message-header";
-  header.textContent = "Juez · consultando fuentes";
+  header.textContent = state.profile === "tactician"
+    ? "Estratega · consultando al Juez"
+    : "Juez · consultando fuentes";
 
   const bubble = document.createElement("div");
   bubble.className = "message-bubble";
@@ -586,7 +608,9 @@ function renderEvidence(result) {
 
   const explanation = document.createElement("p");
   explanation.className = "status-explanation";
-  explanation.textContent = STATUS_EXPLANATIONS[status] || "Resultado estructurado del Juez.";
+  explanation.textContent = result.authority === "tactician"
+    ? "El Estratega ha usado exclusivamente la base factual entregada por el Juez."
+    : STATUS_EXPLANATIONS[status] || "Resultado estructurado del Juez.";
   summary.appendChild(explanation);
 
   const row = document.createElement("div");
@@ -605,7 +629,11 @@ function renderEvidence(result) {
   const rules = result.rules || [];
   const rulings = result.rulings || [];
   const assumptions = result.assumptions || [];
-  const warnings = result.warnings || [];
+  const warnings = [
+    ...(result.warnings || []),
+    ...(result.risks || []),
+    ...(result.review_challenges || []).map(item => item.message || item.code).filter(Boolean),
+  ];
 
   renderCards(cards);
   renderRules(rules);
@@ -777,6 +805,9 @@ function renderTechnicalDetails(result) {
     ["Confianza", result.confidence],
     ["Intent", result.intent || "—"],
     ["Intentos de validación", String(result.validation_attempts ?? 0)],
+    ["Revisado por", (result.reviewed_by || []).join(" · ") || "—"],
+    ["Trazado de autoridad", (result.authority_trace || []).join(" → ") || "—"],
+    ["Sinergias", (result.synergies || []).join(" · ") || "—"],
     ["Consultas de recuperación", (result.retrieval_queries || []).join(" · ") || "—"],
     ["Sesión", result.session_id || "—"],
   ];
@@ -1327,17 +1358,27 @@ function buildWelcomeClone() {
   title.textContent = "Pregunta por cartas, reglas o interacciones.";
 
   const description = document.createElement("p");
-  description.textContent = "El Juez recupera Oracle, Comprehensive Rules y rulings locales antes de responder. Las consultas estratégicas se reservan para el futuro Deck Master.";
+  description.textContent = state.profile === "tactician"
+    ? "El Estratega no consulta fuentes por su cuenta: solicita al Juez un paquete factual y propone líneas, sinergias y riesgos sobre esa base."
+    : "El Juez recupera Oracle, Comprehensive Rules y rulings locales antes de responder.";
 
   const suggestions = document.createElement("div");
   suggestions.className = "suggestion-grid";
   suggestions.setAttribute("aria-label", "Preguntas de ejemplo");
 
-  for (const text of [
-    "¿Puedo responder durante la resolución de una habilidad?",
-    "¿Cuántos Kobolds crea Prossh?",
-    "¿Qué ocurre si sacrifico Young Wolf?",
-  ]) {
+  const examples = state.profile === "tactician"
+    ? [
+        "¿Young Wolf y Carrion Feeder forman un combo o una sinergia?",
+        "¿Qué papel cumple Sol Ring en este plan de juego?",
+        "¿Qué riesgos tiene esta línea de sacrificio?",
+      ]
+    : [
+        "¿Puedo responder durante la resolución de una habilidad?",
+        "¿Cuántos Kobolds crea Prossh?",
+        "¿Qué ocurre si sacrifico Young Wolf?",
+      ];
+
+  for (const text of examples) {
     const button = document.createElement("button");
     button.className = "suggestion";
     button.type = "button";
@@ -1377,6 +1418,8 @@ function setSending(value) {
   elements["cancel-request-button"].hidden = !value;
   elements["new-session-button"].disabled = value;
   elements["refresh-history-button"].disabled = value;
+  elements["judge-profile-button"].disabled = value;
+  elements["tactician-profile-button"].disabled = value;
   elements["question-input"].disabled = value;
   for (const button of document.querySelectorAll(".conversation-action, .conversation-open")) {
     button.disabled = value;
@@ -1387,7 +1430,9 @@ function setSending(value) {
     button.disabled = value || button.dataset.resolved === "true";
   }
   if (value) {
-    announceRequestStatus("Consulta enviada. El Juez está consultando las fuentes.");
+    announceRequestStatus(state.profile === "tactician"
+      ? "Consulta enviada. El Estratega está solicitando hechos al Juez."
+      : "Consulta enviada. El Juez está consultando las fuentes.");
   }
 }
 
@@ -1415,6 +1460,45 @@ function showToast(message, kind = "error") {
   toast.textContent = message;
   elements["toast-region"].appendChild(toast);
   window.setTimeout(() => toast.remove(), 5500);
+}
+
+function setProfile(profile) {
+  if (!new Set(["judge", "tactician"]).has(profile) || state.sending) {
+    return;
+  }
+  state.profile = profile;
+  writeStorage(STORAGE.profile, profile);
+  updateProfileUI();
+
+  if (!state.messages.length) {
+    clearNode(elements["message-list"]);
+    const welcome = buildWelcomeClone();
+    elements["message-list"].appendChild(welcome);
+    bindSuggestionButtons(welcome);
+  }
+  elements["question-input"].focus();
+}
+
+function updateProfileUI() {
+  const tacticianActive = state.profile === "tactician";
+  elements["judge-profile-button"].classList.toggle("is-active", !tacticianActive);
+  elements["judge-profile-button"].setAttribute("aria-pressed", String(!tacticianActive));
+  elements["tactician-profile-button"].classList.toggle("is-active", tacticianActive);
+  elements["tactician-profile-button"].setAttribute("aria-pressed", String(tacticianActive));
+  elements["profile-eyebrow"].textContent = tacticianActive ? "Autoridad estratégica" : "Autoridad factual";
+  elements["conversation-title"].textContent = tacticianActive ? "Consulta al Estratega" : "Consulta al Juez";
+  elements["question-label"].textContent = tacticianActive
+    ? "Escribe tu consulta para el Estratega"
+    : "Escribe tu pregunta para el Juez";
+  elements["question-input"].placeholder = tacticianActive
+    ? "Describe una jugada, sinergia o plan…"
+    : "Escribe una pregunta de reglas…";
+  elements["send-button"].querySelector("span").textContent = tacticianActive ? "Analizar" : "Preguntar";
+}
+
+function loadStoredProfile() {
+  const value = readStorage(STORAGE.profile, "judge");
+  return value === "tactician" ? "tactician" : "judge";
 }
 
 function loadStoredSession() {

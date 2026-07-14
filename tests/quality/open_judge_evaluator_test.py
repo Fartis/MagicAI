@@ -191,27 +191,27 @@ def main() -> int:
     strategy = OpenJudgeTurn(
         id="TEST-STRATEGY",
         question="¿Merece la pena jugarla?",
-        required_all=("Deck Master",),
+        required_all=("Estratega",),
         success_outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
     )
     assert_outcome(
         OpenJudgeOutcome.STRATEGY_REQUIRED,
         strategy,
-        "La recomendación estratégica corresponde a Deck Master.",
+        "La recomendación estratégica corresponde a Estratega.",
     )
 
 
     assert_outcome(
         OpenJudgeOutcome.STRATEGY_REQUIRED,
         strategy,
-        "La recomendación estratégica corresponde a Deck Master.",
+        "La recomendación estratégica corresponde a Estratega.",
         judge_status="strategy_required",
     )
 
     assert_outcome(
         OpenJudgeOutcome.CONTEXT_FAILURE,
         strategy,
-        "La recomendación estratégica corresponde a Deck Master.",
+        "La recomendación estratégica corresponde a Estratega.",
         judge_status="answered",
     )
 

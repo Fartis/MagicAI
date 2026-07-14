@@ -452,3 +452,14 @@ PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
 ```
 
 The default sweep is deterministic-only, resumable, evaluation-only, and stores compact `jsonl.gz` results. See `docs/DEV_COMMANDS.md` for static audits, family filters, smoke runs, packaging, and the deliberately separate LLM audit mode.
+
+## Tactician / Estratega v0.1
+
+La primera vertical estratégica ya está disponible. En la UI puede elegirse
+**Estratega**, cuyo nombre interno es `Tactician`. Este perfil no consulta fuentes
+factuales directamente: solicita un `JudgeResult`, conserva el Juez como autoridad
+final y usa ese paquete para revisar contradicciones, detectar roles, explicar
+sinergias y señalar riesgos.
+
+Consulta [docs/TACTICIAN.md](docs/TACTICIAN.md) para ver el contrato, límites y
+próximos pasos.

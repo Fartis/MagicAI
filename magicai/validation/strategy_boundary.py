@@ -30,6 +30,12 @@ _STRATEGY_MARKERS = (
     "should i play",
     "would you play",
     "recommend",
+    "combo",
+    "sinergia",
+    "synergy",
+    "linea de juego",
+    "línea de juego",
+    "game line",
 )
 
 
@@ -38,7 +44,7 @@ def render_strategy_boundary_answer(knowledge: str) -> str | None:
 
     The Judge keeps authority over recovered card facts, but it does not decide
     which card or line is strategically best. That recommendation belongs to
-    the future Deck Master. The response therefore exposes a compact factual
+    the future Estratega. The response therefore exposes a compact factual
     summary and makes the domain boundary explicit.
     """
 
@@ -71,7 +77,7 @@ def _render_spanish(
         return (
             "Esa consulta requiere una valoración estratégica. El Juez puede "
             "validar reglas, Oracle y legalidad, pero la recomendación sobre "
-            "qué conviene jugar corresponde a Deck Master y depende del "
+            "qué conviene jugar corresponde a Estratega y depende del "
             "formato, la lista y el plan de juego."
             + format_context
         )
@@ -84,7 +90,7 @@ def _render_spanish(
             f"El Juez puede confirmar estos hechos: {factual}. "
             "Decidir si merece la pena jugar esa carta o en qué mazo encaja mejor es "
             "una recomendación estratégica: depende del formato, la lista, "
-            "el plan de juego y el nivel de la mesa, y corresponde a Deck Master."
+            "el plan de juego y el nivel de la mesa, y corresponde a Estratega."
             + format_context
         )
 
@@ -92,7 +98,7 @@ def _render_spanish(
     return (
         f"No hay una respuesta universal sobre cuál es mejor entre {names}: "
         "depende del formato, la lista y el plan de juego, y esa recomendación "
-        "estratégica corresponde a Deck Master. El Juez sí puede confirmar los "
+        "estratégica corresponde a Estratega. El Juez sí puede confirmar los "
         f"hechos recuperados: {factual}."
         + format_context
     )
@@ -123,7 +129,7 @@ def _render_english(
         return (
             f"The Judge can confirm these facts: {factual}. Whether it is worth "
             "playing or where it fits best is a strategic recommendation for "
-            "Deck Master and depends on the format, list, and game plan."
+            "Estratega and depends on the format, list, and game plan."
             + format_context
         )
 

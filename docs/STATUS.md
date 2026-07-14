@@ -313,3 +313,18 @@ Pendiente para cerrar 11.1: revisión visual en navegador real, captura para REA
 - snapshot de referencia: 29.308 cartas soportadas y 7.937 candidatos Oracle.
 
 Los resultados son exclusivamente artefactos de evaluación. No se generan datos de entrenamiento ni se modifica el modelo.
+
+## Sprint 12.0 — Tactician / Estratega v0.1
+
+Estado: **vertical inicial implementada**.
+
+- revisión independiente de respuestas LLM del Juez;
+- challenges estructurados contra la evidencia recuperada;
+- reparación determinista de la interacción sacrificio → morir → Undying;
+- detección de mecánicas implícitas desde Oracle;
+- endpoint `POST /tactician/ask`;
+- selector Juez/Estratega en la UI;
+- detección inicial de roles y sinergias;
+- separación explícita entre autoridad factual y estratégica.
+
+Tactician no tiene acceso directo a Oracle, reglas ni rulings.

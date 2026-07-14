@@ -781,3 +781,21 @@ http://127.0.0.1:8000/ui
 ```
 
 La guía desde un clon limpio está en `docs/QUICKSTART.md`.
+
+## Tactician / Estratega v0.1
+
+```bash
+PYTHONPATH=. python -m tests.tactician.tactician_reviewer_test
+PYTHONPATH=. python -m tests.tactician.tactician_strategy_test
+PYTHONPATH=. python -m tests.tactician.tactician_core_test
+PYTHONPATH=. python -m tests.api.tactician_api_contract_test
+PYTHONPATH=. python -m tests.validation.oracle_derived_undying_test
+```
+
+Prueba manual de API:
+
+```bash
+curl -s http://127.0.0.1:8000/tactician/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"¿Young Wolf y Carrion Feeder forman un combo?"}' | python -m json.tool
+```
