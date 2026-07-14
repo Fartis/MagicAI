@@ -51,10 +51,34 @@ La cancelación detiene la espera del navegador. El backend o el proceso de Olla
 - copia de la respuesta en texto plano;
 - copia de respuesta y evidencia en un resumen legible;
 - exportación del último `JudgeResult` como JSON;
+- exportación de la conversación como caso exploratorio del Community Feedback Gauntlet, limitada a preguntas del usuario y marcada como evaluación sin aprendizaje;
 - apertura automática de las secciones que contienen evidencia;
 - jerarquía visual diferenciada para Oracle, reglas, rulings, supuestos y advertencias;
 - presentación de las consultas de recuperación dentro de los detalles técnicos;
 - controles responsive sin introducir frameworks frontend.
+
+### Sprint 11.2a — persistencia e historial
+
+- conversaciones guardadas en SQLite local por el backend;
+- panel lateral para abrir, renombrar, eliminar y refrescar conversaciones;
+- restauración del contexto y del último `JudgeResult` tras reiniciar FastAPI;
+- copia de recuperación rápida en `localStorage` sin convertirla en autoridad;
+- tema visual basado en la paleta del dashboard del Gauntlet.
+
+### Exportación para evaluación
+
+El botón **Crear caso Gauntlet** genera una plantilla `exploratory` con:
+
+```json
+{
+  "artifact_purpose": "evaluation",
+  "training_allowed": false,
+  "automatic_learning": false,
+  "automatic_promotion": false
+}
+```
+
+La exportación incluye las preguntas del usuario y procedencia local mínima. No incluye la respuesta del Juez como objetivo, no modifica el modelo y requiere revisión humana antes de cualquier promoción a regresión.
 
 ## Arquitectura
 
@@ -65,6 +89,7 @@ Browser
   ├── GET /ui/assets/*
   ├── GET /meta
   ├── GET /health
+  ├── GET/PATCH/DELETE /conversations/*
   └── POST /ask
           │
           ▼
@@ -79,7 +104,7 @@ La UI conserva una copia de recuperación rápida en `localStorage`, pero la aut
 
 La base se guarda por defecto en `~/.local/share/magicai/conversations.sqlite3` en Linux/WSL. Puede cambiarse con `MAGICAI_CONVERSATION_DB`.
 
-La primera beta no implementa cuentas, sincronización, base de datos de conversaciones ni acceso remoto seguro.
+La primera beta no implementa cuentas, sincronización entre equipos ni acceso remoto seguro.
 
 ## Seguridad de presentación
 
@@ -92,5 +117,5 @@ El frontend construye nodos DOM mediante `textContent`; no inserta las respuesta
 - filtros, búsqueda y orden avanzado del historial persistente;
 - búsqueda y copia de evidencia;
 - preferencias de apariencia y densidad;
-- exportación de conversaciones;
+- exportación de conversaciones completas en formatos de usuario;
 - soporte posterior para Deck Master y Deckbuilder sobre la misma shell modular.

@@ -586,6 +586,91 @@ rm -rf \
   resultado_dynamic_campaign
 ```
 
+
+---
+
+## 🧪 Community Feedback Gauntlet
+
+Crear un caso exploratorio seguro:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --create-template community_feedback/inbox/my_case.json
+```
+
+La plantilla queda marcada como evaluación: no permite entrenamiento, aprendizaje automático ni promoción automática.
+
+Ejecutar una campaña identificada y reanudable:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id judge-eval-001 \
+  --checkpoint-every 25
+```
+
+Continuar sin repetir los casos ya guardados:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id judge-eval-001 \
+  --resume
+```
+
+Reintentar únicamente excepciones anteriores:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id judge-eval-001 \
+  --resume \
+  --retry-errors
+```
+
+Ejecutar solo algunos identificadores:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id focused-eval-001 \
+  --case CF-LOCAL-001 \
+  --case CF-LOCAL-002
+```
+
+Los casos exploratorios siempre quedan como `REVIEW_REQUIRED`. Después de revalidarlos contra fuentes actuales y añadir un contrato semántico pueden ejecutarse en modo estricto:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input path/to/validated_cases \
+  --campaign-id validated-eval-001 \
+  --strict
+```
+
+La salida se guarda en `resultado_community_feedback/<campaign-id>/` e incluye manifiesto reproducible, progreso, resultados por caso, errores reintentables, agrupación por familia, comandos de replay y paquetes de revisión.
+
+Los hashes de CR, Oracle, rulings y symbology se calculan por defecto. Para una comprobación rápida:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id smoke-eval-001 \
+  --skip-source-hashes
+```
+
+Validar la infraestructura sin depender de Ollama:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_loader_test
+PYTHONPATH=. python -m tests.quality.community_feedback_execution_test
+PYTHONPATH=. python -m tests.quality.community_feedback_reports_test
+PYTHONPATH=. python -m tests.quality.community_feedback_diagnostics_test
+PYTHONPATH=. python -m tests.quality.community_feedback_campaign_test
+PYTHONPATH=. python -m tests.ui.ui_feedback_export_test
+```
+
+No incluyas usuarios, datos personales, publicaciones completas ni respuestas literales del foro. Consulta `docs/COMMUNITY_FEEDBACK_GAUNTLET.md`.
+
 ---
 
 ## 🗄️ Backup

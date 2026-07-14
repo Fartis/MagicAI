@@ -318,6 +318,29 @@ Inspiración visual: dashboard del Gauntlet actual, adaptado a una experiencia c
 - ajustes del usuario;
 - experiencia móvil ampliada.
 
+### Research C1 — Community Feedback Gauntlet ✅
+
+- entrada manual de escenarios parafraseados;
+- modo exploratorio que nunca produce un falso `PASS`;
+- captura completa de `JudgeResult`, estado conversacional y evidencias;
+- exportación segura desde la UI, limitada a preguntas del usuario;
+- paquetes de revisión compartibles;
+- promoción posterior al mismo contrato semántico de Open Judge;
+- sin crawling, importación masiva ni autoridad factual comunitaria.
+
+### Research C1.1 — Evaluation Campaign Runner ✅
+
+- contrato explícito `artifact_purpose=evaluation`;
+- entrenamiento, aprendizaje y promoción automática bloqueados;
+- campañas identificadas, reanudables y con resultados por caso escritos atómicamente;
+- reintento selectivo de excepciones mediante `--retry-errors`;
+- huellas de las definiciones para impedir mezclar casos editados;
+- manifiesto con Git, modelo, runtime y snapshots SHA-256 de CR, Oracle, rulings y symbology;
+- progreso recuperable, comandos de replay y agrupación diagnóstica por familia;
+- preservación de las decisiones humanas al regenerar paquetes de revisión.
+
+La ingestión automatizada de JudgeApps o Reddit queda separada y condicionada a permisos explícitos. Este track no sustituye la hoja de ruta de UI y solo genera interrupciones cuando detecta fallos críticos o de prioridad media-alta.
+
 Los cambios fuera de esta ruta solo interrumpirán el sprint cuando sean críticos o de prioridad media-alta.
 
 ---

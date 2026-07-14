@@ -48,6 +48,7 @@ def test_copy_and_export_controls_use_the_last_structured_result() -> None:
         "copy-answer-button",
         "copy-evidence-button",
         "export-result-button",
+        "export-feedback-button",
     ):
         attributes = parser.attributes_by_id[control_id]
         assert attributes.get("type") == "button"
@@ -60,7 +61,17 @@ def test_copy_and_export_controls_use_the_last_structured_result() -> None:
     assert "function exportLastResult()" in javascript
     assert 'new Blob([payload], {type: "application/json;charset=utf-8"})' in javascript
     assert "magicai-judge-result-${formatExportTimestamp(new Date())}.json" in javascript
-    assert "JSON.stringify(state.lastResult, null, 2)" in javascript
+    assert "function downloadJson(value, filename)" in javascript
+    assert "function exportFeedbackCase()" in javascript
+    assert "magicai-community-feedback-${timestamp}.json" in javascript
+    assert 'artifact_purpose: "evaluation"' in javascript
+    assert "training_allowed: false" in javascript
+    assert "automatic_learning: false" in javascript
+    assert "automatic_promotion: false" in javascript
+    assert 'mode: "exploratory"' in javascript
+    assert 'paraphrased: true' in javascript
+    assert 'contains_verbatim_quote: false' in javascript
+    assert 'contains_personal_data: false' in javascript
 
 
 def test_evidence_sections_open_from_actual_content() -> None:

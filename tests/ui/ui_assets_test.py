@@ -48,6 +48,8 @@ def test_index_exposes_chat_and_evidence_contract() -> None:
         "copy-answer-button",
         "copy-evidence-button",
         "export-result-button",
+        "export-feedback-button",
+        "feedback-export-notice",
         "cards-list",
         "rules-list",
         "rulings-list",

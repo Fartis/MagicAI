@@ -41,6 +41,9 @@ MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el 
 - Historial persistente de conversaciones en SQLite local, con apertura, renombrado y borrado desde la UI.
 - Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
 - Open Judge Gauntlet con contratos semánticos para conversaciones reales.
+- Community Feedback Gauntlet para ejecutar casos manuales y parafraseados antes de promoverlos a regresiones validadas.
+- Campañas de evaluación reanudables, con persistencia atómica, reintento de excepciones y manifiesto de fuentes.
+- Exportación directa desde la UI de una conversación problemática como caso exploratorio reproducible, sin respuestas objetivo ni aprendizaje automático.
 
 ### Alcance de cartas
 
@@ -77,7 +80,7 @@ FAIL                           0
 
 Esta cifra describe una matriz controlada y reproducible sin regresiones. No significa que estén cubiertas todas las cartas, reglas o interacciones posibles de Magic.
 
-Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado y [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta.
+Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado, [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta y [docs/COMMUNITY_FEEDBACK_GAUNTLET.md](docs/COMMUNITY_FEEDBACK_GAUNTLET.md) para incorporar manualmente escenarios reales sin rastrear foros.
 
 ---
 
@@ -301,7 +304,25 @@ PYTHONPATH=. python -m tests.api.judge_result_schema_test
 PYTHONPATH=. python -m tests.quality.open_judge_contract_test
 PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
 PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+PYTHONPATH=. python -m tests.quality.community_feedback_loader_test
+PYTHONPATH=. python -m tests.quality.community_feedback_campaign_test
+PYTHONPATH=. python -m tests.ui.ui_feedback_export_test
 ```
+
+Community Feedback Campaign Runner:
+
+```bash
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id judge-eval-001
+
+PYTHONPATH=. python -m tests.quality.community_feedback_test \
+  --input community_feedback/inbox \
+  --campaign-id judge-eval-001 \
+  --resume
+```
+
+Estas campañas son solo de evaluación: no entrenan el modelo, no modifican pesos y no promocionan casos automáticamente.
 
 Open Judge Gauntlet:
 
@@ -367,10 +388,10 @@ MagicAI/
 
 ## Evolución prevista · Planned evolution
 
-1. Validar la persistencia real y el nuevo historial gestionable de la UI beta.
+1. Usar campañas de evaluación largas para detectar familias reales de fallos del Juez.
 2. Continuar el pulido visual y la experiencia móvil a partir de uso real.
-3. Añadir preferencias de usuario y mejorar la experiencia móvil.
-4. Ampliar cobertura del Juez únicamente según fallos reales de prioridad suficiente.
+3. Añadir búsqueda de historial y preferencias de usuario.
+4. Ampliar cobertura del Juez únicamente mediante cambios genéricos guiados por fallos revisados.
 5. Preparar instalación y distribución reproducibles.
 6. Añadir Deck Master y Deckbuilder sobre la misma UI, respetando la autoridad factual del Juez.
 

@@ -91,6 +91,7 @@ function captureElements() {
     "copy-answer-button",
     "copy-evidence-button",
     "export-result-button",
+    "export-feedback-button",
     "evidence-sections",
     "cards-count",
     "cards-list",
@@ -132,6 +133,7 @@ function bindEvents() {
   elements["copy-answer-button"].addEventListener("click", () => void copyLastAnswer());
   elements["copy-evidence-button"].addEventListener("click", () => void copyLastEvidence());
   elements["export-result-button"].addEventListener("click", exportLastResult);
+  elements["export-feedback-button"].addEventListener("click", exportFeedbackCase);
 
   for (const button of document.querySelectorAll(".suggestion")) {
     button.addEventListener("click", () => {
@@ -821,7 +823,7 @@ function configureEvidenceSections({cards, rules, rulings, assumptions, warnings
 }
 
 function setResultActionsEnabled(enabled) {
-  for (const id of ["copy-answer-button", "copy-evidence-button", "export-result-button"]) {
+  for (const id of ["copy-answer-button", "copy-evidence-button", "export-result-button", "export-feedback-button"]) {
     elements[id].disabled = !enabled;
   }
 }
@@ -887,17 +889,88 @@ function exportLastResult() {
     return;
   }
 
-  const payload = JSON.stringify(state.lastResult, null, 2);
+  downloadJson(
+    state.lastResult,
+    `magicai-judge-result-${formatExportTimestamp(new Date())}.json`,
+  );
+  showToast("JudgeResult exportado en JSON.", "info");
+}
+
+function exportFeedbackCase() {
+  const userMessages = state.messages
+    .filter(message => message?.role === "user" && typeof message.text === "string")
+    .map(message => message.text.trim())
+    .filter(Boolean);
+
+  if (!userMessages.length || !state.lastResult) {
+    showToast("No hay una conversación para convertir en caso Gauntlet.", "warning");
+    return;
+  }
+
+  const now = new Date();
+  const timestamp = formatExportTimestamp(now);
+  const caseId = `CF-UI-${timestamp}`;
+  const firstQuestion = userMessages[0];
+  const payload = {
+    schema_version: "1.0",
+    artifact_purpose: "evaluation",
+    training_allowed: false,
+    automatic_learning: false,
+    automatic_promotion: false,
+    id: caseId,
+    title: buildFeedbackTitle(firstQuestion),
+    mode: "exploratory",
+    source: {
+      platform: "manual",
+      url: "",
+      topic_id: "",
+      published_at: "",
+      retrieved_at: now.toISOString(),
+      paraphrased: true,
+      contains_verbatim_quote: false,
+      contains_personal_data: false,
+      notes: "Generado desde una conversación local de la UI. Verifica que las preguntas estén parafraseadas antes de ejecutar o compartir el caso.",
+    },
+    review: {
+      status: "unreviewed",
+      rules_version: "",
+      validated_at: "",
+      expected_summary: "",
+      notes: `Último JudgeResult observado: status=${state.lastResult.status || ""}; origin=${state.lastResult.origin || ""}. Describe aquí por qué sospechas que la respuesta necesita revisión.`,
+    },
+    tags: ["ui-feedback", "manual-feedback"],
+    turns: userMessages.map((question, index) => ({
+      id: `${caseId}-${String(index + 1).padStart(2, "0")}`,
+      question,
+      notes: "",
+    })),
+  };
+
+  downloadJson(payload, `magicai-community-feedback-${timestamp}.json`);
+  showToast("Caso exploratorio Gauntlet exportado.", "info");
+}
+
+function buildFeedbackTitle(question) {
+  const normalized = String(question || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) {
+    return "Caso manual desde la UI";
+  }
+  return normalized.length <= 90 ? normalized : `${normalized.slice(0, 87)}…`;
+}
+
+function downloadJson(value, filename) {
+  const payload = JSON.stringify(value, null, 2);
   const blob = new Blob([payload], {type: "application/json;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `magicai-judge-result-${formatExportTimestamp(new Date())}.json`;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  showToast("JudgeResult exportado en JSON.", "info");
 }
 
 function formatExportTimestamp(date) {

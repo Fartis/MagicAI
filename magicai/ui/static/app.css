@@ -718,6 +718,16 @@ h3 {
   opacity: 0.42;
 }
 
+.evaluation-notice {
+  margin: 0;
+  padding: 0.7rem 1rem 0.85rem;
+  color: var(--faint);
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(96, 165, 250, 0.035);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
 .status-row {
   flex-wrap: wrap;
   gap: 0.45rem;

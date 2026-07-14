@@ -120,7 +120,13 @@
         <button id="export-result-button" class="compact-button" type="button" disabled>
           Exportar JSON
         </button>
+        <button id="export-feedback-button" class="compact-button" type="button" disabled title="Exporta solo las preguntas del usuario como evaluación">
+          Crear caso Gauntlet
+        </button>
       </div>
+      <p id="feedback-export-notice" class="evaluation-notice">
+        Los casos exportados sirven para evaluación y revisión humana. No entrenan al modelo ni se promocionan automáticamente.
+      </p>
 
       <div id="evidence-sections" class="evidence-sections" hidden>
         <details id="cards-section" open>

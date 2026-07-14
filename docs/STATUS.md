@@ -1,7 +1,7 @@
 # 📊 Estado actual de MagicAI
 
 > Snapshot de desarrollo: **v0.1.0-alpha**
-> Última actualización documental: **13 de julio de 2026**
+> Última actualización documental: **14 de julio de 2026**
 
 [Español](#-estado-del-proyecto) · [English](#-project-status)
 
@@ -32,6 +32,9 @@ No se considera un producto final porque aún faltan mayor cobertura guiada por 
 - Replay de fallos dinámicos.
 - Campañas multisemilla y cobertura acumulada.
 - Open Judge Gauntlet con 11 conversaciones, 27 turnos y contratos semánticos.
+- Community Feedback Gauntlet con entrada manual parafraseada, modo exploratorio `REVIEW_REQUIRED` y promoción posterior a contrato validado.
+- Evaluation Campaign Runner reanudable, con checkpoints atómicos, reintento de errores y manifiesto reproducible.
+- Exportación desde la UI de los turnos del usuario como caso exploratorio seguro, marcado como evaluación y sin respuestas objetivo.
 - Clasificación separada de fallos de contexto, retrieval, contradicción y alucinación.
 - `JudgeResult` con estado, origen, confianza, autoridad y evidencia de cartas y reglas.
 - Trazabilidad del origen de respuesta en informes Open Judge.
@@ -173,6 +176,8 @@ brawl
 - El soporte principal y mejor probado es el español; el inglés dispone de soporte parcial.
 - La UI beta ya dispone de cancelación, timeout, desambiguación interactiva, copia/exportación, historial SQLite gestionable y presentación accesible. Falta seguir puliendo móvil, búsqueda de historial y ajustes de usuario.
 - La baseline debe repetirse después de cambios que afecten al Juez o a sus contratos; los cambios puramente visuales se validan con tests de UI y smoke tests de API.
+- Los casos comunitarios no se importan ni se consideran autoridad: entran manualmente, sin datos personales ni texto completo, y solo se versionan después de revalidarlos contra CR, Oracle y rulings actuales.
+- Las campañas de feedback no entrenan el modelo, no modifican pesos y no promocionan resultados automáticamente; los fallos se convierten en cambios humanos de código y regresiones revisadas.
 
 ### Definición de “Juez finalizado y funcional”
 
@@ -261,3 +266,14 @@ Pendiente para cerrar 11.1: revisión visual en navegador real, captura para REA
 - elecciones hechas al resolver tratadas de forma independiente para copia y original;
 - validador que rechaza respuestas genéricas de prioridad que no contesten al escenario;
 - regresión basada en una consulta real con Braids, Arisen Nightmare.
+
+## Research C1.1 — campañas de evaluación reanudables ✅
+
+- manifiesto `evaluation` con entrenamiento, aprendizaje y promoción automática desactivados;
+- persistencia atómica por caso en `completed/` y `execution_errors/`;
+- `--resume` sin repetición de casos completados;
+- `--retry-errors` para repetir únicamente excepciones;
+- huellas de casos y snapshots SHA-256 de fuentes locales;
+- `findings_by_family.json`, `replay_commands.txt` y progreso recuperable;
+- decisiones humanas de los paquetes de revisión preservadas entre checkpoints;
+- UI consolidada con historial SQLite, cancelación y exportación segura al Gauntlet.
