@@ -18,6 +18,7 @@ SCRYFALL_FILE = (
 
 _cards = None
 _card_index = None
+_loaded_source = None
 
 
 def _supported_legality_count(card: dict) -> int:
@@ -50,16 +51,40 @@ def _preferred_card(candidates: list[dict]) -> dict:
     )
 
 
-def load_cards():
-    """Load the supported ordinary-paper Oracle corpus once."""
+def configure_card_source(path: str | Path) -> Path:
+    """Select the Oracle bulk file used by runtime card lookup.
+
+    Dynamic campaigns may override the generator corpus.  Runtime lookup must
+    use that exact same file, especially in forked workers, or a scenario can be
+    generated from one Oracle snapshot and answered from another.
+    """
+
+    global SCRYFALL_FILE, _cards, _card_index, _loaded_source
+    resolved = Path(path).resolve()
+    if Path(SCRYFALL_FILE).resolve() != resolved:
+        SCRYFALL_FILE = resolved
+        _cards = None
+        _card_index = None
+        _loaded_source = None
+    return resolved
+
+
+def load_cards(source_file: str | Path | None = None):
+    """Load the supported ordinary-paper Oracle corpus once per source file."""
 
     global _cards
     global _card_index
+    global _loaded_source
 
-    if _cards is not None:
+    if source_file is not None:
+        configure_card_source(source_file)
+    resolved_source = Path(SCRYFALL_FILE).resolve()
+    if _cards is not None and _loaded_source == resolved_source:
         return _cards
 
-    with open(SCRYFALL_FILE, encoding="utf-8") as f:
+    _cards = None
+    _card_index = None
+    with resolved_source.open(encoding="utf-8") as f:
         raw_cards = json.load(f)
 
     _cards = [
@@ -82,13 +107,15 @@ def load_cards():
         name: _preferred_card(candidates)
         for name, candidates in candidates_by_name.items()
     }
+    _loaded_source = resolved_source
 
     excluded_count = len(raw_cards) - len(_cards)
 
     print(
         f"[MagicAI] Indexed {len(_card_index)} card names "
         f"from {len(_cards)} supported cards "
-        f"({excluded_count} supplemental/out-of-scope objects excluded)."
+        f"({excluded_count} supplemental/out-of-scope objects excluded) "
+        f"from {resolved_source}."
     )
 
     return _cards

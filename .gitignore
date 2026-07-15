@@ -220,3 +220,16 @@ node_modules/
 # Git metadata accidentally included in exported source archives
 # -----------------------------------------------------------------------------
 .git/
+
+# Manual community feedback drafts and generated reports.
+/community_feedback/inbox/*
+!/community_feedback/inbox/.gitkeep
+/community_feedback/reports/*
+!/community_feedback/reports/.gitkeep
+/resultado_community_feedback/
+
+# Large dynamic development campaigns generated locally.
+/resultado_dynamic-giant-*/
+
+# Exhaustive Oracle evaluation sweeps.
+/resultado_oracle_exhaustive*/

@@ -167,6 +167,12 @@ def validate_answer(answer: str, knowledge: str) -> list[str]:
             "The answer adds an unasked self-sacrifice edge case."
         )
 
+    if _fails_to_answer_copied_ability_source_removal(answer, knowledge):
+
+        violations.append(
+            "The answer is incomplete for a copied ability whose source leaves the battlefield."
+        )
+
 
     if _has_card_support(knowledge):
 
@@ -175,8 +181,101 @@ def validate_answer(answer: str, knowledge: str) -> list[str]:
             for violation in violations
             if _is_hard_violation(violation)
         ]
-        
+
+    # Concept-specific factual guards run after generic evidence filters. A
+    # well-sourced answer can still contradict Ward's actual procedure.
+    violations.extend(_ward_semantic_violations(answer, knowledge))
+    violations.extend(_source_independence_semantic_violations(answer, knowledge))
+
+    return list(dict.fromkeys(violations))
+
+
+def _ward_semantic_violations(answer: str, knowledge: str) -> list[str]:
+    question = _normalize_match_text(_extract_question(knowledge))
+    if not re.search(r"\bward\b", question):
+        return []
+
+    text = _normalize_match_text(answer)
+    violations: list[str] = []
+    if re.search(r"\bward\s+se\s+activa\b|\bse\s+activa\s+ward\b", text):
+        violations.append("The answer incorrectly describes Ward as an activated ability.")
+    if any(marker in text for marker in (
+        "responder durante su resolucion",
+        "responder durante la resolucion de ward",
+        "respond during its resolution",
+    )):
+        violations.append("The answer incorrectly allows responses during Ward resolution.")
+    if any(marker in text for marker in (
+        "pagar para evitar que el hechizo se resuelva",
+        "paga para evitar que el hechizo se resuelva",
+        "pay to stop the spell from resolving",
+    )):
+        violations.append("The answer misstates what paying the Ward cost prevents.")
+
+    if not any(marker in text for marker in (
+        "habilidad disparada",
+        "habilidad desencadenada",
+        "triggered ability",
+    )):
+        violations.append("The answer does not identify Ward as a triggered ability.")
+    if "pila" not in text and "stack" not in text:
+        violations.append("The answer does not place Ward on the stack.")
+    if "contrarrest" not in text and "counter" not in text:
+        violations.append("The answer does not explain Ward's countering effect.")
+    if not (
+        any(marker in text for marker in (
+            "si no paga",
+            "si no se paga",
+            "a menos que pague",
+            "unless that player pays",
+            "unless its controller pays",
+        ))
+        or re.search(r"\bsi\b[^.]{0,100}\bno\s+paga\b", text)
+    ):
+        violations.append("The answer does not link Ward's countering effect to nonpayment.")
     return violations
+
+
+
+def _source_independence_semantic_violations(answer: str, knowledge: str) -> list[str]:
+    question = _normalize_match_text(_extract_question(knowledge))
+    if not (
+        "fuente" in question
+        and ("pila" in question or "destruy" in question or "elimin" in question)
+    ):
+        return []
+
+    text = _normalize_match_text(answer)
+    violations: list[str] = []
+    if "no fue uno de los objetos sacrificados" in question and not any(marker in text for marker in (
+        "no fue uno de los objetos sacrificados",
+        "no fue sacrificada para pagar",
+        "si se hubiera sacrificado la fuente",
+        "si hubieras sacrificado la propia fuente",
+    )):
+        violations.append(
+            "The answer omits that the source was not used to pay an optional sacrifice cost."
+        )
+    if "ninguno de los objetivos" in question and not any(marker in text for marker in (
+        "ninguno de los objetivos era la fuente",
+        "si la fuente hubiera sido objetivo",
+        "si la fuente hubiera sido también el único objetivo",
+        "si la fuente hubiera sido tambien el unico objetivo",
+        "si la fuente fuese objetivo",
+        "objetivo ilegal",
+        "todos sus objetivos",
+    )):
+        violations.append(
+            "The answer omits the separate target-legality consequence if the source were a target."
+        )
+    return violations
+
+def _normalize_match_text(text: str) -> str:
+    value = (text or "").casefold()
+    replacements = str.maketrans({
+        "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u",
+    })
+    return " ".join(value.translate(replacements).split())
 
 
 def _looks_incomplete(answer: str) -> bool:
@@ -574,7 +673,9 @@ def _mentions_response_during_resolution(answer: str, knowledge: str) -> bool:
     bad_patterns = [
         "durante la resolución del hechizo original",
         "durante la resolución",
+        "durante su resolución",
         "during the resolution",
+        "during its resolution",
     ]
 
     if not any(pattern in lower for pattern in bad_patterns):
@@ -617,6 +718,98 @@ def _incorrectly_denies_response_before_resolution(
         pattern in lower
         for pattern in bad_patterns
     )
+
+def _fails_to_answer_copied_ability_source_removal(
+    answer: str,
+    knowledge: str,
+) -> bool:
+    question = _normalize_for_contract(_extract_question(knowledge))
+
+    mentions_copy = any(
+        marker in question
+        for marker in [
+            "copiar la habilidad",
+            "copio la habilidad",
+            "copia la habilidad",
+            "copia de la habilidad",
+            "habilidad copiada",
+            "copy the ability",
+            "copy of the ability",
+            "copied ability",
+        ]
+    )
+    mentions_original = any(
+        marker in question
+        for marker in [
+            "habilidad original",
+            "la original",
+            "suya propia",
+            "las dos",
+            "ambas",
+            "original ability",
+        ]
+    )
+    source_leaves = any(
+        marker in question
+        for marker in [
+            "sacrific",
+            "destruy",
+            "muere",
+            "exili",
+            "deja el campo",
+            "ya no esta",
+            "no estar",
+            "retir",
+            "elimin",
+        ]
+    )
+
+    if not (mentions_copy and mentions_original and source_leaves):
+        return False
+
+    lower = _normalize_for_contract(answer)
+    addresses_original = any(
+        marker in lower
+        for marker in [
+            "habilidad original se resuelve",
+            "original se resuelve",
+            "original permanece",
+            "original no desaparece",
+            "las dos se resuelven",
+            "ambas se resuelven",
+        ]
+    )
+    addresses_source = any(
+        marker in lower
+        for marker in [
+            "independientemente de su fuente",
+            "retirar su fuente no",
+            "eliminar su fuente no",
+            "sacrificar su fuente no",
+            "aunque la fuente ya no",
+            "aunque ya no este",
+            "no se contrarresta",
+            "no desaparece",
+        ]
+    )
+
+    return not (addresses_original and addresses_source)
+
+
+def _normalize_for_contract(text: str) -> str:
+    text = text.lower()
+    replacements = {
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+        "ü": "u",
+    }
+    for source, target in replacements.items():
+        text = text.replace(source, target)
+    return re.sub(r"\s+", " ", text).strip()
+
 
 def _is_hard_violation(violation: str) -> bool:
 

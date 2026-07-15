@@ -262,13 +262,20 @@ def run_case(
 
         answer = ""
         exception_text = ""
+        judge_result_payload = {}
 
         try:
 
-            answer = assistant.ask(
-                conversation,
-                question,
-            )
+            if hasattr(assistant, "ask_result"):
+                judge_result = assistant.ask_result(conversation, question)
+                answer = judge_result.answer
+                if hasattr(judge_result, "to_dict"):
+                    judge_result_payload = judge_result.to_dict()
+            else:
+                answer = assistant.ask(
+                    conversation,
+                    question,
+                )
 
         except Exception:
 
@@ -351,6 +358,7 @@ def run_case(
                 "failures": failures,
                 "warnings": warnings,
                 "exception": exception_text,
+                "judge_result": judge_result_payload,
                 "required_all": step.get(
                     "required_all",
                     [],

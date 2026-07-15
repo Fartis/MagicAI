@@ -396,7 +396,7 @@ QUALITY_CASES = [
                     "zona de mando",
                 ],
                 "required_any": [
-                    ["no exactamente", "no igual", "diferente"],
+                    ["no exactamente", "no igual", "diferente", "en cambio"],
                     ["reemplazo", "replacement"],
                 ],
                 "forbidden": [

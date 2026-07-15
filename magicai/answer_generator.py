@@ -1,3 +1,5 @@
+import os
+
 from magicai.llm.ollama import generate
 from magicai.prompts.answer import SYSTEM_PROMPT
 from magicai.validation import build_fallback_answer, validate_answer
@@ -6,6 +8,7 @@ from magicai.validation.oracle_renderer import render_oracle_relation_answer
 from magicai.validation.strategy_boundary import render_strategy_boundary_answer
 from magicai.validation.premise_guard import render_false_premise_answer
 from magicai.validation.rulings_renderer import render_rulings_answer
+from magicai.tactician.reviewer import review_judge_candidate
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -26,11 +29,13 @@ def generate_answer(knowledge: str) -> str:
 def generate_judge_result(knowledge: str, context=None):
     """Generate a structured, source-grounded Judge result."""
 
-    print("=" * 80)
-    print("KNOWLEDGE SENT TO ANSWER GENERATOR")
-    print("=" * 80)
-    print(knowledge)
-    print("=" * 80)
+    verbose = not _evaluation_quiet()
+    if verbose:
+        print("=" * 80)
+        print("KNOWLEDGE SENT TO ANSWER GENERATOR")
+        print("=" * 80)
+        print(knowledge)
+        print("=" * 80)
 
     question = getattr(context, "question", None) or _extract_question(knowledge)
 
@@ -98,7 +103,23 @@ def generate_judge_result(knowledge: str, context=None):
             confidence=JudgeConfidence.HIGH,
             context=context,
             warnings=[
-                "A strategic recommendation requires Deck Master; the Judge only validates recovered facts."
+                "A strategic recommendation requires Estratega; the Judge only validates recovered facts."
+            ],
+        )
+
+    if _deterministic_evaluation_only():
+        return build_judge_result(
+            question=question,
+            answer=(
+                "La auditoría determinista no encontró una respuesta verificable "
+                "para este caso y bloqueó deliberadamente el fallback al LLM."
+            ),
+            status=JudgeStatus.INSUFFICIENT_EVIDENCE,
+            origin=JudgeOrigin.SAFE_FALLBACK,
+            confidence=JudgeConfidence.LOW,
+            context=context,
+            warnings=[
+                "Deterministic evaluation blocked the LLM fallback. This is a coverage finding, not a factual answer."
             ],
         )
 
@@ -115,8 +136,13 @@ def generate_judge_result(knowledge: str, context=None):
             answer,
             knowledge,
         )
+        review = review_judge_candidate(
+            answer,
+            knowledge,
+            context=context,
+        )
 
-        if not violations:
+        if not violations and review.accepted and not review.challenges:
             return build_judge_result(
                 question=question,
                 answer=answer,
@@ -125,18 +151,59 @@ def generate_judge_result(knowledge: str, context=None):
                 confidence=JudgeConfidence.MEDIUM,
                 context=context,
                 validation_attempts=attempt,
+                reviewed_by=["tactician"],
+                authority_trace=[
+                    "judge:factual_evidence",
+                    "tactician:independent_review",
+                    "judge:final_authority",
+                ],
             )
 
+        if not violations and review.repaired_answer:
+            repaired_violations = validate_answer(
+                review.repaired_answer,
+                knowledge,
+            )
+            repaired_review = review_judge_candidate(
+                review.repaired_answer,
+                knowledge,
+                context=context,
+            )
+            if not repaired_violations and repaired_review.accepted:
+                return build_judge_result(
+                    question=question,
+                    answer=review.repaired_answer,
+                    status=JudgeStatus.ANSWERED,
+                    origin=JudgeOrigin.TACTICIAN_REPAIR,
+                    confidence=JudgeConfidence.HIGH,
+                    context=context,
+                    validation_attempts=attempt + 1,
+                    reviewed_by=["tactician"],
+                    review_challenges=[
+                        challenge.to_dict()
+                        for challenge in review.challenges
+                    ],
+                    authority_trace=[
+                        "judge:factual_evidence",
+                        "tactician:challenge",
+                        "judge:source_grounded_repair",
+                    ],
+                )
+
+        violations = list(dict.fromkeys(
+            [*violations, *review.violation_messages()]
+        ))
         last_violations = violations
 
-        print("=" * 80)
-        print(f"VALIDATION FAILED attempt {attempt}")
-        print("=" * 80)
+        if verbose:
+            print("=" * 80)
+            print(f"VALIDATION FAILED attempt {attempt}")
+            print("=" * 80)
 
-        for violation in violations:
-            print(f"- {violation}")
+            for violation in violations:
+                print(f"- {violation}")
 
-        print("=" * 80)
+            print("=" * 80)
 
         prompt = _build_retry_prompt(
             knowledge=knowledge,
@@ -213,3 +280,15 @@ def _build_retry_prompt(
         + "\n".join(f"- {violation}" for violation in violations)
         + "\n"
     )
+
+
+def _deterministic_evaluation_only() -> bool:
+    return os.getenv("MAGICAI_EVALUATION_DETERMINISTIC_ONLY", "").strip().casefold() in {
+        "1", "true", "yes", "on"
+    }
+
+
+def _evaluation_quiet() -> bool:
+    return os.getenv("MAGICAI_QUIET_EVALUATION", "").strip().casefold() in {
+        "1", "true", "yes", "on"
+    }

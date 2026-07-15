@@ -474,6 +474,88 @@ Stack
     )
 
 
+
+def test_copied_triggered_ability_survives_sacrificing_its_source():
+    knowledge = """
+QUESTION
+
+Si tengo la posibilidad de copiar la habilidad, la copia entra después de la original en la pila y sacrifico a Braids con la copia, ¿la habilidad original se resuelve normalmente aunque Braids ya no esté?
+
+============================================================
+CARDS
+
+Braids, Arisen Nightmare
+Mana Cost: {1}{B}{B}
+Legendary Creature — Nightmare
+
+At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.
+
+============================================================
+RULES
+
+113.7a
+Once activated or triggered, an ability exists on the stack independently of its source.
+
+405.5
+When all players pass in succession, the top (last-added) spell or ability on the stack resolves.
+
+608.2d
+If an effect offers choices not already made while putting it on the stack, the player announces these while applying the effect.
+
+707.10
+To copy an activated or triggered ability means to put a copy of it onto the stack. Choices that are normally made on resolution are not copied.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "copia",
+            "se resuelve primero",
+            "Braids",
+            "no desaparece",
+            "independientemente de su fuente",
+            "original se resuelve normalmente",
+            "otro permanente válido",
+            "si lo haces",
+        ],
+        "copied triggered ability source removal",
+    )
+    assert_not_contains(
+        answer,
+        [
+            "las habilidades desencadenadas se resuelven antes de la prioridad",
+            "la original no se resuelve",
+        ],
+        "copied triggered ability source removal",
+    )
+
+
+def test_copied_ability_renderer_requires_source_independence_evidence():
+    knowledge = """
+QUESTION
+
+Si copio una habilidad y sacrifico su fuente con la copia, ¿la original se resuelve?
+
+============================================================
+RULES
+
+405.5
+The top object on the stack resolves first.
+
+707.10
+To copy an ability means to put a copy of it onto the stack.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    if answer is not None:
+        raise AssertionError(
+            "copied ability renderer must require rule 113.7a and resolution-choice evidence"
+        )
+
 def test_activated_ability_exists_independently_of_source():
     knowledge = """
 QUESTION
@@ -491,6 +573,12 @@ Once activated or triggered, an ability exists on the stack independently of its
 
 405
 Stack
+
+608.2h
+An effect may use last known information about a source no longer in the expected zone.
+
+609.3
+An effect attempts to do as much as possible.
 """
 
     answer = render_rule_answer(knowledge)
@@ -527,6 +615,12 @@ Once activated or triggered, an ability exists on the stack independently of its
 
 405
 Stack
+
+608.2h
+An effect may use last known information about a source no longer in the expected zone.
+
+609.3
+An effect attempts to do as much as possible.
 """
 
     answer = render_rule_answer(knowledge)
@@ -561,6 +655,12 @@ Once activated or triggered, an ability exists on the stack independently of its
 
 405
 Stack
+
+608.2h
+An effect may use last known information about a source no longer in the expected zone.
+
+609.3
+An effect attempts to do as much as possible.
 
 117
 Timing and Priority
@@ -752,7 +852,7 @@ If a commander would be put into its owner's hand or library from anywhere, its 
     assert_contains(
         answer,
         [
-            "No exactamente",
+            "Sí",
             "mano",
             "biblioteca",
             "efecto de reemplazo",
@@ -788,6 +888,8 @@ Each deck has a legendary card designated as its commander. This designation is 
             "comandante",
             "carta",
             "zona de mando",
+            "propia designación",
+            "no por la copia",
         ],
         "copy commander designation",
     )
@@ -879,6 +981,71 @@ The term dies means “is put into a graveyard from the battlefield.”
         "sacrifice as cost death trigger",
     )
 
+
+def test_sacrifice_counts_as_dies_is_rendered_deterministically():
+    knowledge = """
+QUESTION
+
+¿Sacrificar una criatura cuenta como morir para sus habilidades?
+
+============================================================
+RULES
+
+701.21a
+To sacrifice a permanent, its controller moves it from the battlefield directly to its owner's graveyard.
+
+700.4
+The term dies means “is put into a graveyard from the battlefield.”
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "Sí",
+            "campo de batalla",
+            "cementerio",
+            "muere",
+            "cuando muera",
+            "sin ser lo mismo que destruir",
+        ],
+        "sacrifice counts as dies",
+    )
+
+
+def test_power_toughness_set_then_modify_uses_layers_7b_and_7c():
+    knowledge = """
+QUESTION
+
+Si un efecto fija la fuerza y resistencia de una criatura en 3/3 y otro le da +1/+1, ¿cuál se aplica primero?
+
+============================================================
+RULES
+
+613.4b
+Layer 7b: Effects that set power and/or toughness to a specific number or value are applied.
+
+613.4c
+Layer 7c: Effects and counters that modify power and/or toughness are applied.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "capa 7b",
+            "capa 7c",
+            "primero",
+            "+1/+1",
+            "después",
+        ],
+        "power toughness set then modify",
+    )
+
 def test_undying_sacrifice_is_rendered_deterministically():
     knowledge = """
 QUESTION
@@ -965,7 +1132,17 @@ After applying one effect, repeat the process until none remain.
     assert answer
     assert_contains(
         answer,
-        ["efectos de reemplazo", "contadores", "controlador", "elige", "orden", "4N"],
+        [
+            "efectos de reemplazo",
+            "contadores",
+            "precedencia",
+            "616.1",
+            "misma categoría",
+            "controlador",
+            "elige",
+            "orden",
+            "4N",
+        ],
         "counter replacement order",
     )
 
@@ -1152,6 +1329,185 @@ QUESTION
 
 ¿Cómo funciona Undying?
 
+============================================================
+RULES
+
+Undying
+
+702.93a
+Undying is a triggered ability. When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "habilidad disparada",
+            "muere",
+            "no tenía contadores +1/+1",
+            "vuelve",
+            "contador +1/+1",
+        ],
+        "direct Undying definition",
+    )
+
+
+def test_keyword_difference_uses_recovered_rules():
+    knowledge = """
+QUESTION
+
+¿Qué diferencias tienen?
+
+============================================================
+RULES
+
+Undying
+702.93a
+Undying is a triggered ability.
+
+Persist
+702.79a
+Persist is a triggered ability.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "Undying",
+            "Persist",
+            "+1/+1",
+            "-1/-1",
+            "muere",
+        ],
+        "keyword difference",
+    )
+
+
+def test_rule_followup_example_uses_active_undying_rule():
+    knowledge = """
+QUESTION
+
+¿Puedes explicarla con un ejemplo?
+
+============================================================
+RULES
+
+Undying
+702.93a
+Undying is a triggered ability.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "Por ejemplo",
+            "muere",
+            "cementerio",
+            "+1/+1",
+            "vuelve",
+        ],
+        "rule follow-up example",
+    )
+
+def test_undying_with_existing_positive_counter_is_deterministic():
+    knowledge = """
+QUESTION
+
+¿Y si además tiene un contador +1/+1?
+
+============================================================
+RULES
+
+Undying
+702.93a
+Undying is a triggered ability. When this permanent is put into a graveyard from the battlefield, if it had no +1/+1 counters on it, return it to the battlefield with a +1/+1 counter on it.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "ya tiene un contador +1/+1",
+            "Undying no se dispara",
+            "permanece en el cementerio",
+        ],
+        "Undying with existing +1/+1 counter",
+    )
+
+
+def test_london_mulligan_definition_is_deterministic():
+    knowledge = """
+QUESTION
+
+Explícame el London Mulligan.
+
+============================================================
+RULES
+
+103.5
+Each player draws a number of cards equal to their starting hand size, which is normally seven. To take a mulligan, a player draws a new hand equal to their starting hand size, then puts a number of those cards equal to the number of mulligans taken on the bottom of their library.
+
+103.5c
+In a multiplayer game and in any Brawl game, the first mulligan a player takes doesn't count toward the number of cards that player will put on the bottom of their library.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "siete cartas",
+            "fondo",
+            "mulligans",
+            "multijugador",
+            "primer mulligan es gratuito",
+        ],
+        "London Mulligan definition",
+    )
+
+
+def test_london_mulligan_draw_followup_is_deterministic():
+    knowledge = """
+QUESTION
+
+¿Cuántas cartas robo después?
+
+============================================================
+RULES
+
+103.5
+Each player draws a number of cards equal to their starting hand size, which is normally seven. To take a mulligan, a player draws a new hand equal to their starting hand size, then puts a number of those cards equal to the number of mulligans taken on the bottom of their library.
+
+103.5c
+In a multiplayer game, the first mulligan doesn't count.
+"""
+
+    answer = render_rule_answer(knowledge)
+
+    assert answer
+    assert_contains(
+        answer,
+        [
+            "tamaño inicial",
+            "siete cartas",
+            "fondo",
+            "primero es gratuito",
+        ],
+        "London Mulligan draw follow-up",
+    )
+
+
 def main():
     tests = [
         test_no_priority_during_resolution,
@@ -1166,6 +1522,8 @@ def main():
         test_priority_returns_between_stack_objects,
         test_opponent_can_respond_before_spell_resolves,
         test_ward_is_triggered_and_can_be_responded_to,
+        test_copied_triggered_ability_survives_sacrificing_its_source,
+        test_copied_ability_renderer_requires_source_independence_evidence,
         test_activated_ability_exists_independently_of_source,
         test_source_independence_uses_type_neutral_wording,
         test_source_independence_wins_over_resolution_wording,
@@ -1177,6 +1535,8 @@ def main():
         test_copy_of_commander_is_not_commander,
         test_elenda_commander_death_uses_recovered_card_name,
         test_sacrifice_as_cost_death_trigger_is_rendered_deterministically,
+        test_sacrifice_counts_as_dies_is_rendered_deterministically,
+        test_power_toughness_set_then_modify_uses_layers_7b_and_7c,
         test_undying_sacrifice_is_rendered_deterministically,
         test_exile_does_not_trigger_undying,
         test_multiple_counter_replacement_effects_choose_order,

@@ -1,5 +1,11 @@
 import re
 
+from magicai.oracle_abilities import (
+    contains_quoted_mana_ability,
+    extract_activated_abilities,
+    extract_quoted_activated_abilities,
+)
+
 
 """
 Temporary deterministic renderer for high-risk MTG rule concepts.
@@ -18,6 +24,9 @@ Preferred direction:
 
 _RULE_MARKERS = {
     "abilities": ["113", "113."],
+    "source_independence": ["113.7a"],
+    "source_information": ["608.2h"],
+    "do_possible": ["609.3"],
     "priority": ["117", "117."],
     "stack": ["405", "405."],
     "untap": ["502", "502."],
@@ -26,6 +35,7 @@ _RULE_MARKERS = {
     "activated": ["602", "602."],
     "mana": ["605", "605."],
     "resolution": ["608", "608."],
+    "resolution_choices": ["608.2d"],
     "casting": ["601", "601."],
     "ward": ["702.21", "702.21a"],
     "cleanup": ["514", "514."],
@@ -46,6 +56,7 @@ _RULE_MARKERS = {
     "type_layer": ["613.1d"],
     "ability_layer": ["613.1f"],
     "pt_set_layer": ["613.4b"],
+    "pt_modify_layer": ["613.4c"],
     "layer_continuity": ["613.6"],
     "dependency": ["613.8"],
     "basic_land_type": ["305.7"],
@@ -53,6 +64,7 @@ _RULE_MARKERS = {
     "persist": ["702.79", "702.79a"],
     "undying": ["702.93", "702.93a"],
     "mulligan": ["103.5", "103.5a", "103.5b", "103.5c", "103.5d"],
+    "copy_ability": ["707.10"],
 }
 
 
@@ -72,6 +84,24 @@ def render_rule_answer(knowledge: str) -> str | None:
 
     if not q:
         return None
+
+    undying_sacrifice_card = _oracle_derived_undying_sacrifice_card(q, knowledge)
+    if undying_sacrifice_card:
+        required_rules = ["undying", "dies", "sacrifice"]
+        if _has_rules(knowledge, required_rules):
+            card_name = undying_sacrifice_card
+            if _question_states_plus_counter(q):
+                return (
+                    f"Al sacrificar {card_name}, pasa del campo de batalla al "
+                    "cementerio y muere. Como ya tenía un contador +1/+1, "
+                    "Undying no se dispara y no vuelve por esa habilidad."
+                )
+            return (
+                f"Al sacrificar {card_name}, pasa del campo de batalla al "
+                "cementerio y muere. Si no tenía contadores +1/+1, Undying se "
+                "dispara y, cuando esa habilidad se resuelve, vuelve al campo "
+                "de batalla bajo el control de su propietario con un contador +1/+1."
+            )
 
     if _is_undying_existing_counter_question(q) and _has_rules(
         knowledge,
@@ -214,9 +244,11 @@ def render_rule_answer(knowledge: str) -> str | None:
             return (
                 "Son efectos de reemplazo, no habilidades disparadas, y no van a "
                 "la pila. Si ambos intentan modificar el mismo evento de poner "
-                "contadores, el controlador del objeto afectado o el jugador "
-                "afectado elige el orden en que se aplican. Se aplica uno, se "
-                "recalcula el evento y después puede aplicarse el otro. Si los dos "
+                "contadores, se respeta primero la precedencia de categorías de "
+                "la regla 616.1. Entre los efectos aplicables de la misma categoría, "
+                "el controlador del objeto afectado o el jugador afectado elige el "
+                "orden. Se aplica uno, se recalcula el evento y después puede "
+                "aplicarse el otro. Si los dos "
                 "duplican ese mismo evento, N contadores pasan a 2N y luego a 4N."
             )
 
@@ -226,9 +258,11 @@ def render_rule_answer(knowledge: str) -> str | None:
                 "al entrar son efectos de reemplazo. No se disparan; se aplican "
                 "sin utilizar la pila y modifican el propio evento de entrada. "
                 "Si hay varios "
-                "aplicables, el controlador del permanente que entra —o su "
-                "propietario si aún no tiene controlador— elige el "
-                "orden; se aplica uno y después se vuelve a comprobar cuáles "
+                "aplicables, primero se respeta la precedencia de categorías de "
+                "la regla 616.1. Entre efectos de la misma categoría, el controlador "
+                "del permanente que entra —o su propietario si aún no tiene "
+                "controlador— elige el orden; se aplica uno y después se vuelve a "
+                "comprobar cuáles "
                 "siguen siendo aplicables. Por tanto, no se limitan a sumarse ni "
                 "se anulan entre sí por defecto: cada uno reemplaza sucesivamente "
                 "el evento modificado."
@@ -236,9 +270,11 @@ def render_rule_answer(knowledge: str) -> str | None:
 
         return (
             "Son efectos de reemplazo que modifican el mismo evento de poner "
-            "contadores. El controlador del objeto afectado o el jugador afectado "
-            "elige el orden: se aplica uno, se recalcula el evento y después se "
-            "aplican sucesivamente los que sigan siendo válidos. No son "
+            "contadores. Primero se respeta la precedencia de categorías de la "
+            "regla 616.1; entre los efectos aplicables de la misma categoría, el "
+            "controlador del objeto afectado o el jugador afectado elige el orden. "
+            "Se aplica uno, se recalcula el evento y después se aplican "
+            "sucesivamente los que sigan siendo válidos. No son "
             "habilidades disparadas."
         )
 
@@ -309,6 +345,29 @@ def render_rule_answer(knowledge: str) -> str | None:
             "sacrificio."
         )
 
+    if _is_sacrifice_counts_as_dies_question(q) and _has_rules(
+        knowledge,
+        ["sacrifice", "dies"],
+    ):
+        return (
+            "Sí. Sacrificar una criatura hace que su controlador la mueva del "
+            "campo de batalla al cementerio. Como «muere» significa ir del "
+            "campo de batalla a un cementerio, esa criatura muere y las "
+            "habilidades apropiadas de «cuando muera» pueden dispararse. "
+            "Sacrificarla sigue sin ser lo mismo que destruirla."
+        )
+
+    if _is_power_toughness_set_then_modify_question(q) and _has_rules(
+        knowledge,
+        ["pt_set_layer", "pt_modify_layer"],
+    ):
+        return (
+            "Primero se aplica el efecto que fija o establece la fuerza y la "
+            "resistencia en la capa 7b. Después se aplica el modificador +1/+1 "
+            "en la capa 7c. Por tanto, el valor fijado se calcula antes y luego "
+            "recibe la modificación +1/+1."
+        )
+
     if _is_commander_copy_zone_question(q) and _has_rules(
         knowledge,
         ["commander_designation"],
@@ -316,9 +375,12 @@ def render_rule_answer(knowledge: str) -> str | None:
         return (
             "No. La designación de comandante pertenece a la carta concreta "
             "elegida al construir el mazo y no es un valor copiable. Un permanente "
-            "que solo es una copia de tu comandante no es esa carta comandante, "
-            "así que esa copia no puede moverse a la zona de mando mediante la "
-            "regla de comandante; si muere, va al cementerio normalmente."
+            "que solo es una copia de tu comandante no se convierte por ello en "
+            "comandante, así que no puede ir a la zona de mando por copiar esa "
+            "condición; si muere, va al cementerio normalmente. La salvedad es que "
+            "la carta que está copiando podría haber sido ya designada como "
+            "comandante: en ese caso sigue siéndolo por su propia designación, no "
+            "por la copia."
         )
 
     if _is_commander_hand_library_question(q) and _has_rules(
@@ -326,12 +388,12 @@ def render_rule_answer(knowledge: str) -> str | None:
         ["commander_hand_library", "commander_graveyard_exile"],
     ):
         return (
-            "No exactamente: funciona de forma diferente. Si tu comandante fuera "
-            "a tu mano o biblioteca desde cualquier zona, puedes aplicar un efecto "
-            "de reemplazo y ponerlo en la zona de mando en su lugar, por lo que no "
-            "llega a la mano o biblioteca. En cambio, si va al cementerio o al "
-            "exilio, primero llega a esa zona y después puedes moverlo a la zona "
-            "de mando cuando se comprueban las acciones basadas en estado."
+            "Sí. Si tu comandante fuera a tu mano o biblioteca desde cualquier "
+            "zona, puedes aplicar un efecto de reemplazo y ponerlo en la zona de "
+            "mando en su lugar, por lo que no llega a la mano o biblioteca. En "
+            "cambio, si va al cementerio o al exilio, primero llega a esa zona y "
+            "después puedes moverlo a la zona de mando cuando se comprueban las "
+            "acciones basadas en estado."
         )
 
     if _is_commander_death_zone_question(q) and _has_rules(
@@ -349,6 +411,40 @@ def render_rule_answer(knowledge: str) -> str | None:
             "Moverla después no deshace que haya muerto."
         )
 
+    if _is_copied_ability_source_removed_question(q) and _has_rules(
+        knowledge,
+        [
+            "source_independence",
+            "copy_ability",
+            "resolution_choices",
+            "stack",
+        ],
+    ):
+        card_name = _extract_primary_card_name(knowledge)
+        source_name = card_name or "la fuente de la habilidad"
+        answer = (
+            "Sí. La copia se pone en la pila por encima de la habilidad "
+            "original y, si nadie añade nada más, se resuelve primero. "
+            f"Aunque sacrifiques {source_name} al resolver la copia, la "
+            "habilidad original no desaparece ni se contrarresta: una "
+            "habilidad activada o disparada que ya está en la pila existe "
+            "independientemente de su fuente. Después de que termine la copia, "
+            "el jugador activo recibe prioridad y, si nadie responde, la habilidad "
+            "original se resuelve normalmente. "
+            "Las elecciones que se hacen durante la resolución se realizan de "
+            "nuevo e independientemente para la copia y para la original."
+        )
+
+        if _oracle_has_optional_sacrifice_condition(knowledge):
+            answer += (
+                " Por tanto, al resolver la habilidad original puedes "
+                "sacrificar otro permanente válido. Si no sacrificas ninguno, "
+                "no ocurre la parte de esa instancia condicionada por "
+                "«si lo haces»."
+            )
+
+        return answer
+
     if _is_sacrifice_as_cost_death_trigger(q) and _has_rules(
         knowledge,
         ["casting", "priority", "triggered", "stack"],
@@ -365,14 +461,65 @@ def render_rule_answer(knowledge: str) -> str | None:
 
     if _is_source_independence_question(q) and _has_rules(
         knowledge,
-        ["abilities", "stack"],
+        ["source_independence", "stack", "source_information", "do_possible"],
     ):
-        return (
+        ability = _quoted_source_ability(knowledge, question)
+        dependency = ability.source_dependency if ability else ""
+        answer = (
             "No. La habilidad no se contrarresta por destruir o retirar su "
-            "fuente. Una vez activada, existe en la pila de forma independiente "
-            "de su fuente; permanece en la pila y normalmente seguirá "
-            "resolviéndose."
+            "fuente. Una vez activada, existe de forma independiente de su "
+            "fuente y permanece en la pila. "
         )
+        if dependency == "source_object":
+            answer += (
+                "La habilidad seguirá resolviéndose y hará todo lo posible, pero "
+                "si intenta modificar a la propia fuente y ese objeto ya no está, "
+                "esa parte puede no hacer nada."
+            )
+        elif dependency == "information":
+            answer += (
+                "La habilidad seguirá resolviéndose y hará todo lo posible. Si "
+                "necesita información de la fuente, puede usar su última "
+                "información conocida."
+            )
+        elif dependency == "source_bound_effect":
+            answer += (
+                "La habilidad seguirá resolviéndose, pero el efecto está ligado "
+                "a que la fuente exista como un objeto identificable. Si ya no "
+                "existe, esa instrucción puede resultar imposible o no afectar "
+                "al juego; no se recupera el objeto mediante última información "
+                "conocida."
+            )
+        elif dependency == "partial":
+            answer += (
+                "La habilidad seguirá resolviéndose y hará todo lo posible: las "
+                "partes independientes todavía ocurren; una parte que necesite "
+                "información puede usar su última información conocida, y una "
+                "parte que intente modificar la fuente desaparecida puede no "
+                "hacer nada."
+            )
+        else:
+            answer += (
+                "La habilidad seguirá resolviéndose y hará todo lo posible sin "
+                "necesitar que la fuente siga en el campo de batalla."
+            )
+
+        if ability and ability.source_may_be_removed_as_cost and not ability.source_removed_as_cost:
+            answer += (
+                " La pregunta aclara que la propia fuente no fue uno de los "
+                "objetos sacrificados para pagar el coste. Si se hubiera "
+                "sacrificado la fuente para pagarlo, ya habría abandonado el "
+                "campo de batalla durante la activación, aunque la habilidad "
+                "seguiría existiendo en la pila."
+            )
+        if ability and ability.source_may_be_target:
+            answer += (
+                " Si la fuente hubiera sido también el único objetivo de la "
+                "habilidad, al dejar de ser un objetivo legal la habilidad no se "
+                "resolvería por no conservar ningún objetivo legal. Eso sería una "
+                "consecuencia de las reglas de objetivos, no de perder su fuente."
+            )
+        return answer
 
     if _is_no_priority_during_resolution(q) and _has_rules(
         knowledge,
@@ -408,11 +555,14 @@ def render_rule_answer(knowledge: str) -> str | None:
         ["ward", "triggered", "stack"],
     ):
         return (
-            "Ward es una habilidad disparada; no es un coste adicional para "
-            "lanzar el hechizo. Cuando el permanente se convierte en objetivo de un "
-            "hechizo o habilidad que controla un oponente, Ward se dispara y su "
-            "habilidad se pone en la pila. Sí, los jugadores reciben prioridad y "
-            "pueden responder a esa habilidad antes de que se resuelva."
+            "Sí. Ward es una habilidad disparada; no es un coste adicional para "
+            "lanzar el hechizo. Cuando el permanente se convierte en objetivo de "
+            "un hechizo o habilidad que controla un oponente, Ward se dispara y "
+            "su habilidad se pone en la pila. Los jugadores reciben prioridad y "
+            "pueden responder mientras Ward está en la pila, antes de que se "
+            "resuelva. Al resolverse, el controlador del hechizo o habilidad que "
+            "hizo objetivo puede pagar el coste de Ward; si no paga, Ward "
+            "contrarresta ese hechizo o habilidad."
         )
 
     if _is_ability_taxonomy_question(q) and _has_rules(
@@ -771,10 +921,49 @@ def _has_rules(
     return True
 
 
+def _quoted_source_ability(knowledge: str, question: str):
+    card_name = _extract_primary_card_name(knowledge) or ""
+    type_line = ""
+    for name, entry_text in _extract_card_entries(knowledge):
+        if not card_name or name == card_name:
+            type_line = entry_text.splitlines()[0].strip() if entry_text else ""
+            if not card_name:
+                card_name = name
+            break
+    abilities = extract_quoted_activated_abilities(
+        question,
+        card_name=card_name,
+        type_line=type_line,
+    )
+    return abilities[0] if abilities else None
+
+
+def _quoted_source_dependency(knowledge: str, question: str) -> str:
+    ability = _quoted_source_ability(knowledge, question)
+    return ability.source_dependency if ability else ""
+
+
 def _supports_mana_ability(
     knowledge: str,
     question: str,
 ) -> bool:
+    cards_block = _extract_cards_block(knowledge)
+    card_entries = _extract_card_entries(knowledge)
+    oracle_sources = [entry_text for _name, entry_text in card_entries]
+    if not oracle_sources and cards_block:
+        oracle_sources = [cards_block]
+    oracle_abilities = [
+        ability
+        for source in oracle_sources
+        for ability in extract_activated_abilities(source)
+    ]
+    mana_abilities = [ability for ability in oracle_abilities if ability.is_mana]
+
+    # Exact quoted ability wording is preferred for generated scenarios. The
+    # quoted parser ignores reminder text and abilities granted to other objects.
+    if contains_quoted_mana_ability(question):
+        return bool(mana_abilities)
+
     explicit_mana_reference = any(
         marker in question
         for marker in [
@@ -786,49 +975,11 @@ def _supports_mana_ability(
             "produce mana",
         ]
     )
-
-    cards_block = _extract_cards_block(knowledge)
-
     if not cards_block:
         return explicit_mana_reference
-
-    activated_lines = []
-    mana_lines = []
-
-    for raw_line in cards_block.splitlines():
-        line = _normalize(raw_line)
-
-        if not _looks_like_oracle_activated_ability(line):
-            continue
-
-        activated_lines.append(line)
-
-        if not any(
-            marker in line
-            for marker in [
-                "add ",
-                "anade ",
-                "agrega ",
-                "produce ",
-            ]
-        ):
-            continue
-
-        if "target" in line or "objetivo" in line:
-            continue
-
-        if re.match(r"^[+-]\d+\s*:", line):
-            continue
-
-        mana_lines.append(line)
-
     if explicit_mana_reference:
-        return bool(mana_lines)
-
-    # When the user refers only to "the ability" of a recovered card, avoid
-    # selecting a mana ability if the card has several activated abilities.
-    return len(activated_lines) == 1 and len(mana_lines) == 1
-
+        return bool(mana_abilities)
+    return len(oracle_abilities) == 1 and len(mana_abilities) == 1
 
 def _looks_like_oracle_activated_ability(line: str) -> bool:
     if ":" not in line:
@@ -863,6 +1014,80 @@ def _is_sacrifice_as_cost_death_trigger(question: str) -> bool:
             or "persist" in question
         )
     )
+
+
+def _is_copied_ability_source_removed_question(question: str) -> bool:
+    mentions_copy = any(
+        marker in question
+        for marker in [
+            "copiar la habilidad",
+            "copio la habilidad",
+            "copia la habilidad",
+            "copia de la habilidad",
+            "habilidad copiada",
+            "copy the ability",
+            "copy of the ability",
+            "copied ability",
+        ]
+    )
+
+    mentions_original = any(
+        marker in question
+        for marker in [
+            "habilidad original",
+            "la original",
+            "original se resuelve",
+            "original resuelve",
+            "suya propia",
+            "las dos",
+            "ambas",
+            "original ability",
+        ]
+    )
+
+    source_leaves = any(
+        marker in question
+        for marker in [
+            "sacrific",
+            "destruy",
+            "muere",
+            "exili",
+            "deja el campo",
+            "ya no esta",
+            "no estar",
+            "retir",
+            "elimin",
+        ]
+    )
+
+    asks_resolution = any(
+        marker in question
+        for marker in [
+            "se resuelve",
+            "resuelve normalmente",
+            "sigue resolviendo",
+            "se resuelven",
+            "resolveria",
+            "resolverá",
+            "resolve",
+        ]
+    )
+
+    return mentions_copy and mentions_original and source_leaves and asks_resolution
+
+
+def _oracle_has_optional_sacrifice_condition(knowledge: str) -> bool:
+    entries = _extract_card_entries(knowledge)
+
+    for _name, card_text in entries:
+        oracle = _normalize(card_text)
+        if (
+            ("may sacrifice" in oracle or "puedes sacrificar" in oracle)
+            and ("if you do" in oracle or "si lo haces" in oracle)
+        ):
+            return True
+
+    return False
 
 
 def _is_no_priority_during_resolution(question: str) -> bool:
@@ -925,6 +1150,8 @@ def _is_source_independence_question(question: str) -> bool:
             "activo una habilidad",
             "activa una habilidad",
             "activar una habilidad",
+            "activo en",
+            "habilidad «",
             "activated ability",
         ]
     )
@@ -952,6 +1179,10 @@ def _is_source_independence_question(question: str) -> bool:
             "permanece",
             "que pasa",
             "qué pasa",
+            "que puede hacer",
+            "qué puede hacer",
+            "resolverse",
+            "resuelve",
         ]
     )
 
@@ -1323,6 +1554,33 @@ def _is_cleanup_priority_question(question: str) -> bool:
     )
 
 
+
+def _is_sacrifice_counts_as_dies_question(question: str) -> bool:
+    return (
+        "sacrific" in question
+        and not any(marker in question for marker in ["coste", "costo", "cost"])
+        and any(marker in question for marker in ["muere", "morir", "dies"])
+        and any(marker in question for marker in ["cuenta", "considera", "es "])
+    )
+
+
+def _is_power_toughness_set_then_modify_question(question: str) -> bool:
+    mentions_set = any(
+        marker in question
+        for marker in [
+            "fija su fuerza y resistencia",
+            "fija la fuerza y resistencia",
+            "establece su fuerza y resistencia",
+            "set power and toughness",
+            "base power and toughness",
+        ]
+    )
+    mentions_modify = any(
+        marker in question
+        for marker in ["+1/+1", "-1/-1", "gets +", "gets -"]
+    )
+    return mentions_set and mentions_modify
+
 def _is_sacrifice_not_destroy_question(question: str) -> bool:
     return (
         "sacrific" in question
@@ -1390,4 +1648,59 @@ def _is_commander_death_zone_question(question: str) -> bool:
         and mentions_command_zone
         and mentions_death_or_graveyard
         and asks_about_consequence
+    )
+
+
+def _oracle_derived_undying_sacrifice_card(
+    question: str,
+    knowledge: str,
+) -> str | None:
+    """Return the sacrificed Undying card using question + recovered Oracle."""
+
+    if "persist" in question:
+        return None
+    if not any(marker in question for marker in ("sacrific", "sacrifice")):
+        return None
+
+    candidates: list[tuple[str, str]] = []
+    for name, card_text in _extract_card_entries(knowledge):
+        normalized_text = _normalize(card_text)
+        if "creature" in normalized_text and "undying" in normalized_text:
+            candidates.append((name, _normalize(name)))
+
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        candidate_name, normalized_name = candidates[0]
+        all_named_cards = [
+            (_normalize(name), name)
+            for name, _ in _extract_card_entries(knowledge)
+            if _normalize(name) in question
+        ]
+        sacrifice_tail = re.split(r"sacrific(?:o|as|a|ar|e|ed|ing)?", question, maxsplit=1)[-1]
+        explicitly_sacrificed = [
+            original
+            for normalized, original in all_named_cards
+            if normalized in sacrifice_tail[:120]
+        ]
+        if explicitly_sacrificed and candidate_name not in explicitly_sacrificed:
+            return None
+        return candidate_name
+
+    sacrifice_tail = re.split(r"sacrific(?:o|as|a|ar|e|ed|ing)?", question, maxsplit=1)[-1]
+    for name, normalized_name in candidates:
+        if normalized_name in sacrifice_tail[:120]:
+            return name
+
+    return None
+
+
+def _question_states_plus_counter(question: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:con|tiene|tenia|had|with)\s+(?:un|a|one)?\s*"
+            r"(?:contador\s*)?\+1/\+1|"
+            r"with\s+(?:a|one)\s*\+1/\+1\s+counter",
+            question,
+        )
     )

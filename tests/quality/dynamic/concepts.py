@@ -15,22 +15,22 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
             QuestionTemplate(
                 id="mana-response",
                 text=(
-                    "Cuando activo la habilidad de maná de {card}, "
-                    "¿mi rival puede responder antes de que se añada el maná?"
+                    "{card} tiene esta habilidad activada: «{ability}». "
+                    "¿es una habilidad de maná y puede mi rival responder?"
                 ),
             ),
             QuestionTemplate(
                 id="mana-stack",
                 text=(
-                    "¿La habilidad de maná de {card} usa la pila o se "
+                    "Para {card}, la habilidad «{ability}» ¿usa la pila o se "
                     "resuelve sin dar oportunidad de responder?"
                 ),
             ),
             QuestionTemplate(
                 id="mana-priority",
                 text=(
-                    "Activo {card} para añadir maná. ¿Se pone esa habilidad "
-                    "en la pila y recibimos prioridad para responder?"
+                    "Activo en {card} exactamente «{ability}». ¿Se pone esa "
+                    "habilidad en la pila y recibimos prioridad?"
                 ),
             ),
         ),
@@ -91,46 +91,57 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
             ),
         ),
         contract=EvaluationContract(
-            required_all=("Ward", "pila"),
+            required_all=("Ward", "pila", "contrarresta"),
             required_any=(
                 ("habilidad disparada", "habilidad desencadenada", "trigger"),
                 ("responder", "prioridad"),
+                (
+                    "si no paga",
+                    "si no se paga",
+                    "a menos que pague",
+                    "unless that player pays",
+                ),
             ),
             recommended_any=(("sí", "si"),),
             forbidden=(
                 "Ward es un coste adicional",
                 "Ward es un costo adicional",
+                "Ward se activa",
+                "se activa Ward",
                 "no se puede responder porque es un coste",
                 "no usa la pila",
+                "responder durante su resolución",
+                "responder durante la resolución de Ward",
+                "pagar para evitar que el hechizo se resuelva",
             ),
         ),
     ),
     DynamicConcept(
         id="source_independence",
         name="Activated ability survives its source",
-        selector="activated_nonmana",
+        selector="source_independence_ability",
         tags=("dynamic", "activated-ability", "source", "stack"),
         templates=(
             QuestionTemplate(
                 id="source-destroyed",
                 text=(
-                    "Activo una habilidad de {card} y después destruyen ese "
-                    "permanente. ¿La habilidad desaparece de la pila?"
+                    "Activo en {card} la habilidad «{ability}» y después destruyen "
+                    "ese permanente. ¿La habilidad desaparece de la pila?"
                 ),
             ),
             QuestionTemplate(
                 id="source-removed",
                 text=(
-                    "Después de activar una habilidad de {card}, eliminan su "
-                    "fuente. ¿Eso contrarresta automáticamente la habilidad?"
+                    "Después de activar en {card} la habilidad «{ability}», eliminan "
+                    "su fuente. ¿Eso contrarresta automáticamente la habilidad?"
                 ),
             ),
             QuestionTemplate(
                 id="source-resolution",
                 text=(
-                    "Una habilidad activada de {card} ya está en la pila y "
-                    "destruyen la carta. ¿Se contrarresta o deja de resolverse "
-                    "por perder su fuente?"
+                    "La habilidad «{ability}» de {card} ya está en la pila y "
+                    "destruyen la fuente. ¿Se contrarresta o qué puede hacer al "
+                    "resolverse sin esa fuente?"
                 ),
             ),
         ),
@@ -145,6 +156,12 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
                     "seguirá resolviéndose",
                 ),
                 ("fuente", "origen"),
+                (
+                    "todo lo posible",
+                    "puede no hacer nada",
+                    "última información conocida",
+                    "ultima informacion conocida",
+                ),
             ),
             forbidden=(
                 "desaparece de la pila",
@@ -456,6 +473,12 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
                 ("no",),
                 ("carta", "designación", "no es un valor copiable"),
                 ("cementerio", "va al cementerio"),
+                (
+                    "ya era comandante",
+                    "designada como comandante",
+                    "por su propia designación",
+                    "por su propia designacion",
+                ),
             ),
             forbidden=(
                 "la copia también es comandante",
@@ -585,6 +608,7 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
                 ("controlador", "jugador afectado"),
                 ("elige", "decide"),
                 ("se aplica uno", "sucesivamente", "uno después"),
+                ("precedencia", "categoría", "categoria", "616.1"),
             ),
             forbidden=(
                 "son habilidades disparadas",
@@ -638,6 +662,87 @@ CONCEPTS: tuple[DynamicConcept, ...] = (
         ),
     )
 )
+
+
+def contract_for_scenario(
+    concept: DynamicConcept,
+    *,
+    source_dependency: str = "",
+    source_may_be_removed_as_cost: bool = False,
+    source_may_be_target: bool = False,
+) -> EvaluationContract:
+    """Return the semantic contract for one generated scenario.
+
+    Source-independence is not one factual family: an effect can be completely
+    independent, modify its own missing source, read information using LKI, or
+    contain both independent and source-dependent instructions.  Some costs can
+    optionally consume the source and some abilities can legally target it; the
+    answer must preserve those distinctions instead of treating source removal
+    as the only possible reason an ability might fail.
+    """
+
+    if concept.id != "source_independence":
+        return concept.contract
+
+    base = concept.contract
+    required_any = list(base.required_any)
+    if source_dependency == "source_object":
+        required_any.append((
+            "puede no hacer nada",
+            "esa parte puede no hacer nada",
+            "no puede modificar",
+            "ya no está",
+            "ya no esta",
+        ))
+    elif source_dependency == "information":
+        required_any.append((
+            "última información conocida",
+            "ultima informacion conocida",
+            "last known information",
+        ))
+    elif source_dependency == "source_bound_effect":
+        required_any.append((
+            "efecto está ligado",
+            "efecto esta ligado",
+            "objeto identificable",
+            "puede resultar imposible",
+            "source-bound",
+        ))
+    elif source_dependency == "partial":
+        required_any.append((
+            "parte",
+            "todo lo posible",
+            "puede no hacer nada",
+            "última información conocida",
+            "ultima informacion conocida",
+        ))
+
+    if source_may_be_removed_as_cost:
+        required_any.append((
+            "no fue uno de los objetos sacrificados",
+            "no fue sacrificada para pagar",
+            "si se hubiera sacrificado la fuente",
+            "si hubieras sacrificado la propia fuente",
+        ))
+    if source_may_be_target:
+        required_any.append((
+            "ninguno de los objetivos era la fuente",
+            "si la fuente hubiera sido objetivo",
+            "si la fuente hubiera sido también el único objetivo",
+            "si la fuente hubiera sido tambien el unico objetivo",
+            "si la fuente fuese objetivo",
+            "objetivo ilegal",
+            "todos sus objetivos",
+        ))
+
+    return EvaluationContract(
+        required_all=base.required_all,
+        required_any=tuple(required_any),
+        forbidden=base.forbidden,
+        recommended_all=base.recommended_all,
+        recommended_any=base.recommended_any,
+        soft_forbidden=base.soft_forbidden,
+    )
 
 
 _CONCEPT_INDEX = {

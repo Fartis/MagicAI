@@ -236,7 +236,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_any=(
                     ("Undying", "persistencia"),
                     ("Strangleroot Geist tiene prisa", "Geist tiene prisa", "prisa"),
-                    ("Deck Master", "estratégica", "estrategica"),
+                    ("Estratega", "estratégica", "estrategica"),
                     ("depende", "según", "en función"),
                 ),
                 recommended_any=(
@@ -257,7 +257,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 question="¿En qué mazos jugarías cada uno?",
                 required_all=("Young Wolf", "Strangleroot Geist"),
                 required_any=(
-                    ("Deck Master", "estratégica", "estrategica"),
+                    ("Estratega", "estratégica", "estrategica"),
                     ("depende", "formato", "plan de juego"),
                 ),
                 expected_cards=("Young Wolf", "Strangleroot Geist"),
@@ -294,7 +294,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_all=("Sol Ring",),
                 required_any=(
                     ("aceleración", "acelera", "maná rápidamente", "mana rapidamente"),
-                    ("Deck Master", "estratégica", "estrategica"),
+                    ("Estratega", "estratégica", "estrategica"),
                     ("depende", "formato", "plan de juego"),
                 ),
                 recommended_any=(
@@ -366,7 +366,7 @@ OPEN_JUDGE_CASES: tuple[OpenJudgeCase, ...] = (
                 required_all=("Korvold", "Prossh"),
                 required_any=(
                     ("depende", "según", "en función"),
-                    ("Deck Master", "estratégica", "estrategica"),
+                    ("Estratega", "estratégica", "estrategica"),
                     ("roba", "carta", "ventaja de cartas"),
                     ("Kobold", "fichas", "tokens"),
                 ),

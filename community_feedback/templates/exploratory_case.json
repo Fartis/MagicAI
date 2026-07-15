@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "artifact_purpose": "evaluation",
+  "training_allowed": false,
+  "automatic_learning": false,
+  "automatic_promotion": false,
+  "id": "CF-LOCAL-001",
+  "title": "Describe the interaction briefly",
+  "mode": "exploratory",
+  "source": {
+    "platform": "manual",
+    "url": "",
+    "topic_id": "",
+    "published_at": "",
+    "retrieved_at": "",
+    "paraphrased": true,
+    "contains_verbatim_quote": false,
+    "contains_personal_data": false,
+    "notes": "Optional minimal provenance. Do not paste usernames or full posts."
+  },
+  "review": {
+    "status": "unreviewed",
+    "rules_version": "",
+    "validated_at": "",
+    "expected_summary": "",
+    "notes": "Describe why the answer looks suspicious after running the case."
+  },
+  "tags": [
+    "manual-feedback"
+  ],
+  "turns": [
+    {
+      "id": "CF-LOCAL-001-01",
+      "question": "Write a paraphrased rules question here.",
+      "notes": "Optional context for the reviewer."
+    }
+  ]
+}

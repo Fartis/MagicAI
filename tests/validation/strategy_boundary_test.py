@@ -28,7 +28,7 @@ Artifact
     assert answer
     assert_contains(
         answer,
-        ["Sol Ring", "{1}", "{C}{C}", "aceleración", "Deck Master", "depende"],
+        ["Sol Ring", "{1}", "{C}{C}", "aceleración", "Estratega", "depende"],
         "Sol Ring strategy boundary",
     )
 
@@ -62,7 +62,7 @@ Sacrifice another creature: Prossh gets +1/+0 until end of turn.
     assert answer
     assert_contains(
         answer,
-        ["Korvold", "Prossh", "depende", "Deck Master", "roba", "Kobold"],
+        ["Korvold", "Prossh", "depende", "Estratega", "roba", "Kobold"],
         "Two-card strategy boundary",
     )
 
@@ -88,7 +88,7 @@ Artifact
     assert answer
     assert_contains(
         answer,
-        ["Sol Ring", "Commander", "Deck Master"],
+        ["Sol Ring", "Commander", "Estratega"],
         "Named format strategy boundary",
     )
 

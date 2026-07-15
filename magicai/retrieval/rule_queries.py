@@ -1,3 +1,4 @@
+from magicai.oracle_abilities import contains_quoted_mana_ability
 import re
 
 
@@ -413,6 +414,38 @@ def _rule_number_queries(question: str) -> list[str]:
                 number,
             )
 
+    if _is_copied_ability_source_removed_question(q):
+        # Highest-priority evidence for copied abilities whose source leaves
+        # the battlefield while the original ability remains on the stack.
+        add(
+            "707.10",
+            "113.7a",
+            "608.2d",
+            "405.5",
+            "117.3b",
+        )
+
+    if contains_quoted_mana_ability(q):
+        add(
+            "605",
+            "405",
+            "117",
+        )
+
+    if _is_exact_source_independence_question(q):
+        add(
+            "113.7a",
+            "608.2h",
+            "609.3",
+            "405",
+        )
+
+    if _is_power_toughness_set_then_modify_question(q):
+        add(
+            "613.4b",
+            "613.4c",
+        )
+
     # Las interacciones que cambian tipos, habilidades o fuerza/resistencia
     # necesitan capas antes que reglas incidentales de lanzamiento o Commander.
     if _is_characteristic_continuous_effect_question(q):
@@ -618,7 +651,7 @@ def _rule_number_queries(question: str) -> list[str]:
             "117",
         )
 
-    if _contains_any(q, ["sacrificar", "sacrificio", "sacrifice"]):
+    if _contains_any(q, ["sacrific"]):
 
         add(
             "701.21",
@@ -768,6 +801,8 @@ def _rule_number_queries(question: str) -> list[str]:
             "fuente",
             "origen",
             "mato",
+            "mata",
+            "matado",
             "matar",
             "destruyen esa criatura",
             "destruir esa criatura",
@@ -814,6 +849,17 @@ def _specialized_queries(question: str) -> list[str]:
     q = question.lower()
 
     queries = []
+
+    if _is_copied_ability_source_removed_question(_normalize_question(q)):
+        queries.extend(
+            [
+                "707.10 copy activated or triggered ability choices made on resolution are not copied",
+                "113.7a ability on stack exists independently of its source",
+                "608.2d choices made while resolving a spell or ability",
+                "405.5 top object on stack resolves first",
+                "117.3b active player receives priority after an ability resolves",
+            ]
+        )
 
     if _is_characteristic_continuous_effect_question(q):
 
@@ -1057,6 +1103,15 @@ def _specialized_queries(question: str) -> list[str]:
             ]
         )
 
+
+    if contains_quoted_mana_ability(q):
+        queries.extend(
+            [
+                "605 activated mana ability could add mana no target not loyalty ability",
+                "605.3 mana ability resolves immediately without using the stack",
+            ]
+        )
+
     if _contains_any(
         q,
         [
@@ -1183,6 +1238,8 @@ def _specialized_queries(question: str) -> list[str]:
             "fuente",
             "origen",
             "mato",
+            "mata",
+            "matado",
             "matar",
             "destruyen esa criatura",
             "destruir esa criatura",
@@ -1195,6 +1252,16 @@ def _specialized_queries(question: str) -> list[str]:
             [
                 "activated ability on the stack exists independently of its source",
                 "removing source of activated ability from battlefield does not counter ability",
+            ]
+        )
+
+
+    if _is_exact_source_independence_question(_normalize_question(q)):
+        queries.extend(
+            [
+                "113.7a ability on stack exists independently of its source last known information",
+                "608.2h effect uses last known information for missing source",
+                "609.3 effect does only as much as possible",
             ]
         )
 
@@ -1350,6 +1417,68 @@ def _mentions_basic_land_type_interaction(question: str) -> bool:
     )
 
 
+
+
+def _is_power_toughness_set_then_modify_question(question: str) -> bool:
+    q = _normalize_question(question)
+    mentions_set = _contains_any(
+        q,
+        [
+            "fija su fuerza y resistencia",
+            "fija la fuerza y resistencia",
+            "establece su fuerza y resistencia",
+            "set power and toughness",
+            "base power and toughness",
+        ],
+    )
+    mentions_modify = _contains_any(
+        q,
+        [
+            "+1/+1",
+            "-1/-1",
+            "modifica su fuerza",
+            "gets +",
+            "gets -",
+        ],
+    )
+    return mentions_set and mentions_modify
+
+def _is_exact_source_independence_question(question: str) -> bool:
+    q = _normalize_question(question)
+    mentions_ability = "habilidad" in q or "ability" in q
+    source_removed = _contains_any(
+        q,
+        [
+            "fuente",
+            "source",
+            "destruyen",
+            "destruido",
+            "destruida",
+            "eliminan",
+            "mato",
+            "mata",
+            "matado",
+            "matar",
+            "retiran",
+            "removed",
+            "destroyed",
+        ],
+    )
+    asks_stack_result = _contains_any(
+        q,
+        [
+            "pila",
+            "stack",
+            "contrarresta",
+            "counter",
+            "resolverse",
+            "resuelve",
+            "disappears",
+            "desaparece",
+        ],
+    )
+    return mentions_ability and source_removed and asks_stack_result
+
 def _mentions_mana_value(question: str) -> bool:
 
     if _contains_any(
@@ -1371,6 +1500,66 @@ def _mentions_mana_value(question: str) -> bool:
             question,
         )
     )
+
+
+def _is_copied_ability_source_removed_question(question: str) -> bool:
+    mentions_copy = _contains_any(
+        question,
+        [
+            "copiar la habilidad",
+            "copio la habilidad",
+            "copia la habilidad",
+            "copia de la habilidad",
+            "habilidad copiada",
+            "copy the ability",
+            "copy of the ability",
+            "copied ability",
+        ],
+    )
+
+    mentions_original = _contains_any(
+        question,
+        [
+            "habilidad original",
+            "la original",
+            "original se resuelve",
+            "original resuelve",
+            "suya propia",
+            "las dos",
+            "ambas",
+            "original ability",
+        ],
+    )
+
+    source_leaves = _contains_any(
+        question,
+        [
+            "sacrific",
+            "destruy",
+            "muere",
+            "exili",
+            "deja el campo",
+            "ya no esta",
+            "no estar",
+            "retir",
+            "elimin",
+        ],
+    )
+
+    asks_resolution = _contains_any(
+        question,
+        [
+            "se resuelve",
+            "resuelve normalmente",
+            "sigue resolviendo",
+            "se resuelven",
+            "resolveria",
+            "resolvera",
+            "resolve",
+        ],
+    )
+
+    return mentions_copy and mentions_original and source_leaves and asks_resolution
 
 
 def _is_sacrifice_as_cost_death_trigger_question(question: str) -> bool:

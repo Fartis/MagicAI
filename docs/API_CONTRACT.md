@@ -1,69 +1,52 @@
-# API contract
-
-MagicAI exposes a versioned additive HTTP contract for the Judge beta UI.
+# MagicAI HTTP contract
 
 ## Versions
 
-- Project version: package release version.
-- API contract version: compatibility policy for HTTP endpoints.
-- JudgeResult schema version: shape and semantics of structured Judge answers.
-
-`GET /meta` exposes all three values. Every successful `/ask` response and every structured error includes `schema_version`.
-
-## Compatibility policy
-
-Within JudgeResult schema `1.x`:
-
-- existing fields will not be removed or renamed;
-- new optional fields may be added;
-- enum values may only be added when clients can safely treat unknown values as informational;
-- `answer` and `session_id` remain available for legacy clients.
-
-A future incompatible change requires schema `2.0`.
+- API contract: `1.2`
+- JudgeResult schema: `1.0`
+- TacticianResult schema: `0.2`
 
 ## Endpoints
 
-### `GET /meta`
+```text
+GET    /                         service metadata
+GET    /meta                     contracts, profiles, codenames, capabilities
+GET    /health                   source and Ollama health
+POST   /ask                      Judge with optional automatic handoff
+POST   /tactician/ask            explicit Tactician request
+GET    /conversations            local history
+GET    /conversations/{id}       conversation detail
+PATCH  /conversations/{id}       rename conversation
+DELETE /conversations/{id}       delete conversation
+```
 
-Returns contract versions, supported Judge statuses, origins and confidence values.
-
-### `GET /health`
-
-Returns:
-
-- whether required factual sources are ready;
-- whether all optional sources are available;
-- whether Ollama and the configured model are available;
-- whether the service has full functionality or is operating in degraded deterministic mode.
-
-`ready=true` means the required local factual sources are usable.
-`full_service=true` additionally requires Ollama and the configured model.
-
-### `POST /ask`
-
-Returns a versioned `JudgeResult` plus `session_id`.
-
-### Errors
-
-Errors use this envelope:
+## Ask request
 
 ```json
 {
-  "schema_version": "1.0",
-  "error": {
-    "code": "invalid_request",
-    "message": "The request payload is not valid.",
-    "retryable": false,
-    "details": []
-  }
+  "question": "And does it combo with Ghave and Ashnod's Altar?",
+  "session_id": "optional-session-id",
+  "auto_handoff": true
 }
 ```
 
-Known codes include:
+`auto_handoff` defaults to `true`. Set it to `false` only for diagnostics that need the raw `strategy_required` Judge boundary.
 
-- `invalid_request`
-- `llm_unavailable`
-- `http_error`
-- `internal_error`
+## Strategic response fields
 
-The UI should use `code` for behavior and `message` for display.
+A handoff response remains compatible with the Judge evidence fields and may add:
+
+```json
+{
+  "authority": "tactician",
+  "strategy_intent": "combo_detection",
+  "combo_classification": "infinite_combo",
+  "combo_steps": [],
+  "outcomes": [],
+  "synergies": [],
+  "risks": [],
+  "inherited_cards": ["Young Wolf"],
+  "judge_queries": [],
+  "judge_result": {}
+}
+```

@@ -131,6 +131,20 @@ def build_campaign_payload(
     failures = sum(run["failures"] for run in run_summaries)
     warnings = sum(run["warnings"] for run in run_summaries)
     cases_executed = sum(run["cases"] for run in run_summaries)
+    origin_counts: Counter[str] = Counter()
+    timing_sums: Counter[str] = Counter()
+    timing_counts: Counter[str] = Counter()
+    llm_calls = 0
+    for run in run_summaries:
+        origin_counts.update(run.get("origin_counts", {}))
+        timing_sums.update(run.get("timing_sums", {}))
+        timing_counts.update(run.get("timing_counts", {}))
+        llm_calls += int(run.get("llm_calls", 0))
+    timing_means = {
+        name: round(timing_sums[name] / timing_counts[name], 6)
+        for name in sorted(timing_sums)
+        if timing_counts[name]
+    }
 
     return {
         "schema_version": CAMPAIGN_SCHEMA_VERSION,
@@ -145,6 +159,11 @@ def build_campaign_payload(
         "status": campaign_status(failures=failures, warnings=warnings),
         "elapsed_seconds": round(total_elapsed, 6),
         "coverage": aggregate_coverage(scenarios, concepts=concepts),
+        "origin_counts": dict(sorted(origin_counts.items())),
+        "llm_calls": llm_calls,
+        "timing_means": timing_means,
+        "timing_sums": {name: round(value, 6) for name, value in sorted(timing_sums.items())},
+        "timing_counts": dict(sorted(timing_counts.items())),
         "runs": run_summaries,
     }
 
@@ -185,6 +204,9 @@ def _render_txt(payload: dict[str, Any]) -> str:
         f"Warnings         : {payload['warnings']}",
         f"Time             : {payload['elapsed_seconds']:.2f}s",
         f"Status           : {payload['status']}",
+        f"LLM calls        : {payload.get('llm_calls', 0)}",
+        f"Origins          : {payload.get('origin_counts', {})}",
+        f"Timing means     : {payload.get('timing_means', {})}",
         "",
         "COVERAGE",
         "-" * 80,
