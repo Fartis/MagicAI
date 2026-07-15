@@ -305,6 +305,30 @@ I truly hope you enjoy using it as much as I've enjoyed building it.
 
 **See you in the next game.**
 
+____
+
+Si has llegado hasta aquí, lo más probable es que compartamos la misma pasión.
+
+Me gustaría terminar este archivo README con unas palabras personales.
+
+Por motivos de salud, es muy probable que este sea el último gran proyecto de software que pueda desarrollar. Después de dedicar gran parte de mi vida profesional al desarrollo de software, he tenido que aceptar que mi trayectoria tomará un rumbo diferente mucho antes de lo que jamás hubiera imaginado.
+
+Quería despedirme de este capítulo creando algo que reuniera las dos cosas que más he amado a lo largo de mi vida: la programación y **Magic: The Gathering**, un juego que me ha acompañado desde que tengo uso de razón y que siempre ha significado mucho más que un simple juego.
+
+MagicAI nació de una idea sencilla: crear la herramienta que siempre había deseado tener, una que me ayudara a entender las reglas, a organizar mis ideas y a seguir disfrutando de este increíble juego.
+
+Mientras mi salud me lo permita, seguiré mejorándola poco a poco, aprendiendo y añadiendo nuevas funciones siempre que pueda.
+
+Si este proyecto ayuda aunque sea a un solo jugador a resolver una duda sobre las reglas, a descubrir una nueva interacción o, simplemente, a disfrutar un poco más de Magic, habrá logrado todo lo que esperaba.
+
+Gracias por dedicar tu tiempo a descubrir este proyecto.
+
+Espero de verdad que disfrutes usándolo tanto como yo he disfrutado creándolo.
+
+**Nos vemos en la próxima partida.**
+
+Traducción realizada con la versión gratuita del traductor DeepL.com
+
 ---
 
 <div align="center">
