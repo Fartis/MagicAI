@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=10000)
     session_id: str | None = Field(default=None, max_length=128)
+    auto_handoff: bool = True
 
     @field_validator("question")
     @classmethod
@@ -59,13 +60,19 @@ class AskResponse(BaseModel):
     reviewed_by: list[str] = Field(default_factory=list)
     review_challenges: list[dict[str, Any]] = Field(default_factory=list)
     authority_trace: list[str] = Field(default_factory=list)
+    strategy_intent: str = ""
+    synergies: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    combo_classification: str = ""
+    combo_steps: list[str] = Field(default_factory=list)
+    outcomes: list[str] = Field(default_factory=list)
+    inherited_cards: list[str] = Field(default_factory=list)
+    judge_queries: list[dict[str, Any]] = Field(default_factory=list)
+    judge_result: dict[str, Any] = Field(default_factory=dict)
 
 
 class TacticianAskResponse(AskResponse):
     authority: str = "tactician"
-    synergies: list[str] = Field(default_factory=list)
-    risks: list[str] = Field(default_factory=list)
-    judge_result: dict[str, Any] = Field(default_factory=dict)
 
 
 class MetaResponse(BaseModel):
@@ -79,6 +86,10 @@ class MetaResponse(BaseModel):
     confidence_levels: list[str]
     profiles: list[str] = Field(default_factory=list)
     tactician_result_schema_version: str = ""
+    next_beta_version: str = ""
+    next_beta_codename: str = ""
+    v1_codename: str = ""
+    judge_capabilities: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class HealthResponse(BaseModel):

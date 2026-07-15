@@ -57,6 +57,7 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
     assert payload["authority_trace"] == [
         "judge:factual_evidence",
         "tactician:strategic_interpretation",
+        "judge:source_gateway",
     ]
     assert "sinergia de sacrificio" in payload["answer"]
     assert "No es un bucle infinito" in payload["answer"]

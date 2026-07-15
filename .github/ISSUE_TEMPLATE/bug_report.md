@@ -1,79 +1,32 @@
 ---
-name: Bug report / Informe de error
-about: Report a reproducible MagicAI problem
+name: Bug report
+about: Report reproducible incorrect behavior
+title: "[Bug] "
 labels: bug
 ---
 
-## Summary / Resumen
+## Summary
 
-Describe what happened and why it is incorrect.
+## Question or action
 
-## Area / Área
+## Actual result
 
-- [ ] Card selection / Selección de carta
-- [ ] Rule retrieval / Recuperación de reglas
-- [ ] Renderer
-- [ ] Validation / Validación
-- [ ] Conversation / Conversación
-- [ ] API
-- [ ] Dynamic Gauntlet or campaign
-- [ ] Documentation
-- [ ] Other / Otro
+## Expected result
 
-## Question or scenario / Pregunta o escenario
+## Evidence
 
-```text
-Paste the exact question.
-```
+Attach the exported JudgeResult or TacticianResult when possible. Remove personal information before sharing.
 
-## Actual result / Resultado actual
+## Environment
 
-```text
-Paste the answer, traceback or report excerpt.
-```
+- MagicAI version/commit:
+- Python:
+- Ollama server/client:
+- Model:
+- Source versions:
 
-## Expected result / Resultado esperado
+## Reproduction steps
 
-Explain the correct behavior and, when possible, the supporting Oracle text or rule.
-
-## Reproduction / Reproducción
-
-```bash
-# Exact command, seed or replay command
-```
-
-Include when available:
-
-- seed;
-- concept and template;
-- manifest entry;
-- failure JSON;
-- card name and Oracle evidence;
-- rules source version;
-- model and Ollama version.
-
-## Failure classification / Clasificación
-
-- [ ] False premise
-- [ ] Selector failure
-- [ ] Retrieval failure
-- [ ] Routing failure
-- [ ] Renderer failure
-- [ ] Validator failure
-- [ ] Contract mismatch
-- [ ] LLM generation issue
-- [ ] Unknown
-
-## Environment / Entorno
-
-```text
-OS:
-Python:
-MagicAI commit:
-Model:
-Ollama:
-```
-
-## Additional context / Contexto adicional
-
-Do not attach Scryfall bulk files, local databases or private conversations.
+1.
+2.
+3.

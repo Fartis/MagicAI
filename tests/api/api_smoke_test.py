@@ -259,6 +259,7 @@ def main():
         {
             "session_id": session_sol_ring,
             "question": "¿Merece la pena jugarlo en Commander?",
+            "auto_handoff": False,
         },
     )
 

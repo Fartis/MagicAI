@@ -1,9 +1,5 @@
-# Espacio local de retroalimentación comunitaria
+# Community feedback inbox
 
-- `inbox/`: borradores parafraseados locales; ignorados por Git.
-- `reports/`: copias locales opcionales de informes; ignoradas por Git.
-- `templates/`: plantillas seguras y marcadas como `evaluation`.
+Place manually curated, preferably paraphrased evaluation cases in `inbox/`. Generated reports are written to `reports/`.
 
-Los casos sirven para medir y corregir el código del Juez. No entrenan el modelo, no modifican pesos y no se promocionan automáticamente.
-
-Consulta `docs/COMMUNITY_FEEDBACK_GAUNTLET.md` para campañas reanudables, reintento de errores y revisión humana.
+These files are evaluation artifacts only. They do not train models, modify weights, or enter regression coverage without human review.

@@ -57,11 +57,54 @@ def render_strategy_boundary_answer(knowledge: str) -> str | None:
     spanish = _is_spanish_question(question)
     named_format = _detect_named_format(question)
 
+    if _is_combo_question(question):
+        return _render_combo_boundary(
+            cards,
+            spanish=spanish,
+            named_format=named_format,
+        )
+
     if spanish:
         return _render_spanish(cards, named_format=named_format)
 
     return _render_english(cards, named_format=named_format)
 
+
+
+def _is_combo_question(question: str) -> bool:
+    normalized = _normalize(question)
+    return any(marker in normalized for marker in ("combo", "infinito", "infinite", "bucle", "loop"))
+
+
+def _render_combo_boundary(
+    cards: list[CardBlock],
+    *,
+    spanish: bool,
+    named_format: str | None = None,
+) -> str:
+    names = ", ".join(card["name"] for card in cards)
+    format_text = f" en {named_format}" if named_format else ""
+    if spanish:
+        if names:
+            return (
+                f"El Juez ha recuperado la base factual de {names}. Determinar si forman un combo{format_text}, "
+                "reconstruir el ciclo y calcular su resultado neto corresponde al Estratega; esta respuesta "
+                "de frontera está preparada para el handoff automático."
+            )
+        return (
+            "Esta consulta requiere reconstruir y validar una posible línea de combo. El Juez aporta Oracle, "
+            "reglas y legalidad, y el Estratega analiza el ciclo mediante el handoff automático."
+        )
+    if names:
+        return (
+            f"The Judge recovered the factual package for {names}. Determining whether they form a combo{format_text}, "
+            "reconstructing the loop, and calculating its net result belongs to the Tactician; this boundary "
+            "answer is ready for automatic handoff."
+        )
+    return (
+        "This question requires reconstructing and validating a possible combo line. The Judge supplies Oracle, "
+        "rules, and legality, while the Tactician analyzes the loop through automatic handoff."
+    )
 
 def _render_spanish(
     cards: list[CardBlock],

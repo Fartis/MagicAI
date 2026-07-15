@@ -108,15 +108,34 @@ def test_quickstart_documents_branches_ui_and_ollama_modes() -> None:
     assert "git clone https://github.com/Fartis/MagicAI.git" in quickstart
     assert "git clone -b develop https://github.com/Fartis/MagicAI.git" in quickstart
     assert "http://127.0.0.1:8000/ui" in quickstart
-    assert "Ollama en el mismo equipo" in quickstart
-    assert "Ollama en un contenedor existente" in quickstart
-    assert "Ollama en otra máquina de la red local" in quickstart
+    assert "Ollama on the same machine" in quickstart
+    assert "Ollama in an existing container" in quickstart
+    assert "Ollama on another LAN machine" in quickstart
     assert "231/231" in readme
-    assert "No significa" in readme
+    assert "do **not** mean" in readme
     assert "docs/QUICKSTART.md" in readme
+    assert "# ❤️ A personal letter" in readme
+    assert "See you in the next game." in readme
+    assert "0.1 beta" in readme and "Ponder" in readme
+    assert "NicolAI Bolas" in readme
 
 
 
+
+
+def test_strategy_handoff_renders_tactician_result_and_combo_trace() -> None:
+    javascript = read_javascript()
+    stylesheet = read_stylesheet()
+
+    assert 'profile: result.authority === "tactician" ? "tactician" : state.profile' in javascript
+    assert "function renderStrategySummary(result)" in javascript
+    assert "result.combo_steps || []" in javascript
+    assert "result.outcomes || []" in javascript
+    assert '["Intent estratégico", result.strategy_intent || "—"]' in javascript
+    assert '["Clasificación de combo", result.combo_classification || "—"]' in javascript
+    assert '["Cartas heredadas", (result.inherited_cards || []).join(" · ") || "—"]' in javascript
+    assert 'container.className = "strategy-summary"' in javascript
+    assert ".strategy-summary" in stylesheet
 
 def test_profile_switch_exposes_judge_and_tactician() -> None:
     parser = ControlCollector()
@@ -137,6 +156,7 @@ def main() -> int:
         test_copy_and_export_controls_use_the_last_structured_result,
         test_evidence_sections_open_from_actual_content,
         test_copy_fallback_and_rendering_remain_local_and_safe,
+        test_strategy_handoff_renders_tactician_result_and_combo_trace,
         test_profile_switch_exposes_judge_and_tactician,
         test_quickstart_documents_branches_ui_and_ollama_modes,
     ]

@@ -16,7 +16,8 @@ from magicai.api.schemas import (
     TacticianAskResponse,
 )
 from magicai.conversation.manager import ConversationManager
-from magicai.tactician.core import Tactician
+from magicai.tactician.core import Tactician, replace_boundary_answer
+from magicai.judge_tools import get_capability_registry_payload
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -27,6 +28,9 @@ from magicai.versioning import (
     JUDGE_RESULT_SCHEMA_VERSION,
     get_project_version,
     TACTICIAN_RESULT_SCHEMA_VERSION,
+    NEXT_BETA_VERSION,
+    NEXT_BETA_CODENAME,
+    V1_CODENAME,
 )
 
 
@@ -62,6 +66,10 @@ def meta():
         "confidence_levels": [item.value for item in JudgeConfidence],
         "profiles": ["judge", "tactician"],
         "tactician_result_schema_version": TACTICIAN_RESULT_SCHEMA_VERSION,
+        "next_beta_version": NEXT_BETA_VERSION,
+        "next_beta_codename": NEXT_BETA_CODENAME,
+        "v1_codename": V1_CODENAME,
+        "judge_capabilities": get_capability_registry_payload(),
     }
 
 
@@ -76,10 +84,19 @@ def ask(request: AskRequest):
         request.session_id
     )
 
+    prior_cards = list(conversation.active_cards)
     result = assistant.ask_result(
         conversation,
         request.question,
     )
+
+    if request.auto_handoff and result.status is JudgeStatus.STRATEGY_REQUIRED:
+        result = tactician.from_judge_result(
+            question=request.question,
+            judge_result=result,
+            prior_cards=prior_cards,
+        )
+        replace_boundary_answer(conversation, result)
 
     payload = result.to_dict()
     try:

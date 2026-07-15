@@ -1,122 +1,53 @@
-# Tactician / Estratega
+# Tactician profile
 
-`Tactician` es el nombre interno del primer perfil estratégico de MagicAI. En la
-interfaz se muestra como **Estratega**. Sustituye el nombre provisional
-`Deck Master`, porque su responsabilidad no se limita a construir o valorar mazos:
-también revisa líneas de juego, riesgos, sinergias y posibles combos.
+The internal profile name is `Tactician`; the local UI displays **Estratega**.
 
-## Jerarquía de autoridad
+## Responsibility
 
-```text
-Oracle + Comprehensive Rules + rulings
-                  │
-                  ▼
-                Juez
-        autoridad factual única
-                  │
-         paquete factual validado
-                  ▼
-        Tactician / Estratega
-       interpretación estratégica
-```
+The Tactician analyzes:
 
-El Estratega:
+- combos and loops;
+- synergies;
+- game lines and sequencing;
+- deck construction and upgrades;
+- risks, interaction points, and alternatives;
+- format, bracket, budget, collection, and local-metagame constraints.
 
-- no consulta Scryfall directamente;
-- no consulta Comprehensive Rules directamente;
-- no puede corregir Oracle ni una regla;
-- puede impugnar una conclusión provisional si contradice la evidencia que ya
-  recuperó el Juez;
-- devuelve la decisión factual al Juez para la respuesta final;
-- utiliza el paquete factual del Juez para detectar roles, sinergias, riesgos y
-  líneas de juego.
+It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It asks the Judge-owned source gateway for structured evidence.
 
-## Protocolo de revisión
+## Current milestone: 0.2
 
-Las respuestas generadas por LLM pasan por dos revisiones independientes:
+Implemented:
 
-1. El validador factual tradicional.
-2. El revisor del Estratega, que comprueba relaciones causales estructuradas.
+- automatic handoff from `POST /ask`;
+- explicit `POST /tactician/ask`;
+- strategic intent classification;
+- previous-turn card inheritance;
+- structured `strategy_intent`, `combo_classification`, `combo_steps`, and `outcomes`;
+- generic recognition of a three-piece loop consisting of:
+  - a creature with Undying;
+  - a sacrifice outlet that generates mana;
+  - an ability that removes the +1/+1 counter and creates a token;
+- Judge review challenges for contradictory LLM answers;
+- Judge capability registry.
 
-Ejemplo:
+## Evidence loop
+
+Target design:
 
 ```text
-sacrificar un permanente
-→ estaba en el campo de batalla
-→ va al cementerio
-→ si era criatura, muere
-→ comprobar Undying y otras habilidades de muerte
+Tactician forms a hypothesis
+  → asks the Judge for evidence
+  → checks gaps and contradictions
+  → asks follow-up questions
+  → constructs a line
+  → Judge validates every factual claim
+  → Critic attempts to break the result
+  → publish or declare uncertainty
 ```
 
-Si una respuesta contradice esa cadena, el Estratega devuelve un challenge
-estructurado. El Juez puede reconstruir una respuesta desde las fuentes, pero la
-autoridad final sigue siendo `judge`.
+The current implementation records a first `judge_queries` trace. Multi-query planning is the next milestone.
 
-## Primera cobertura estratégica
+## Constraints
 
-Tactician v0.1 reconoce de forma determinista roles básicos derivados del Oracle que
-le entrega el Juez:
-
-- aceleración de maná;
-- motores de sacrificio;
-- valor al morir;
-- recursión;
-- ventaja de cartas;
-- removal;
-- generación de fichas;
-- protección.
-
-También distingue una sinergia de sacrificio de un combo infinito. Por ejemplo,
-Young Wolf y Carrion Feeder generan valor, pero no forman un bucle infinito por sí
-solos porque Undying devuelve Young Wolf con un contador +1/+1.
-
-## API
-
-### Juez
-
-```http
-POST /ask
-```
-
-### Estratega
-
-```http
-POST /tactician/ask
-```
-
-El cuerpo es el mismo:
-
-```json
-{
-  "question": "¿Young Wolf y Carrion Feeder forman un combo?",
-  "session_id": null
-}
-```
-
-La respuesta estratégica conserva `cards`, `rules`, `rulings` y las versiones de
-fuentes del Juez, y añade:
-
-```json
-{
-  "authority": "tactician",
-  "origin": "tactician_strategy",
-  "synergies": [],
-  "risks": [],
-  "authority_trace": [
-    "judge:factual_evidence",
-    "tactician:strategic_interpretation"
-  ],
-  "judge_result": {}
-}
-```
-
-## Límites de v0.1
-
-- No analiza todavía una lista completa de 100 cartas.
-- No calcula probabilidades de robo ni consistencia.
-- No consulta metajuego ni estadísticas externas.
-- No genera líneas complejas mediante LLM.
-- Los patrones estratégicos iniciales son deterministas y auditables.
-
-Las siguientes versiones añadirán estado de partida, secuencias de acciones,
-mulligans, paquetes de sinergia y demostración formal de ciclos infinitos.
+User-provided format, Commander bracket, budget, collection, or preferences constrain the recommendation. They do not change Oracle text or rules.

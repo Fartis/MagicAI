@@ -289,7 +289,7 @@ async function submitQuestion() {
       role: "assistant",
       text: result.answer || "MagicAI no devolvió texto.",
       status: result.status,
-      profile: state.profile,
+      profile: result.authority === "tactician" ? "tactician" : state.profile,
       ...(candidates.length ? {candidates} : {}),
     });
     renderEvidence(result);
@@ -620,7 +620,14 @@ function renderEvidence(result) {
     createPill(`Confianza: ${translateConfidence(result.confidence)}`, `is-${result.confidence || "unknown"}`),
     createPill(`Autoridad: ${result.authority || "judge"}`),
   );
+  if (result.combo_classification) {
+    row.appendChild(createPill(`Combo: ${result.combo_classification}`));
+  }
   summary.appendChild(row);
+
+  if ((result.combo_steps || []).length || (result.outcomes || []).length) {
+    summary.appendChild(renderStrategySummary(result));
+  }
 
   elements["evidence-sections"].hidden = false;
   setResultActionsEnabled(true);
@@ -642,6 +649,40 @@ function renderEvidence(result) {
   renderNotes("warnings", warnings, "No hay advertencias.");
   renderTechnicalDetails(result);
   configureEvidenceSections({cards, rules, rulings, assumptions, warnings, result});
+}
+
+
+function renderStrategySummary(result) {
+  const container = document.createElement("section");
+  container.className = "strategy-summary";
+
+  if ((result.combo_steps || []).length) {
+    const title = document.createElement("h3");
+    title.textContent = "Línea validada";
+    container.appendChild(title);
+    const list = document.createElement("ol");
+    for (const step of result.combo_steps) {
+      const item = document.createElement("li");
+      item.textContent = step;
+      list.appendChild(item);
+    }
+    container.appendChild(list);
+  }
+
+  if ((result.outcomes || []).length) {
+    const title = document.createElement("h3");
+    title.textContent = "Resultado por ciclo";
+    container.appendChild(title);
+    const list = document.createElement("ul");
+    for (const outcome of result.outcomes) {
+      const item = document.createElement("li");
+      item.textContent = outcome;
+      list.appendChild(item);
+    }
+    container.appendChild(list);
+  }
+
+  return container;
 }
 
 function createPill(text, className = "") {
@@ -804,6 +845,11 @@ function renderTechnicalDetails(result) {
     ["Origen", result.origin],
     ["Confianza", result.confidence],
     ["Intent", result.intent || "—"],
+    ["Intent estratégico", result.strategy_intent || "—"],
+    ["Clasificación de combo", result.combo_classification || "—"],
+    ["Cartas heredadas", (result.inherited_cards || []).join(" · ") || "—"],
+    ["Resultados", (result.outcomes || []).join(" · ") || "—"],
+    ["Consultas al Juez", (result.judge_queries || []).map(item => `${item.sequence}: ${item.purpose}`).join(" · ") || "—"],
     ["Intentos de validación", String(result.validation_attempts ?? 0)],
     ["Revisado por", (result.reviewed_by || []).join(" · ") || "—"],
     ["Trazado de autoridad", (result.authority_trace || []).join(" → ") || "—"],
