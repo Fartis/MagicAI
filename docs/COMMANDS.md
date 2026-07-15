@@ -102,3 +102,35 @@ git status --short
 git diff --check
 git diff --stat
 ```
+
+## Judge Tool Gateway
+
+Inspect capabilities:
+
+```bash
+curl -s http://127.0.0.1:8000/meta | python -m json.tool
+```
+
+Resolve Oracle evidence:
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/judge/tools/execute \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "tool": "oracle_lookup",
+    "arguments": {"card_names": ["Young Wolf"]},
+    "purpose": "manual_gateway_check"
+  }' | python -m json.tool
+```
+
+Resolve rules:
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/judge/tools/execute \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "tool": "rules_lookup",
+    "arguments": {"identifiers": ["702.93", "701.21", "700.4"]},
+    "purpose": "verify_undying_sacrifice"
+  }' | python -m json.tool
+```

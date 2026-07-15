@@ -16,6 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 TEST_MODULES = (
     "tests.repository.repository_health_test",
     "tests.repository.release_packaging_test",
+    "tests.judge_tools.judge_tool_gateway_test",
+    "tests.judge_tools.local_tools_test",
+    "tests.api.judge_tool_api_test",
+    "tests.tactician.tactician_tool_gateway_test",
     "tests.tactician.tactician_reviewer_test",
     "tests.tactician.tactician_strategy_test",
     "tests.tactician.tactician_conversation_handoff_test",

@@ -1,52 +1,44 @@
-# Current MagicAI status
+# Project status
 
-> Current release: `v0.1.1-beta` — **Force of Will**
-> Next beta milestone: `v0.2.0-beta` — **Ponder**
-> Planned 1.0 codename: **NicolAI Bolas**
+## Release
 
-## Overall assessment
+- Public version: `0.1.1-beta`
+- Codename: `Force of Will`
+- Next beta: `0.2.0-beta — Ponder`
+- Future major release: `1.0 — NicolAI Bolas`
 
-MagicAI is an early public beta with an advanced Judge core and an integrated Tactician foundation.
+## Current development line
 
-Approximate maturity relative to the complete vision:
+Sprint `12.2a` introduces the executable Judge Tool Gateway.
 
-| Area | Maturity |
-|---|---:|
-| Local Oracle, rules, rulings, and source health | 85% |
-| Evidence retrieval and provenance | 75% |
-| Deterministic Judge coverage | 70% |
-| LLM validation and repair | 50% |
-| Evaluation infrastructure | 80% |
-| Local UI and persistent history | 65% |
-| Tactician handoff and continuity | 35% |
-| Formal combo engine | 20% |
-| Full deck analysis | 5% |
-| Commander Spellbook | 0% |
-| Authorized statistics | 0% |
+Completed in this milestone:
 
-These are planning estimates, not coverage statistics.
+- typed read-only tool contracts;
+- executable Oracle, rules, rulings, legality, and conversation-context tools;
+- source provenance and version reporting;
+- bounded shared investigation budgets;
+- in-memory source-aware cache;
+- explicit unavailable responses for planned providers;
+- diagnostic REST endpoint;
+- first Tactician evidence refresh through the gateway;
+- focused source-independent CI coverage.
 
-## Current strengths
+## Next development line
 
-- The model is not the sole authority.
-- Sources are local and versioned.
-- Deterministic routes avoid unnecessary LLM calls.
-- Evaluation campaigns are reproducible and resumable.
-- Human audit can expose false positives after harness PASS results.
-- Problems are fixed by semantic families rather than card-name exceptions.
-- Strategic questions can now hand off automatically to the Tactician.
-- Follow-up card context can survive the handoff.
+Sprint `12.2b` will focus on conversational strategic orchestration:
 
-## Current blockers before Ponder
+- play-sequence and combo-follow-up intents;
+- active strategic state;
+- independent Tactician synthesis;
+- warmer interactive responses;
+- smart ambiguity handling;
+- factual claim verification after synthesis.
 
-- Multi-query autonomous Tactician planning is not implemented yet.
-- The Judge tool gateway is a registry, not yet a complete typed execution API.
-- Arbitrary combos are not formally proven through a general state graph.
-- Validation can still miss unsupported LLM interpretations outside covered contracts.
-- Spellbook, authorized statistics, user collection, and metagame sources are not connected.
-- The full exhaustive evaluation must be run on the user's local Oracle snapshot after each major semantic change.
+## Known limitations
 
-
-## Repository health
-
-The first repository-health foundation adds fast pull request CI, clean release packaging, community policies, dependency update configuration, and explicit branching and release documentation. Large Oracle and Ollama campaigns remain separate from fast CI.
+- The Tactician does not yet plan arbitrary multi-query investigations.
+- Combo reconstruction covers only a narrow generic family.
+- Commander Spellbook is not connected.
+- EDHREC-style statistics remain permission-gated.
+- A full deck analyzer and collection provider are not yet implemented.
+- Some Judge fallbacks may still require stronger second-pass validation.

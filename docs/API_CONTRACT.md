@@ -1,57 +1,54 @@
-# MagicAI HTTP contract
+# API contract
 
-## Versions
+Current API contract version: `1.4`.
 
-- API contract: `1.2`
-- JudgeResult schema: `1.0`
-- TacticianResult schema: `0.2`
+## Stable result families
 
-## Endpoints
+- Judge results use JudgeResult schema `1.0`.
+- Tactician results use TacticianResult schema `0.3`.
+- Judge tool results use JudgeToolResult schema `1.0`.
 
-```text
-GET    /                         service metadata
-GET    /meta                     contracts, profiles, codenames, capabilities
-GET    /health                   source and Ollama health
-POST   /ask                      Judge with optional automatic handoff
-POST   /tactician/ask            explicit Tactician request
-GET    /conversations            local history
-GET    /conversations/{id}       conversation detail
-PATCH  /conversations/{id}       rename conversation
-DELETE /conversations/{id}       delete conversation
-```
+## Main endpoints
 
-## Ask request
+- `GET /`
+- `GET /meta`
+- `GET /health`
+- `POST /ask`
+- `POST /tactician/ask`
+- `POST /judge/tools/execute`
+- conversation history endpoints under `/conversations`
 
-```json
-{
-  "question": "And does it combo with Ghave and Ashnod's Altar?",
-  "session_id": "optional-session-id",
-  "auto_handoff": true
-}
-```
+## Judge Tool Gateway endpoint
 
-`auto_handoff` defaults to `true`. Set it to `false` only for diagnostics that need the raw `strategy_required` Judge boundary.
+`POST /judge/tools/execute` executes one read-only Judge-owned capability.
 
-## Strategic response fields
-
-A handoff response remains compatible with the Judge evidence fields and may add:
+Example:
 
 ```json
 {
-  "authority": "tactician",
-  "strategy_intent": "combo_detection",
-  "combo_classification": "infinite_combo",
-  "combo_steps": [],
-  "outcomes": [],
-  "synergies": [],
-  "risks": [],
-  "inherited_cards": ["Young Wolf"],
-  "judge_queries": [],
-  "judge_result": {}
+  "tool": "rules_lookup",
+  "arguments": {
+    "identifiers": ["702.93", "701.21"]
+  },
+  "purpose": "verify_undying_sacrifice",
+  "result_limit": 8
 }
 ```
 
+The endpoint is intended for local diagnostics, future UI tooling, and controlled strategic orchestration. It does not allow arbitrary files, shell commands, provider URLs, or network access.
 
-## Release metadata
+A `session_id` may be supplied only when `conversation_context` requires an existing persisted conversation.
 
-`GET /meta` and `GET /health` expose the public version, PEP 440 package version, release channel, codename, and canonical Git tag. The current public identity is `v0.1.1-beta` — **Force of Will**.
+## Capability discovery
+
+`GET /meta` exposes:
+
+- executable status;
+- authority level;
+- provider;
+- read-only status;
+- accepted argument names;
+- result limit;
+- planned and permission-gated capabilities.
+
+Unavailable capabilities return a structured result instead of being guessed.

@@ -1,0 +1,1 @@
+"""Judge Tool Gateway tests."""

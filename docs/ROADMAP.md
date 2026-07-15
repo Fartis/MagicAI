@@ -14,7 +14,7 @@ The next integrated beta requires:
 - source-grounded validation and safe failure;
 - automatic Judge-to-Tactician handoff;
 - resilient conversation continuity;
-- iterative Tactician queries through the Judge tool gateway;
+- iterative Tactician queries through the Judge Tool Gateway;
 - formal combo reconstruction;
 - useful local UI and persistent history;
 - reproducible installation and evaluation.
@@ -40,23 +40,36 @@ The first major release should add mature deck analysis, authorized strategic so
 - Judge contradiction review.
 - Basic role and synergy analysis.
 
-### 12.1 — Automatic handoff and continuity — implemented
+### 12.1 — Automatic handoff and continuity — complete
 
 - Automatic handoff from `/ask`.
 - No duplicate conversation turns.
 - Referential previous-card inheritance.
 - Intent-specific combo boundary.
 - Structured combo steps and outcomes.
-- Generic Young Wolf + mana outlet + counter converter loop recognition.
+- Generic Undying loop recognition.
 - Judge capability registry.
 
-### 12.2 — Judge tool gateway
+### 12.2a — Executable Judge Tool Gateway — complete
 
 - Typed tool requests and responses.
-- Per-tool provenance, version, latency, and authority.
-- Legality exposed to Tactician evidence.
-- Query cache and budgets.
+- Per-tool provenance, version, latency, cache state, and authority.
+- Executable Oracle lookup and search.
+- Executable rules lookup and search.
+- Executable rulings, legality, and conversation-context tools.
+- Bounded shared query budgets.
 - Capability-missing responses.
+- Read-only diagnostic REST endpoint.
+- Initial Tactician Oracle refresh through the gateway.
+
+### 12.2b — Conversational strategic orchestration — next
+
+- `play_sequence`, `combo_execution_order`, `combo_disruption`, and related intents.
+- Active strategic conversation state.
+- Independent Tactician synthesis instead of Judge-answer relay.
+- Warm, interactive response style.
+- Smart ambiguity handling.
+- Factual claim verification after synthesis.
 
 ### 12.3 — Autonomous investigation planner
 

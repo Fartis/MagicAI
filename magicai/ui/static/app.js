@@ -850,6 +850,8 @@ function renderTechnicalDetails(result) {
     ["Cartas heredadas", (result.inherited_cards || []).join(" · ") || "—"],
     ["Resultados", (result.outcomes || []).join(" · ") || "—"],
     ["Consultas al Juez", (result.judge_queries || []).map(item => `${item.sequence}: ${item.purpose}`).join(" · ") || "—"],
+    ["Herramientas del Juez", (result.judge_tool_calls || []).map(item => `${item.tool}: ${item.status}${item.cache_hit ? " (caché)" : ""}`).join(" · ") || "—"],
+    ["Síntesis del Estratega", result.tactician_synthesized ? "sí" : "no"],
     ["Intentos de validación", String(result.validation_attempts ?? 0)],
     ["Revisado por", (result.reviewed_by || []).join(" · ") || "—"],
     ["Trazado de autoridad", (result.authority_trace || []).join(" → ") || "—"],

@@ -73,6 +73,8 @@ class TacticianResult:
     outcomes: list[str] = field(default_factory=list)
     inherited_cards: list[str] = field(default_factory=list)
     judge_queries: list[dict[str, Any]] = field(default_factory=list)
+    judge_tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    tactician_synthesized: bool = False
     authority_trace: list[str] = field(default_factory=list)
     judge_result: dict[str, Any] = field(default_factory=dict)
 
@@ -107,6 +109,8 @@ class TacticianResult:
             "outcomes": list(self.outcomes),
             "inherited_cards": list(self.inherited_cards),
             "judge_queries": list(self.judge_queries),
+            "judge_tool_calls": list(self.judge_tool_calls),
+            "tactician_synthesized": bool(self.tactician_synthesized),
             "authority_trace": list(self.authority_trace),
             "judge_result": dict(self.judge_result),
         }

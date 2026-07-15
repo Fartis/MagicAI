@@ -68,6 +68,8 @@ class AskResponse(BaseModel):
     outcomes: list[str] = Field(default_factory=list)
     inherited_cards: list[str] = Field(default_factory=list)
     judge_queries: list[dict[str, Any]] = Field(default_factory=list)
+    judge_tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    tactician_synthesized: bool = False
     judge_result: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -94,6 +96,37 @@ class MetaResponse(BaseModel):
     next_beta_codename: str = ""
     v1_codename: str = ""
     judge_capabilities: list[dict[str, Any]] = Field(default_factory=list)
+    judge_tool_result_schema_version: str = ""
+    judge_tool_gateway: dict[str, Any] = Field(default_factory=dict)
+
+
+class JudgeToolExecuteRequest(BaseModel):
+    tool: str = Field(min_length=1, max_length=80)
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    purpose: str = Field(default="", max_length=240)
+    request_id: str = Field(default="", max_length=128)
+    result_limit: int = Field(default=8, ge=1, le=20)
+    session_id: str | None = Field(default=None, max_length=128)
+
+
+class JudgeToolExecuteResponse(BaseModel):
+    schema_version: str
+    tool: str
+    status: str
+    authority: str
+    provider: str
+    purpose: str = ""
+    request_id: str = ""
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    evidence: list[dict[str, Any]] = Field(default_factory=list)
+    source_versions: dict[str, str] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    error_code: str = ""
+    error_message: str = ""
+    elapsed_ms: float = 0.0
+    cache_hit: bool = False
+    budget: dict[str, Any] = Field(default_factory=dict)
 
 
 class HealthResponse(BaseModel):

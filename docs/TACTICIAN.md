@@ -13,9 +13,9 @@ The Tactician analyzes:
 - risks, interaction points, and alternatives;
 - format, bracket, budget, collection, and local-metagame constraints.
 
-It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It asks the Judge-owned source gateway for structured evidence.
+It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It requests structured evidence through the Judge Tool Gateway.
 
-## Current milestone: 0.2
+## Current milestone: 0.3
 
 Implemented:
 
@@ -24,12 +24,12 @@ Implemented:
 - strategic intent classification;
 - previous-turn card inheritance;
 - structured `strategy_intent`, `combo_classification`, `combo_steps`, and `outcomes`;
-- generic recognition of a three-piece loop consisting of:
-  - a creature with Undying;
-  - a sacrifice outlet that generates mana;
-  - an ability that removes the +1/+1 counter and creates a token;
+- generic recognition of a three-piece Undying loop;
 - Judge review challenges for contradictory LLM answers;
-- Judge capability registry.
+- executable, typed Judge Tool Gateway;
+- bounded Oracle refresh through the Judge before strategic synthesis;
+- tool-call provenance in `judge_tool_calls` and `judge_queries`;
+- explicit `tactician_synthesized` metadata.
 
 ## Evidence loop
 
@@ -37,16 +37,28 @@ Target design:
 
 ```text
 Tactician forms a hypothesis
-  → asks the Judge for evidence
+  → requests one or more Judge tools
   → checks gaps and contradictions
-  → asks follow-up questions
+  → requests narrower evidence
   → constructs a line
-  → Judge validates every factual claim
+  → Judge validates factual claims
   → Critic attempts to break the result
   → publish or declare uncertainty
 ```
 
-The current implementation records a first `judge_queries` trace. Multi-query planning is the next milestone.
+Milestone 0.3 provides the executable gateway and a first bounded Oracle refresh. Autonomous multi-query planning remains the next milestone.
+
+## Personality
+
+The Judge should remain formal and concise. The Tactician should be warmer, conversational, and proactive while preserving the same factual boundary.
+
+It should:
+
+- explain why a line is attractive;
+- mention risks and interaction windows;
+- infer likely follow-up meaning from active strategic context;
+- ask a question only when missing information materially changes the recommendation;
+- never invent card text or rules to sound helpful.
 
 ## Constraints
 

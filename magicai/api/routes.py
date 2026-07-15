@@ -12,12 +12,18 @@ from magicai.api.schemas import (
     ConversationRenameRequest,
     ConversationSummaryResponse,
     HealthResponse,
+    JudgeToolExecuteRequest,
+    JudgeToolExecuteResponse,
     MetaResponse,
     TacticianAskResponse,
 )
 from magicai.conversation.manager import ConversationManager
 from magicai.tactician.core import Tactician, replace_boundary_answer
-from magicai.judge_tools import get_capability_registry_payload
+from magicai.judge_tools import (
+    JudgeToolGateway,
+    JudgeToolRequest,
+    get_capability_registry_payload,
+)
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -26,6 +32,7 @@ from magicai.judge_result import (
 from magicai.versioning import (
     API_CONTRACT_VERSION,
     JUDGE_RESULT_SCHEMA_VERSION,
+    JUDGE_TOOL_RESULT_SCHEMA_VERSION,
     get_project_version,
     get_package_version,
     TACTICIAN_RESULT_SCHEMA_VERSION,
@@ -41,7 +48,8 @@ from magicai.versioning import (
 router = APIRouter()
 
 assistant = MagicAI()
-tactician = Tactician(judge=assistant)
+judge_tool_gateway = JudgeToolGateway()
+tactician = Tactician(judge=assistant, tool_gateway=judge_tool_gateway)
 conversation_manager = ConversationManager()
 
 
@@ -82,12 +90,44 @@ def meta():
         "next_beta_codename": NEXT_BETA_CODENAME,
         "v1_codename": V1_CODENAME,
         "judge_capabilities": get_capability_registry_payload(),
+        "judge_tool_result_schema_version": JUDGE_TOOL_RESULT_SCHEMA_VERSION,
+        "judge_tool_gateway": {
+            "executable": True,
+            "read_only": True,
+            "endpoint": "/judge/tools/execute",
+            "cache": judge_tool_gateway.cache_info(),
+        },
     }
 
 
 @router.get("/health", response_model=HealthResponse)
 def health():
     return build_health_payload()
+
+
+@router.post(
+    "/judge/tools/execute",
+    response_model=JudgeToolExecuteResponse,
+)
+def execute_judge_tool(request: JudgeToolExecuteRequest):
+    conversation = None
+    if request.session_id:
+        record = conversation_manager.load(request.session_id)
+        if not record:
+            raise _conversation_not_found()
+        conversation = record.conversation
+
+    result = judge_tool_gateway.execute(
+        JudgeToolRequest(
+            tool=request.tool,
+            arguments=dict(request.arguments),
+            purpose=request.purpose,
+            request_id=request.request_id,
+            result_limit=request.result_limit,
+        ),
+        conversation=conversation,
+    )
+    return JudgeToolExecuteResponse(**result.to_dict())
 
 
 @router.post("/ask", response_model=AskResponse)
@@ -107,6 +147,7 @@ def ask(request: AskRequest):
             question=request.question,
             judge_result=result,
             prior_cards=prior_cards,
+            conversation=conversation,
         )
         replace_boundary_answer(conversation, result)
 
