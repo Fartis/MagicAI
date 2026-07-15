@@ -3,7 +3,7 @@ from magicai.context_enricher import _merge_unique_queries
 from magicai.context_enricher import _needs_rulings
 
 
-def test_oracle_queries_are_prioritized_without_duplicates():
+def test_exact_rule_numbers_are_prioritized_without_duplicates():
     merged = _merge_unique_queries(
         preferred=[
             "activated ability",
@@ -17,9 +17,9 @@ def test_oracle_queries_are_prioritized_without_duplicates():
     )
 
     expected = [
+        "117",
         "activated ability",
         "mana ability",
-        "117",
         "in response priority stack resolves",
     ]
 
@@ -70,7 +70,7 @@ def test_rulings_are_loaded_only_for_explicit_requests():
 
 def main():
     tests = [
-        test_oracle_queries_are_prioritized_without_duplicates,
+        test_exact_rule_numbers_are_prioritized_without_duplicates,
         test_bare_power_toughness_is_not_enough_for_continuous_focus,
         test_characteristic_change_with_power_toughness_keeps_continuous_focus,
         test_rulings_are_loaded_only_for_explicit_requests,

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=10000)
     session_id: str | None = Field(default=None, max_length=128)
+    auto_handoff: bool = True
 
     @field_validator("question")
     @classmethod
@@ -56,6 +57,22 @@ class AskResponse(BaseModel):
     source_versions: dict[str, str] = Field(default_factory=dict)
     source_health: dict[str, Any] = Field(default_factory=dict)
     validation_attempts: int = 0
+    reviewed_by: list[str] = Field(default_factory=list)
+    review_challenges: list[dict[str, Any]] = Field(default_factory=list)
+    authority_trace: list[str] = Field(default_factory=list)
+    strategy_intent: str = ""
+    synergies: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    combo_classification: str = ""
+    combo_steps: list[str] = Field(default_factory=list)
+    outcomes: list[str] = Field(default_factory=list)
+    inherited_cards: list[str] = Field(default_factory=list)
+    judge_queries: list[dict[str, Any]] = Field(default_factory=list)
+    judge_result: dict[str, Any] = Field(default_factory=dict)
+
+
+class TacticianAskResponse(AskResponse):
+    authority: str = "tactician"
 
 
 class MetaResponse(BaseModel):
@@ -67,6 +84,12 @@ class MetaResponse(BaseModel):
     judge_statuses: list[str]
     judge_origins: list[str]
     confidence_levels: list[str]
+    profiles: list[str] = Field(default_factory=list)
+    tactician_result_schema_version: str = ""
+    next_beta_version: str = ""
+    next_beta_codename: str = ""
+    v1_codename: str = ""
+    judge_capabilities: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class HealthResponse(BaseModel):
@@ -96,3 +119,38 @@ class ErrorBodyResponse(BaseModel):
 class ErrorResponse(BaseModel):
     schema_version: str
     error: ErrorBodyResponse
+
+
+class ConversationMessageResponse(BaseModel):
+    role: str
+    content: str
+
+
+class ConversationSummaryResponse(BaseModel):
+    session_id: str
+    title: str
+    created_at: str
+    updated_at: str
+    message_count: int
+
+
+class ConversationDetailResponse(ConversationSummaryResponse):
+    messages: list[ConversationMessageResponse] = Field(default_factory=list)
+    last_result: dict[str, Any] | None = None
+
+
+class ConversationRenameRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str) -> str:
+        normalized = " ".join(value.strip().split())
+        if not normalized:
+            raise ValueError("title must not be empty")
+        return normalized
+
+
+class ConversationDeleteResponse(BaseModel):
+    session_id: str
+    deleted: bool

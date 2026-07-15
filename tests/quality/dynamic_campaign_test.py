@@ -6,21 +6,18 @@ import sys
 import time
 from pathlib import Path
 
-from magicai.assistant import MagicAI
 from tests.quality.dynamic.campaign import (
     build_campaign_payload,
     resolve_campaign_seeds,
     write_campaign_summary,
 )
-from tests.quality.dynamic.card_catalog import CardCatalog
-from tests.quality.dynamic.concepts import CONCEPTS, get_concepts
-from tests.quality.dynamic.execution import (
-    run_dynamic_scenarios,
-    summarize_results,
-    write_dynamic_reports,
+from tests.quality.dynamic.campaign_runner import (
+    DynamicCampaignError,
+    execute_campaign_runs,
+    finalize_campaign_manifest,
+    prepare_campaign,
 )
-from tests.quality.dynamic.failure_store import write_manifest
-from tests.quality.dynamic.scenario_generator import ScenarioGenerator
+from tests.quality.dynamic.concepts import CONCEPTS, get_concepts
 
 DEFAULT_OUTPUT_DIR = "resultado_dynamic_campaign"
 
@@ -28,8 +25,9 @@ DEFAULT_OUTPUT_DIR = "resultado_dynamic_campaign"
 def parse_args():
     parser = argparse.ArgumentParser(
         description=(
-            "Run a reproducible multi-seed MagicAI Dynamic Gauntlet campaign "
-            "and aggregate concept/template coverage."
+            "Run a reproducible, resumable multi-seed MagicAI Dynamic "
+            "Gauntlet campaign. Runs can be distributed across independent "
+            "worker processes."
         ),
     )
     parser.add_argument(
@@ -58,6 +56,24 @@ def parse_args():
         type=int,
         default=42,
         help="Scenarios generated per seed. Default: 42.",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help=(
+            "Independent worker processes used for campaign runs. "
+            "Default: 1. For deterministic campaigns on a Ryzen 5 5600, "
+            "start with 4."
+        ),
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help=(
+            "Resume the same campaign from completed run markers. Stable "
+            "inputs, sources, model metadata and code fingerprints must match."
+        ),
     )
     parser.add_argument(
         "--concept",
@@ -90,13 +106,8 @@ def parse_args():
 
 def _print_concepts():
     print("Available dynamic concepts:")
-
     for concept in CONCEPTS:
         print(f"- {concept.id}: {concept.name}")
-
-
-def _relative(path: Path, root: Path) -> str:
-    return path.relative_to(root).as_posix()
 
 
 def main():
@@ -108,6 +119,15 @@ def main():
 
     if args.cases <= 0:
         print("ERROR: --cases must be greater than zero.", file=sys.stderr)
+        return 2
+    if args.workers <= 0:
+        print("ERROR: --workers must be greater than zero.", file=sys.stderr)
+        return 2
+    if args.fail_fast and args.workers > 1:
+        print(
+            "ERROR: --fail-fast is only supported with --workers 1.",
+            file=sys.stderr,
+        )
         return 2
 
     base_seed = (
@@ -123,118 +143,110 @@ def main():
             runs=args.runs,
         )
         concepts = get_concepts(args.concept)
-        catalog = CardCatalog(args.oracle_file)
-    except (FileNotFoundError, ValueError) as exc:
+    except ValueError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
 
-    output_root = Path(args.output_dir)
-    output_root.mkdir(parents=True, exist_ok=True)
-    assistant = MagicAI()
-    run_summaries = []
-    all_scenarios = []
-    campaign_start = time.perf_counter()
+    concept_ids = [concept.id for concept in concepts]
+    requires_oracle = any(concept.selector is not None for concept in concepts)
+    project_root = Path.cwd().resolve()
+    output_root = Path(args.output_dir).resolve()
+    command = [sys.executable, "-m", "tests.quality.dynamic_campaign_test", *sys.argv[1:]]
+
+    try:
+        prepare_campaign(
+            project_root=project_root,
+            output_root=output_root,
+            base_seed=base_seed,
+            seeds=seeds,
+            cases_per_seed=args.cases,
+            concept_ids=concept_ids,
+            oracle_file=args.oracle_file,
+            workers=args.workers,
+            requires_oracle=requires_oracle,
+            resume=args.resume,
+            command=command,
+        )
+    except (DynamicCampaignError, FileNotFoundError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
 
     print(f"Base seed : {base_seed}")
     print(f"Seeds     : {', '.join(str(seed) for seed in seeds)}")
     print(f"Runs      : {len(seeds)}")
     print(f"Cases/run : {args.cases}")
+    print(f"Workers   : {args.workers} process(es)")
+    print(f"Resume    : {'yes' if args.resume else 'no'}")
     print(f"Output    : {output_root}")
+    print("Purpose   : evaluation only; no training or automatic learning")
 
-    for run_index, seed in enumerate(seeds, start=1):
-        run_dir = output_root / f"run_{run_index:02d}_seed_{seed}"
-        failure_dir = run_dir / "failures"
-        generator = ScenarioGenerator(
-            seed=seed,
-            catalog=catalog,
-            concepts=concepts,
-        )
-        scenarios = generator.generate(args.cases)
-        manifest = write_manifest(run_dir / "manifest.json", seed, scenarios)
+    campaign_start = time.perf_counter()
+    run_summaries = []
+    scenarios = []
+    run_errors = []
+    payload = None
 
-        print()
-        print("=" * 80)
-        print(f"RUN {run_index}/{len(seeds)} · seed {seed}")
-        print("=" * 80)
-
-        def _progress(scenario, result):
-            source_label = scenario.card_name or "rules-only"
-            print(
-                f"[{scenario.id}] {scenario.concept_id} · "
-                f"{source_label} · {scenario.template_id}"
-            )
-            print(f"  {result['status']} ({result['elapsed']:.2f}s)")
-
-            if result.get("dynamic_failure_file"):
-                print(f"  Saved failure: {result['dynamic_failure_file']}")
-
-        results, saved_failures, elapsed = run_dynamic_scenarios(
-            assistant,
-            scenarios,
-            failure_dir=failure_dir,
+    try:
+        run_summaries, scenarios, run_errors = execute_campaign_runs(
+            project_root=project_root,
+            output_root=output_root,
+            base_seed=base_seed,
+            seeds=seeds,
+            cases_per_seed=args.cases,
+            concept_ids=concept_ids,
+            oracle_file=args.oracle_file,
+            workers=args.workers,
+            requires_oracle=requires_oracle,
             fail_fast=args.fail_fast,
-            progress_callback=_progress,
+            resume=args.resume,
         )
-        metadata = {
-            "Campaign base seed": str(base_seed),
-            "Campaign run": f"{run_index}/{len(seeds)}",
-            "Seed": str(seed),
-            "Generated cases": str(len(scenarios)),
-            "Executed cases": str(len(results)),
-            "Mode": "campaign",
-        }
-        txt_path = run_dir / "report.txt"
-        xml_path = run_dir / "report.xml"
-        html_path = run_dir / "report.html"
-        write_dynamic_reports(
-            results=results,
-            txt_file=txt_path,
-            xml_file=xml_path,
-            html_file=html_path,
-            total_elapsed=elapsed,
-            metadata=metadata,
-            suite_name="MagicAI Dynamic Campaign Run",
-            suite_subtitle=(
-                "Ejecución individual dentro de una campaña multisemilla "
-                "reproducible."
-            ),
+        total_elapsed = time.perf_counter() - campaign_start
+        payload = build_campaign_payload(
+            base_seed=base_seed,
+            seeds=seeds,
+            cases_per_seed=args.cases,
+            run_summaries=run_summaries,
+            scenarios=scenarios,
+            concepts=concepts,
+            total_elapsed=total_elapsed,
         )
-        summary = summarize_results(results)
-        all_scenarios.extend(scenarios[: summary["cases"]])
-        run_summaries.append(
+        payload.update(
             {
-                "index": run_index,
-                "seed": seed,
-                "cases": summary["cases"],
-                "failures": summary["failures"],
-                "warnings": summary["warnings"],
-                "status": summary["status"],
-                "elapsed_seconds": round(elapsed, 6),
-                "manifest": _relative(manifest, output_root),
-                "txt": _relative(txt_path, output_root),
-                "xml": _relative(xml_path, output_root),
-                "html": _relative(html_path, output_root),
-                "failure_files": [
-                    _relative(path, output_root)
-                    for path in saved_failures
-                ],
+                "artifact_purpose": "evaluation",
+                "training_allowed": False,
+                "automatic_learning": False,
+                "automatic_promotion": False,
+                "workers": args.workers,
+                "resume": args.resume,
+                "run_errors": run_errors,
             }
         )
-
-        if summary["failures"] and args.fail_fast:
-            break
-
-    total_elapsed = time.perf_counter() - campaign_start
-    payload = build_campaign_payload(
-        base_seed=base_seed,
-        seeds=seeds,
-        cases_per_seed=args.cases,
-        run_summaries=run_summaries,
-        scenarios=all_scenarios,
-        concepts=concepts,
-        total_elapsed=total_elapsed,
-    )
-    summary_paths = write_campaign_summary(output_root, payload)
+        if run_errors:
+            payload["status"] = "FAIL"
+        summary_paths = write_campaign_summary(output_root, payload)
+        final_status = "failed" if payload["status"] == "FAIL" else "completed"
+        finalize_campaign_manifest(
+            output_root,
+            status=final_status,
+            run_summaries=run_summaries,
+            run_errors=run_errors,
+            elapsed_seconds=total_elapsed,
+        )
+    except (DynamicCampaignError, FileNotFoundError, ValueError) as exc:
+        total_elapsed = time.perf_counter() - campaign_start
+        with_exception = [*run_errors, {"error": str(exc)}]
+        try:
+            finalize_campaign_manifest(
+                output_root,
+                status="failed",
+                run_summaries=run_summaries,
+                run_errors=with_exception,
+                elapsed_seconds=total_elapsed,
+            )
+        except Exception:
+            pass
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
 
     print()
     print("=" * 80)
@@ -244,22 +256,25 @@ def main():
     print(f"Cases    : {payload['cases_executed']}")
     print(f"Failures : {payload['failures']}")
     print(f"Warnings : {payload['warnings']}")
-    print(f"Templates: {payload['coverage']['templates_seen']}/"
-          f"{payload['coverage']['templates_expected']}")
+    print(f"Errors   : {len(run_errors)}")
+    print(
+        f"Templates: {payload['coverage']['templates_seen']}/"
+        f"{payload['coverage']['templates_expected']}"
+    )
+    print(f"Origins  : {payload.get('origin_counts', {})}")
+    print(f"LLM calls: {payload.get('llm_calls', 0)}")
+    print(f"Timings  : {payload.get('timing_means', {})}")
     print(f"Status   : {payload['status']}")
     print(f"TXT      : {summary_paths['txt']}")
     print(f"JSON     : {summary_paths['json']}")
     print(f"HTML     : {summary_paths['html']}")
 
-    if payload["failures"]:
+    if run_errors or payload["failures"]:
         return 1
-
     if args.require_full_coverage and not payload["coverage"]["complete"]:
         return 1
-
     if payload["warnings"] and args.fail_on_warn:
         return 1
-
     return 0
 
 

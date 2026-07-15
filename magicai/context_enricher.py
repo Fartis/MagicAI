@@ -7,6 +7,7 @@ from magicai.repositories.rule_repository import RuleRepository
 from magicai.repositories.ruling_repository import RulingRepository
 from magicai.sources.symbology import extract_symbols_from_card
 from magicai.retrieval import build_oracle_rule_queries
+from magicai.retrieval.concept_evidence import mandatory_rule_numbers
 
 
 MAX_RULES = 8
@@ -21,25 +22,16 @@ def enrich(context):
     enriched_cards = []
 
     for name in context.cards:
-
         card = card_repo.find_by_name(name)
-
         if card is not None:
             enriched_cards.append(card)
 
     context.cards = enriched_cards
 
     symbols = []
-
     for card in context.cards:
-
         for symbol in extract_symbols_from_card(card):
-
-            _add_unique_symbol(
-                symbols,
-                symbol,
-            )
-
+            _add_unique_symbol(symbols, symbol)
     context.symbols = symbols
 
     context.rulings = []
@@ -51,107 +43,72 @@ def enrich(context):
                 context.rulings.append(enriched_ruling)
 
     oracle_query_focus = _oracle_query_focus(context)
-
     if oracle_query_focus:
-
         oracle_rule_queries = []
-
         for card in context.cards:
-
             for query in build_oracle_rule_queries(
                 card.oracle_text or "",
                 focus=oracle_query_focus,
             ):
-
-                _add_unique_query(
-                    oracle_rule_queries,
-                    query,
-                )
-
-        # Los conceptos derivados del Oracle recuperado son evidencia más
-        # específica que las expansiones léxicas de la pregunta. Se priorizan
-        # para que el límite MAX_RULES no los deje fuera por ruido anterior.
+                _add_unique_query(oracle_rule_queries, query)
         context.rule_queries = _merge_unique_queries(
             oracle_rule_queries,
             context.rule_queries,
         )
 
+    # Concept-critical evidence is a reserved quota, not a best-effort lexical
+    # search. Add it before incidental card keywords can consume MAX_RULES.
+    mandatory_numbers = mandatory_rule_numbers(context.question)
+    context.rule_queries = _merge_unique_queries(
+        list(mandatory_numbers),
+        context.rule_queries,
+    )
+
     enriched_rules = []
-
-    #
-    # Reglas explícitas pedidas por el usuario.
-    #
-
-    for number in context.rules:
-
+    for number in mandatory_numbers:
         rule = rule_repo.find_by_keyword(number)
-
         if rule is not None:
             _add_unique_rule(enriched_rules, rule)
 
-    #
-    # Keywords detectadas en la pregunta.
-    #
+    # Explicit rules requested by the user remain decisive.
+    for number in context.rules:
+        rule = rule_repo.find_by_keyword(number)
+        if rule is not None:
+            _add_unique_rule(enriched_rules, rule)
 
+    # Keywords detected in the question.
     for keyword in context.keywords:
-
         rule = rule_repo.find_by_keyword(keyword)
-
         if rule is not None:
             _add_unique_rule(enriched_rules, rule)
-
-    #
-    # Una consulta directa de definición o comparación entre keywords ya tiene
-    # su evidencia más específica en las reglas exactas recuperadas arriba.
-    # Evitamos añadir secciones completas de reglas relacionadas que pueden
-    # eclipsar la definición principal ante el LLM.
-    #
 
     if _prefer_exact_keyword_rules(context):
-        context.rules = enriched_rules
+        context.rules = enriched_rules[:MAX_RULES]
         return context
 
-    #
-    # Keywords detectadas en el Oracle text de las cartas recuperadas.
-    #
-    # Esto es clave: si el texto oficial de una carta contiene Undying,
-    # Flying, Haste, etc., podemos traer la regla correspondiente sin que
-    # el usuario tenga que nombrarla explícitamente.
-    #
-
+    # Oracle keywords are useful but incidental. They may fill only the space
+    # left after mandatory concept evidence.
     if not _is_basic_card_question(context):
-
         for card in context.cards:
-
             for keyword in extract_keywords(card.oracle_text or ""):
-
+                if len(enriched_rules) >= MAX_RULES:
+                    break
                 rule = rule_repo.find_by_keyword(keyword)
-
                 if rule is not None:
                     _add_unique_rule(enriched_rules, rule)
-
-    #
-    # Búsqueda conceptual en Comprehensive Rules.
-    #
-    # Limitamos a 3 por query y a MAX_RULES total para evitar ruido.
-    #
-
-    for query in context.rule_queries:
-
-        for rule in rule_repo.search(query, limit=1):
-
-            _add_unique_rule(enriched_rules, rule)
-
             if len(enriched_rules) >= MAX_RULES:
-
                 break
 
+    # Conceptual CR search, likewise bounded after pinned evidence.
+    for query in context.rule_queries:
         if len(enriched_rules) >= MAX_RULES:
-
             break
+        for rule in rule_repo.search(query, limit=1):
+            _add_unique_rule(enriched_rules, rule)
+            if len(enriched_rules) >= MAX_RULES:
+                break
 
-    context.rules = enriched_rules
-
+    context.rules = enriched_rules[:MAX_RULES]
     return context
 
 
@@ -330,14 +287,19 @@ def _merge_unique_queries(
 
     merged = []
 
-    for query in preferred + existing:
+    # Exact rule numbers derived from the question are decisive and must not
+    # be displaced by incidental Oracle expansions when MAX_RULES is reached.
+    exact_existing = [query for query in existing if _is_rule_number_query(query)]
+    broad_existing = [query for query in existing if not _is_rule_number_query(query)]
 
-        _add_unique_query(
-            merged,
-            query,
-        )
+    for query in exact_existing + preferred + broad_existing:
+        _add_unique_query(merged, query)
 
     return merged
+
+
+def _is_rule_number_query(query: str) -> bool:
+    return re.fullmatch(r"\d{3}(?:\.\d+[a-z]?)?", (query or "").strip()) is not None
 
 
 def _prefer_exact_keyword_rules(context) -> bool:

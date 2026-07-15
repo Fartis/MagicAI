@@ -1,7 +1,11 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 from magicai.api import routes
 from magicai.api.schemas import AskRequest, AskResponse
+from magicai.conversation.manager import ConversationManager
+from magicai.conversation.repository import ConversationRepository
 from magicai.judge_result import (
     JudgeConfidence,
     JudgeOrigin,
@@ -81,16 +85,23 @@ def test_route_serializes_judge_result() -> None:
             )
 
     original_assistant = routes.assistant
-    routes.assistant = FakeAssistant()
+    original_manager = routes.conversation_manager
 
-    try:
-        response = routes.ask(
-            AskRequest(
-                question="¿Puedo responder durante la resolución?",
-            )
+    with TemporaryDirectory() as directory:
+        routes.assistant = FakeAssistant()
+        routes.conversation_manager = ConversationManager(
+            ConversationRepository(Path(directory) / "judge-result.sqlite3")
         )
-    finally:
-        routes.assistant = original_assistant
+
+        try:
+            response = routes.ask(
+                AskRequest(
+                    question="¿Puedo responder durante la resolución?",
+                )
+            )
+        finally:
+            routes.assistant = original_assistant
+            routes.conversation_manager = original_manager
 
     payload = response.model_dump()
     assert payload["answer"].startswith("No puedes responder")

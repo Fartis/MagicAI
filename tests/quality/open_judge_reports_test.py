@@ -46,7 +46,7 @@ def main() -> int:
         turn_id="OJ-TEST-STRATEGY",
         turn_index=3,
         question="¿Es mejor?",
-        answer="La recomendación corresponde a Deck Master.",
+        answer="La recomendación corresponde a Estratega.",
         outcome=OpenJudgeOutcome.STRATEGY_REQUIRED,
         elapsed=0.15,
         snapshot=ConversationSnapshot(history_size=4),

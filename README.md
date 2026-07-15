@@ -6,170 +6,153 @@
 
 ### More Gathering. Less Guessing.
 
-**Asistente local y source-grounded para Magic: The Gathering**
 **Local, source-grounded assistant for Magic: The Gathering**
 
-`v0.1.0-alpha` · Judge core in active development · Local-first
+`v0.1.0-alpha` · Local-first · Python + Ollama
+
+**Next public milestone:** `0.1 beta` — **Ponder**  
+**Planned 1.0 codename:** **NicolAI Bolas**
 
 </div>
 
 ---
 
-## 🇪🇸 Qué es MagicAI
+## What is MagicAI?
 
-MagicAI es un proyecto de IA local especializado en **Magic: The Gathering**. Su primer producto es el **Juez**, un asistente que recupera Oracle, reglas y contexto antes de responder.
+MagicAI is a local AI project for **Magic: The Gathering**. Its factual core is the **Judge**, which retrieves Oracle text, Comprehensive Rules, rulings, and conversation context before answering.
 
-La idea central es sencilla:
+> The model is not the source of truth. The Judge retrieves and validates evidence; language models explain it.
 
-> El modelo no es la fuente de verdad. El Juez recupera la evidencia y el modelo la explica.
+MagicAI does not attempt to memorize every card or rule. It builds the evidence required for each question, uses deterministic renderers when a formal answer is covered, validates model output, and falls back safely when the evidence is insufficient.
 
-MagicAI no intenta memorizar todas las cartas ni todas las reglas. Construye el contexto necesario para cada pregunta, aplica renderizadores deterministas cuando existe una respuesta formal conocida, valida las respuestas del LLM y utiliza fallbacks seguros cuando la evidencia no basta.
+The second profile is the **Tactician**—shown as **Estratega** in the local UI. The Tactician analyzes game lines, interactions, synergies, and combos, but all factual data still passes through the Judge-owned source gateway.
 
-### Alcance actual
+## Current capabilities
 
-- Oracle y rulings locales descargados desde los bulk de Scryfall.
-- Magic Comprehensive Rules locales.
-- Recuperación de cartas, keywords, símbolos y reglas relacionadas.
-- Memoria conversacional y resolución de referencias ambiguas.
-- Renderizado determinista de familias de reglas cubiertas.
-- Ollama como motor local para explicaciones no cubiertas por renderizadores.
-- Validación, reintento y fallback source-grounded.
-- API REST de desarrollo.
-- UI beta local servida por FastAPI, sin Node ni servicios externos.
-- Suites de regresión, generalización, Gauntlet dinámico y campañas multisemilla.
-- Open Judge Gauntlet con contratos semánticos para conversaciones reales.
+- Local Scryfall Oracle and rulings snapshots.
+- Local Magic Comprehensive Rules.
+- Card, keyword, symbol, action, and rule retrieval.
+- Conversation continuity and card disambiguation.
+- Deterministic answers for covered rule families.
+- Ollama fallback for explanations outside deterministic coverage.
+- Source-grounded validation, retries, and safe fallback.
+- Structured `JudgeResult` evidence and provenance.
+- Local FastAPI REST API and browser UI.
+- Persistent local conversation history in SQLite.
+- Exportable community-feedback cases for evaluation only.
+- Reproducible Gauntlets, multi-seed campaigns, process workers, sharding, and resume support.
+- Tactician review of Judge contradictions.
+- Automatic Judge-to-Tactician handoff for strategic questions.
+- Referential follow-up support, including cards inherited from the previous turn.
+- Initial generic combo reconstruction for sacrifice, Undying, counter-removal, token, and mana loops.
 
-### Alcance de cartas
+## Card scope
 
-El Juez y las campañas estándar se centran en **cartas de papel ordinarias**. Se excluyen cartas de broma, silver-border, acorn y playtest, además de objetos suplementarios como Vanguard, tokens, emblemas, planos, fenómenos y esquemas. Las cartas ordinarias siguen siendo consultables aunque estén prohibidas actualmente.
+The standard Judge and evaluation catalog focus on ordinary paper cards. Funny, silver-border, acorn, and playtest cards are excluded, together with supplemental objects such as Vanguard cards, tokens, emblems, planes, phenomena, and schemes. Ordinary paper cards remain queryable even when they are currently banned.
 
-### Estado
+## Development status
 
-El Juez ya es funcional para varias familias de reglas, pero todavía no es una versión final. El desarrollo inmediato se centra en medir su generalización abierta, ampliar cobertura según fallos reales y estabilizar un contrato estructurado que sirva tanto a la futura UI como a otros perfiles.
+MagicAI is an advanced Judge alpha and an early integrated Tactician alpha. The quality infrastructure is mature enough to expose semantic false positives instead of merely checking surface matches, but arbitrary Magic interactions are not yet fully covered.
 
-La última campaña dinámica validada cubrió:
-
-```text
-3 semillas
-126 escenarios
-14 conceptos
-42 plantillas
-126 PASS
-0 WARN
-0 FAIL
-```
-
-La matriz completa de regresión actualmente validada es:
+The latest focused C1.4 validation recorded:
 
 ```text
-Reddit Gauntlet          30/30
-Generalization Probe     18/18
-Dynamic Gauntlet         42/42
-Dynamic Campaign        126/126
---------------------------------
-Ejecuciones validadas   216/216
-WARN                           0
-FAIL                           0
+Focused and expanded tests      231/231
+Full-Oracle smoke                 42/42
+C1.3 finding replays              23/23
+Rebuilt campaign               1,000/1,000
+WARN                                   0
+FAIL                                   0
 ```
 
-Consulta [docs/STATUS.md](docs/STATUS.md) para el estado detallado y [docs/ROADMAP.md](docs/ROADMAP.md) para la hoja de ruta.
+These results describe a controlled and reproducible matrix. They do **not** mean every Magic card, rule, or interaction is covered.
 
----
-
-## 🇬🇧 What is MagicAI?
-
-MagicAI is a local AI project specialized in **Magic: The Gathering**. Its first product is the **Judge**, an assistant that retrieves Oracle text, rules and conversation context before answering.
-
-Its core principle is:
-
-> The model is not the source of truth. The Judge retrieves evidence and the model explains it.
-
-MagicAI does not try to memorize every card or rule. It builds the context required for each question, uses deterministic renderers where a formal answer is available, validates LLM output and falls back safely when evidence is insufficient.
-
-The Judge and standard test catalog focus on ordinary paper cards. Funny, silver-border, acorn and playtest cards are out of scope, together with supplemental objects such as Vanguard cards, tokens, emblems, planes, phenomena and schemes.
-
-See [docs/STATUS.md](docs/STATUS.md) for the current state and [docs/ROADMAP.md](docs/ROADMAP.md) for the development plan.
-
----
-
-## Principios del proyecto · Project principles
-
-- **Judge authority:** el Juez es la única autoridad factual sobre cartas, reglas, rulings y legalidad.
-- **Retrieve, do not memorize:** Oracle y reglas antes que memoria del modelo.
-- **No card-specific patches:** los arreglos deben ser genéricos, transparentes y reutilizables.
-- **Local-first:** la inferencia se ejecuta mediante Ollama en la máquina del usuario.
-- **Safe uncertainty:** es preferible declarar evidencia insuficiente a inventar una interacción.
-- **Test the premise:** una respuesta correcta no sirve si la pregunta se generó desde una premisa falsa.
-- **Official-play scope:** no se gastan recursos estándar en cartas de broma o playtest.
-
-Más detalle en [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md).
-
----
-
-## Arquitectura resumida · Architecture overview
+The current Tactician milestone adds:
 
 ```text
-User / API
-    │
-    ▼
-Conversation + disambiguation
-    │
-    ▼
-Context Builder
-    │
-    ├── card extraction
-    ├── keyword and action detection
-    └── rule-query generation
-    │
-    ▼
-Context Enricher
-    │
-    ├── local Oracle
-    ├── local Scryfall rulings
-    ├── Comprehensive Rules
-    └── Scryfall symbology
-    │
-    ▼
-Knowledge Builder
-    │
-    ▼
-Deterministic rule renderer
-    │
-    ├── answer found ───────────────► final answer
-    │
-    └── no deterministic answer
-             │
-             ▼
-          Ollama
-             │
-             ▼
-     validation → retry → safe fallback
+Automatic strategic handoff
+Conversation-card inheritance
+Intent-specific strategy routing
+Generic three-piece Undying loop detection
+Judge capability registry
+Structured combo steps and outcomes
 ```
 
-La arquitectura completa y la separación futura entre Juez, Deck Master y Deckbuilder se documentan en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+See [docs/STATUS.md](docs/STATUS.md) for the current snapshot and [docs/ROADMAP.md](docs/ROADMAP.md) for the path to **Ponder**.
 
 ---
 
-## Requisitos · Requirements
+## Project principles
+
+- **Judge authority:** the Judge is the sole factual authority for Oracle text, rules, rulings, and legality.
+- **Tactician autonomy:** the Tactician may investigate iteratively and request as many Judge-owned tools as needed.
+- **Source gateway:** strategic profiles never open factual sources directly.
+- **Retrieve, do not memorize:** current sources take precedence over model memory.
+- **No card-specific patches:** fixes must be generic, inspectable, and reusable.
+- **Local-first:** inference runs through Ollama on the user's machine.
+- **Safe uncertainty:** insufficient evidence is better than invented certainty.
+- **Test the premise:** a correct answer is useless when the generated scenario is invalid.
+- **Evaluation is not training:** reports and feedback artifacts never modify model weights automatically.
+
+See [docs/PHILOSOPHY.md](docs/PHILOSOPHY.md).
+
+---
+
+## Architecture overview
+
+```text
+User / API / UI
+       │
+       ▼
+Conversation and intent routing
+       │
+       ├──────── factual question ───────► Judge
+       │                                      │
+       │                                      ├─ Oracle / Scryfall rulings
+       │                                      ├─ Comprehensive Rules
+       │                                      ├─ symbology / legality
+       │                                      └─ deterministic validation
+       │
+       └──────── strategic question ─────► automatic handoff
+                                              │
+                                              ▼
+                                        Tactician
+                                     plan / combo / line
+                                              │
+                                              ▼
+                                    Judge source gateway
+                                              │
+                                              ▼
+                                  challenge / verify / critic
+                                              │
+                                              ▼
+                                         final answer
+```
+
+The Tactician may make repeated structured requests through the Judge. The source boundary is a trust boundary, not an intelligence limit.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/TACTICIAN.md](docs/TACTICIAN.md).
+
+---
+
+## Requirements
 
 - Python **3.12+**
-- Ollama accesible por HTTP
-- Modelo recomendado: **Qwen3 8B**
-- `curl`, `wget` y `jq` para los scripts de descarga
-- Linux, WSL2 o un entorno equivalente
+- Ollama reachable over HTTP
+- Recommended model: **Qwen3 8B**
+- `curl`, `wget`, and `jq` for source download scripts
+- Linux, WSL2, or an equivalent environment
 
-La configuración por defecto espera:
+Default environment:
 
 ```text
 OLLAMA_URL=http://127.0.0.1:11434/api/chat
 MAGICAI_MODEL=qwen3:8b
 ```
 
-Ambas variables pueden sobrescribirse mediante el entorno.
-
 ---
 
-## Instalación rápida · Quick start
+## Quick start
 
 ```bash
 git clone https://github.com/Fartis/MagicAI.git
@@ -177,179 +160,89 @@ cd MagicAI
 
 python3.12 -m venv .venv
 source .venv/bin/activate
-
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-```
 
-`requirements.txt` instala el proyecto en modo editable mediante `-e .`. Las dependencias directas se declaran en `pyproject.toml`.
-
-Para reproducir exactamente el entorno validado:
-
-```bash
-python -m pip install -r requirements.txt   -c requirements.lock.txt
-python -m pip check
-```
-
-Descarga las fuentes locales:
-
-```bash
 ./scripts/download_sources.sh
 ./scripts/download_rules.sh
 python scripts/update_scryfall_symbology.py
-```
 
-Comprueba Ollama y descarga el modelo:
-
-```bash
-ollama list
 ollama pull qwen3:8b
-```
-
-Si Ollama se ejecuta en Docker:
-
-```bash
-docker exec ollama ollama list
-docker exec ollama ollama pull qwen3:8b
-```
-
----
-
-## API de desarrollo · Development API
-
-```bash
 python -m uvicorn magicai.api:app --reload
 ```
 
-Endpoints útiles:
+Open:
 
 ```text
-UI   http://127.0.0.1:8000/ui
-GET  http://127.0.0.1:8000/
-POST http://127.0.0.1:8000/ask
-DOCS http://127.0.0.1:8000/docs
+UI    http://127.0.0.1:8000/ui
+API   http://127.0.0.1:8000/docs
 ```
 
-La UI beta muestra la conversación, el estado de `JudgeResult`, cartas, reglas, rulings, supuestos, advertencias y salud de las fuentes. Consulta [docs/UI.md](docs/UI.md).
+The complete setup guide, including `main` versus `develop`, Docker Ollama, and LAN Ollama, is in [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
-Ejemplo:
+---
 
-```bash
-curl -X POST http://127.0.0.1:8000/ask \
-  -H 'Content-Type: application/json' \
-  -d '{"question":"¿Puedo responder a Ward?"}'
-```
-
-La API mantiene `answer` y `session_id` por compatibilidad, pero ya devuelve un `JudgeResult` estructurado con estado, origen, confianza, autoridad, cartas, reglas, consultas de recuperación, advertencias y versiones locales de fuentes.
-
-El contrato HTTP está versionado y preparado para la UI beta:
+## API profiles
 
 ```text
-GET  /meta    versiones y valores admitidos por el contrato
-GET  /health  disponibilidad de fuentes locales y Ollama
-POST /ask     JudgeResult estructurado y compatible con clientes legacy
+POST /ask             Judge entry point with automatic strategic handoff
+POST /tactician/ask   Explicit Tactician entry point
+GET  /meta            contracts, profiles, codenames, and Judge capabilities
+GET  /health          source and service health
 ```
 
-Los errores HTTP utilizan un sobre estructurado y versionado. Consulta [docs/API_CONTRACT.md](docs/API_CONTRACT.md).
-
-Ejemplo abreviado:
+Automatic handoff can be disabled for diagnostic clients:
 
 ```json
 {
-  "answer": "No puedes responder durante la resolución.",
-  "session_id": "...",
-  "status": "answered",
-  "origin": "deterministic_rule",
-  "confidence": "high",
-  "authority": "judge",
-  "cards": [],
-  "rules": [{"number": "117.2e", "title": "..."}],
-  "assumptions": [],
-  "warnings": [],
-  "source_versions": {
-    "comprehensive_rules": "2026-06-19"
-  }
+  "question": "Do these cards form a combo?",
+  "auto_handoff": false
 }
 ```
 
-Consulta [docs/JUDGE_RESULT.md](docs/JUDGE_RESULT.md) para el contrato completo.
+See [docs/API_CONTRACT.md](docs/API_CONTRACT.md) and [docs/JUDGE_RESULT.md](docs/JUDGE_RESULT.md).
 
 ---
 
-## Pruebas · Testing
+## Testing
 
-Pruebas rápidas sin campaña completa:
+Focused deterministic tests:
 
 ```bash
-PYTHONPATH=. python -m tests.quality.dynamic_gauntlet_generator_test
-PYTHONPATH=. python -m tests.quality.dynamic_campaign_planner_test
-PYTHONPATH=. python -m tests.quality.dynamic_concept_contract_test
-PYTHONPATH=. python -m tests.retrieval.rule_queries_test
-PYTHONPATH=. python -m tests.retrieval.conversation_continuity_test
 PYTHONPATH=. python -m tests.validation.rule_renderer_test
 PYTHONPATH=. python -m tests.validation.oracle_renderer_test
-PYTHONPATH=. python -m tests.validation.strategy_boundary_test
-PYTHONPATH=. python -m tests.validation.judge_result_test
-PYTHONPATH=. python -m tests.api.judge_result_schema_test
-PYTHONPATH=. python -m tests.quality.open_judge_contract_test
-PYTHONPATH=. python -m tests.quality.open_judge_evaluator_test
-PYTHONPATH=. python -m tests.quality.open_judge_reports_test
+PYTHONPATH=. python -m tests.tactician.tactician_reviewer_test
+PYTHONPATH=. python -m tests.tactician.tactician_strategy_test
+PYTHONPATH=. python -m tests.tactician.tactician_conversation_handoff_test
 ```
 
-Open Judge Gauntlet:
+Exhaustive Oracle evaluation:
 
 ```bash
-PYTHONPATH=. python -m tests.quality.open_judge_test
+PYTHONPATH=. python -u -m tests.quality.oracle_exhaustive_test \
+  --workers 4 \
+  --shard-size 250 \
+  --output-dir quality-results/oracle-exhaustive
 ```
 
-Genera una baseline semántica de 11 conversaciones y 27 turnos, con informes TXT, JSON, XML y HTML.
-
-Gauntlet dinámico reproducible:
-
-```bash
-python -m tests.quality.dynamic_gauntlet_test \
-  --seed 184729 \
-  --cases 42
-```
-
-Campaña multisemilla:
-
-```bash
-python -m tests.quality.dynamic_campaign_test \
-  --seed 184729 \
-  --seed 987654 \
-  --seed 424242 \
-  --cases 42 \
-  --require-full-coverage \
-  --fail-on-warn
-```
-
-Consulta [docs/COMMANDS.md](docs/COMMANDS.md) para la referencia completa.
+See [docs/COMMANDS.md](docs/COMMANDS.md) and [docs/DEV_COMMANDS.md](docs/DEV_COMMANDS.md).
 
 ---
 
-## Estructura principal · Main structure
+## Main structure
 
 ```text
 MagicAI/
 ├── magicai/
 │   ├── api/               # REST API
 │   ├── assistant/         # Judge orchestration
-│   ├── conversation/      # sessions and disambiguation
-│   ├── extractors/        # cards, keywords and rules
-│   ├── llm/               # Ollama client
-│   ├── reasoning/         # semantic action hints
-│   ├── repositories/      # card/rule access boundary
-│   ├── retrieval/         # rule and Oracle query building
-│   ├── services/          # local search services
-│   ├── sources/           # symbology access
-│   └── validation/        # renderers, validation and fallback
+│   ├── conversation/      # sessions and continuity
+│   ├── judge_tools/       # Judge-owned capability registry
+│   ├── retrieval/         # rule and Oracle query construction
+│   ├── tactician/         # strategic analysis and challenges
+│   ├── validation/        # renderers, validation, and fallback
+│   └── ui/                # local browser UI
 ├── tests/
-│   ├── api/
-│   ├── quality/
-│   ├── regression/
-│   ├── retrieval/
-│   └── validation/
 ├── docs/
 ├── scripts/
 ├── sources/
@@ -358,39 +251,86 @@ MagicAI/
 
 ---
 
-## Evolución prevista · Planned evolution
+## Release names
 
-1. Repetir el Open Judge Gauntlet tras cada hardening y estabilizar sus contratos.
-2. Corregir por familias los fallos de contexto, retrieval y atribución.
-3. Estabilizar y ampliar `JudgeResult` como contrato factual público.
-4. Completar cobertura guiada por fallos reales.
-5. Cerrar un Judge Release Candidate.
-6. Construir una UI beta modular para conversar con el Juez.
-7. Añadir Deck Master y Deckbuilder sobre la misma UI.
+- **0.1 beta — Ponder:** the first integrated Judge + Tactician beta.
+- **1.0 — NicolAI Bolas:** the planned complete first major release.
 
-Deck Master y Deckbuilder **no tendrán acceso factual directo a Internet, Oracle ni reglas**. Para cartas, legalidad, rulings e interacciones deberán consultar al Juez mediante su API interna.
+The codenames do not change MagicAI's source-grounded architecture or licensing.
 
 ---
 
-## Documentación
+## Documentation
 
-- [Arquitectura](docs/ARCHITECTURE.md)
-- [Comandos](docs/COMMANDS.md)
-- [UI beta](docs/UI.md)
-- [Estado actual](docs/STATUS.md)
-- [Contrato JudgeResult](docs/JUDGE_RESULT.md)
-- [Contrato HTTP y compatibilidad](docs/API_CONTRACT.md)
-- [Hoja de ruta](docs/ROADMAP.md)
-- [Filosofía](docs/PHILOSOPHY.md)
-- [Contribuir](docs/CONTRIBUTING.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Quick start](docs/QUICKSTART.md)
+- [Commands](docs/COMMANDS.md)
+- [Developer commands](docs/DEV_COMMANDS.md)
+- [UI](docs/UI.md)
+- [Current status](docs/STATUS.md)
+- [JudgeResult](docs/JUDGE_RESULT.md)
+- [API contract](docs/API_CONTRACT.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Tactician](docs/TACTICIAN.md)
+- [Philosophy](docs/PHILOSOPHY.md)
+- [Contributing](docs/CONTRIBUTING.md)
 
 ---
 
-## Licencia
+## License
 
-El código de MagicAI se distribuye bajo la **GNU Affero General Public License v3.0 o posterior** (`AGPL-3.0-or-later`).
+MagicAI is distributed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE) and [docs/LICENSING.md](docs/LICENSING.md).
 
-Puedes usarlo, estudiarlo, modificarlo y redistribuirlo bajo los términos de esa licencia. Si publicas o prestas por red una versión modificada de MagicAI, debes ofrecer a quienes interactúen con ella acceso al código fuente correspondiente de esa versión.
+---
 
-Consulta [LICENSE](LICENSE) y [docs/LICENSING.md](docs/LICENSING.md).
+# ❤️ A personal letter
 
+If you've made it this far, chances are we share the same passion.
+
+I'd like to finish this README with a few personal words.
+
+Due to health reasons, this will most likely be the last major software project I'll be able to build. After spending a large part of my professional life developing software, I've had to accept that my journey will take a different path much sooner than I ever expected.
+
+I wanted to say goodbye to this chapter by creating something that brought together the two things I've loved the most throughout my life: programming and **Magic: The Gathering**, a game that has been with me for as long as I can remember and has always meant far more than just a game.
+
+MagicAI was born from a simple idea: to build the tool I always wished I had, one that could help me understand the rules, organize my thoughts and continue enjoying this incredible game.
+
+As long as my health allows it, I'll continue improving it little by little, learning and adding new features whenever I can.
+
+If this project helps even a single player solve a rules question, discover a new interaction or simply enjoy Magic a little bit more, then it will have achieved everything I hoped for.
+
+Thank you for taking the time to discover this project.
+
+I truly hope you enjoy using it as much as I've enjoyed building it.
+
+**See you in the next game.**
+
+____
+
+Si has llegado hasta aquí, lo más probable es que compartamos la misma pasión.
+
+Me gustaría terminar este archivo README con unas palabras personales.
+
+Por motivos de salud, es muy probable que este sea el último gran proyecto de software que pueda desarrollar. Después de dedicar gran parte de mi vida profesional al desarrollo de software, he tenido que aceptar que mi trayectoria tomará un rumbo diferente mucho antes de lo que jamás hubiera imaginado.
+
+Quería despedirme de este capítulo creando algo que reuniera las dos cosas que más he amado a lo largo de mi vida: la programación y **Magic: The Gathering**, un juego que me ha acompañado desde que tengo uso de razón y que siempre ha significado mucho más que un simple juego.
+
+MagicAI nació de una idea sencilla: crear la herramienta que siempre había deseado tener, una que me ayudara a entender las reglas, a organizar mis ideas y a seguir disfrutando de este increíble juego.
+
+Mientras mi salud me lo permita, seguiré mejorándola poco a poco, aprendiendo y añadiendo nuevas funciones siempre que pueda.
+
+Si este proyecto ayuda aunque sea a un solo jugador a resolver una duda sobre las reglas, a descubrir una nueva interacción o, simplemente, a disfrutar un poco más de Magic, habrá logrado todo lo que esperaba.
+
+Gracias por dedicar tu tiempo a descubrir este proyecto.
+
+Espero de verdad que disfrutes usándolo tanto como yo he disfrutado creándolo.
+
+**Nos vemos en la próxima partida.**
+
+---
+
+<div align="center">
+
+### 🧙 More Gathering. Less Guessing.
+
+</div>

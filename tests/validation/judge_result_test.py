@@ -78,6 +78,77 @@ No player has priority while a spell or ability is resolving.
     assert "sources" in result.source_health
 
 
+
+def test_copied_ability_interaction_uses_deterministic_judge_route() -> None:
+    question = (
+        "Si copio la habilidad de Braids y sacrifico a Braids con la copia, "
+        "¿la habilidad original se resuelve normalmente?"
+    )
+    knowledge = """
+QUESTION
+
+Si copio la habilidad de Braids y sacrifico a Braids con la copia, ¿la habilidad original se resuelve normalmente?
+
+============================================================
+CARDS
+
+Braids, Arisen Nightmare
+Mana Cost: {1}{B}{B}
+Legendary Creature — Nightmare
+
+At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permanent that shares a card type with it. For each opponent who doesn't, that player loses 2 life and you draw a card.
+
+============================================================
+RULES
+
+113.7a
+Once activated or triggered, an ability exists on the stack independently of its source.
+
+405.5
+The top object on the stack resolves first.
+
+608.2d
+Choices made while applying an effect are announced during resolution.
+
+707.10
+To copy an ability means to put a copy of it onto the stack. Choices that are normally made on resolution are not copied.
+"""
+    context = SimpleNamespace(
+        question=question,
+        intent="rules",
+        cards=[
+            SimpleNamespace(
+                name="Braids, Arisen Nightmare",
+                mana_cost="{1}{B}{B}",
+                type_line="Legendary Creature — Nightmare",
+                oracle_text=(
+                    "At the beginning of your end step, you may sacrifice an "
+                    "artifact, creature, enchantment, land, or planeswalker. "
+                    "If you do, each opponent may sacrifice a permanent that "
+                    "shares a card type with it. For each opponent who doesn't, "
+                    "that player loses 2 life and you draw a card."
+                ),
+                scryfall_uri="https://scryfall.com/card/example/braids",
+            )
+        ],
+        rules=[
+            {"number": "113.7a", "title": "Ability source independence"},
+            {"number": "405.5", "title": "Top object resolves first"},
+            {"number": "608.2d", "title": "Choices on resolution"},
+            {"number": "707.10", "title": "Copying spells and abilities"},
+        ],
+        rulings=[],
+        rule_queries=["707.10", "113.7a", "608.2d", "405.5"],
+    )
+
+    result = generate_judge_result(knowledge, context=context)
+
+    assert result.status is JudgeStatus.ANSWERED
+    assert result.origin is JudgeOrigin.DETERMINISTIC_RULE
+    assert result.confidence is JudgeConfidence.HIGH
+    assert "original se resuelve normalmente" in result.answer
+    assert "otro permanente válido" in result.answer
+
 def test_strategy_result_is_explicit() -> None:
     knowledge = """
 QUESTION
@@ -163,6 +234,7 @@ def test_clarification_result_serializes_legacy_and_structured_fields() -> None:
 def main() -> int:
     tests = [
         test_deterministic_result_contains_evidence,
+        test_copied_ability_interaction_uses_deterministic_judge_route,
         test_strategy_result_is_explicit,
         test_safe_fallback_reports_insufficient_evidence,
         test_clarification_result_serializes_legacy_and_structured_fields,

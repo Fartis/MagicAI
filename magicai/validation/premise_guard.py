@@ -5,6 +5,11 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
+from magicai.oracle_abilities import (
+    extract_activated_abilities,
+    extract_quoted_activated_abilities,
+)
+
 
 @dataclass(frozen=True, slots=True)
 class PremiseCorrection:
@@ -20,8 +25,17 @@ def render_false_premise_answer(
 ) -> PremiseCorrection | None:
     """Correct only high-confidence false premises grounded in Oracle text."""
 
-    question = _normalize(getattr(context, "question", "") or _question(knowledge))
+    raw_question = getattr(context, "question", "") or _question(knowledge)
+    question = _normalize(raw_question)
     cards = list(getattr(context, "cards", []) or [])
+
+    impossible_sequence = _exact_ability_source_removal_premise(
+        raw_question,
+        question,
+        cards,
+    )
+    if impossible_sequence:
+        return impossible_sequence
 
     if not _asserts_a_premise(question):
         return None
@@ -36,6 +50,62 @@ def render_false_premise_answer(
 
     return None
 
+
+
+def _exact_ability_source_removal_premise(
+    raw_question: str,
+    question: str,
+    cards: list[Any],
+) -> PremiseCorrection | None:
+    if not any(marker in question for marker in (
+        "destruy", "elimin", "retir", "fuente", "source", "removed",
+    )):
+        return None
+    quoted = extract_quoted_activated_abilities(raw_question)
+    if not quoted:
+        return None
+    quoted_texts = {_normalize(ability.text) for ability in quoted}
+    for card in cards:
+        name = str(getattr(card, "name", "Esta carta") or "Esta carta")
+        oracle = str(getattr(card, "oracle_text", "") or "")
+        type_line = str(getattr(card, "type_line", "") or "")
+        for ability in extract_activated_abilities(
+            oracle,
+            card_name=name,
+            type_line=type_line,
+        ):
+            if _normalize(ability.text) not in quoted_texts:
+                continue
+            if ability.source_removed_as_cost:
+                return PremiseCorrection(
+                    answer=(
+                        f"La secuencia planteada no es posible para esa habilidad de "
+                        f"{name}: el coste retira la propia fuente antes de que la "
+                        "habilidad quede activada en la pila. No puede destruirse "
+                        "después como si todavía siguiera en el campo de batalla."
+                    ),
+                    warnings=[
+                        "Se corrigió una premisa donde la propia fuente abandona su zona como coste de activación."
+                    ],
+                )
+            if ability.source_zone != "battlefield":
+                zone = {
+                    "hand": "la mano",
+                    "graveyard": "el cementerio",
+                    "exile": "el exilio",
+                    "library": "la biblioteca",
+                }.get(ability.source_zone, ability.source_zone)
+                return PremiseCorrection(
+                    answer=(
+                        f"La secuencia planteada no es posible para esa habilidad de "
+                        f"{name}: se activa desde {zone}, no desde un permanente en "
+                        "el campo de batalla que pueda ser destruido después."
+                    ),
+                    warnings=[
+                        "Se corrigió una premisa que colocaba la fuente de una habilidad en una zona incorrecta."
+                    ],
+                )
+    return None
 
 def _cast_trigger_entering_premise(
     question: str,
