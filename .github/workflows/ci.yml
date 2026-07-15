@@ -36,12 +36,13 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
-          version: "0.11.28"
           enable-cache: true
 
-      - name: Validate and install locked dependencies
+      - name: Validate lock file
+        run: uv lock --check
+
+      - name: Install locked dependencies
         run: |
-          uv lock --check
           uv sync --frozen
           uv pip check
 
