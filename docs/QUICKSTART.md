@@ -16,13 +16,11 @@ cd MagicAI
 
 ## Python environment
 
+Install `uv`:
+
 ```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip check
-```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source "$HOME/.local/bin/env"
 
 ## Local sources
 
