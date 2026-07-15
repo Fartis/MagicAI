@@ -1,12 +1,12 @@
 # Current MagicAI status
 
-> Development snapshot: `v0.1.0-alpha`  
-> Next beta: `0.1` — **Ponder**  
+> Current release: `v0.1.1-beta` — **Force of Will**
+> Next beta milestone: `v0.2.0-beta` — **Ponder**
 > Planned 1.0 codename: **NicolAI Bolas**
 
 ## Overall assessment
 
-MagicAI is an advanced functional alpha of the Judge and an early integrated alpha of the Tactician.
+MagicAI is an early public beta with an advanced Judge core and an integrated Tactician foundation.
 
 Approximate maturity relative to the complete vision:
 
@@ -45,3 +45,8 @@ These are planning estimates, not coverage statistics.
 - Validation can still miss unsupported LLM interpretations outside covered contracts.
 - Spellbook, authorized statistics, user collection, and metagame sources are not connected.
 - The full exhaustive evaluation must be run on the user's local Oracle snapshot after each major semantic change.
+
+
+## Repository health
+
+The first repository-health foundation adds fast pull request CI, clean release packaging, community policies, dependency update configuration, and explicit branching and release documentation. Large Oracle and Ollama campaigns remain separate from fast CI.

@@ -3,6 +3,10 @@ from magicai.api.schemas import TacticianAskResponse
 from magicai.versioning import (
     NEXT_BETA_CODENAME,
     NEXT_BETA_VERSION,
+    PUBLIC_VERSION,
+    RELEASE_CHANNEL,
+    RELEASE_CODENAME,
+    RELEASE_TAG,
     TACTICIAN_RESULT_SCHEMA_VERSION,
     V1_CODENAME,
 )
@@ -11,6 +15,10 @@ from magicai.versioning import (
 def test_meta_exposes_tactician_profile() -> None:
     payload = routes.meta()
     assert "tactician" in payload["profiles"]
+    assert payload["project_version"] == PUBLIC_VERSION
+    assert payload["release_channel"] == RELEASE_CHANNEL
+    assert payload["release_codename"] == RELEASE_CODENAME
+    assert payload["release_tag"] == RELEASE_TAG
     assert payload["tactician_result_schema_version"] == TACTICIAN_RESULT_SCHEMA_VERSION
     assert payload["next_beta_version"] == NEXT_BETA_VERSION
     assert payload["next_beta_codename"] == NEXT_BETA_CODENAME

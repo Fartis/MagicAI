@@ -2,9 +2,13 @@
 
 ## Release targets
 
-### 0.1 beta — Ponder
+### 0.1.1 beta — Force of Will — current
 
-The first integrated beta requires:
+The first public beta establishes the integrated Judge and Tactician foundation, persistent conversations, structured evidence, automated handoff, and repository-health basics.
+
+### 0.2.0 beta — Ponder
+
+The next integrated beta requires:
 
 - reliable Judge answers for the covered families;
 - source-grounded validation and safe failure;
@@ -18,6 +22,15 @@ The first integrated beta requires:
 ### 1.0 — NicolAI Bolas
 
 The first major release should add mature deck analysis, authorized strategic sources, collection awareness, broader format support, and production-grade packaging.
+
+## Repository health — parallel track
+
+- Fast pull request CI without Ollama or bulk sources.
+- Clean tracked-file release packaging.
+- Security, support, conduct, and pull request policies.
+- Dependabot configuration.
+- Explicit branch and release procedures.
+- Later: test markers, static analysis, governance, maintainers, ADRs, and branch cleanup.
 
 ## Sprint 12 — Tactician integration
 

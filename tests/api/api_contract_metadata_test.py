@@ -4,6 +4,9 @@ from magicai.sources.health import SourceHealth, SourceProbe
 from magicai.versioning import (
     API_CONTRACT_VERSION,
     JUDGE_RESULT_SCHEMA_VERSION,
+    PUBLIC_VERSION,
+    RELEASE_CODENAME,
+    RELEASE_TAG,
 )
 
 
@@ -41,6 +44,9 @@ def _source_health() -> SourceHealth:
 def test_meta_exposes_stable_contract_values() -> None:
     payload = routes.meta()
 
+    assert payload["project_version"] == PUBLIC_VERSION
+    assert payload["release_codename"] == RELEASE_CODENAME
+    assert payload["release_tag"] == RELEASE_TAG
     assert payload["api_contract_version"] == API_CONTRACT_VERSION
     assert payload["judge_result_schema_version"] == JUDGE_RESULT_SCHEMA_VERSION
     assert "answered" in payload["judge_statuses"]
@@ -59,6 +65,9 @@ def test_health_payload_distinguishes_ready_and_full_service() -> None:
         ),
     )
 
+    assert payload["project_version"] == PUBLIC_VERSION
+    assert payload["release_codename"] == RELEASE_CODENAME
+    assert payload["release_tag"] == RELEASE_TAG
     assert payload["status"] == "degraded"
     assert payload["ready"] is True
     assert payload["full_service"] is False

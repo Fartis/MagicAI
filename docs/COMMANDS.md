@@ -34,6 +34,25 @@ python -m tests.tactician.tactician_conversation_handoff_test
 python -m tests.api.tactician_api_contract_test
 ```
 
+## Fast pull request checks
+
+```bash
+python scripts/ci_check.py
+```
+
+## Release packages
+
+```bash
+python scripts/package_release.py --source
+python scripts/package_release.py --full
+```
+
+## GitHub repository analysis export
+
+```bash
+./scripts/export_github_analysis.sh
+```
+
 ## Dynamic Gauntlet
 
 ```bash

@@ -8,9 +8,9 @@
 
 **Local, source-grounded assistant for Magic: The Gathering**
 
-`v0.1.0-alpha` · Local-first · Python + Ollama
+`v0.1.1-beta` — **Force of Will** · Local-first · Python + Ollama
 
-**Next public milestone:** `0.1 beta` — **Ponder**  
+**Next public milestone:** `v0.2.0-beta` — **Ponder**
 **Planned 1.0 codename:** **NicolAI Bolas**
 
 </div>
@@ -52,7 +52,7 @@ The standard Judge and evaluation catalog focus on ordinary paper cards. Funny, 
 
 ## Development status
 
-MagicAI is an advanced Judge alpha and an early integrated Tactician alpha. The quality infrastructure is mature enough to expose semantic false positives instead of merely checking surface matches, but arbitrary Magic interactions are not yet fully covered.
+MagicAI is an early public beta with an advanced Judge core and an integrated Tactician foundation. The quality infrastructure is mature enough to expose semantic false positives instead of merely checking surface matches, but arbitrary Magic interactions are not yet fully covered.
 
 The latest focused C1.4 validation recorded:
 
@@ -206,6 +206,12 @@ See [docs/API_CONTRACT.md](docs/API_CONTRACT.md) and [docs/JUDGE_RESULT.md](docs
 
 ## Testing
 
+Fast pull request checks:
+
+```bash
+python scripts/ci_check.py
+```
+
 Focused deterministic tests:
 
 ```bash
@@ -253,7 +259,8 @@ MagicAI/
 
 ## Release names
 
-- **0.1 beta — Ponder:** the first integrated Judge + Tactician beta.
+- **0.1.1 beta — Force of Will:** the first public beta milestone.
+- **0.2.0 beta — Ponder:** iterative Judge tools and a more autonomous Strategist.
 - **1.0 — NicolAI Bolas:** the planned complete first major release.
 
 The codenames do not change MagicAI's source-grounded architecture or licensing.
@@ -274,6 +281,9 @@ The codenames do not change MagicAI's source-grounded architecture or licensing.
 - [Tactician](docs/TACTICIAN.md)
 - [Philosophy](docs/PHILOSOPHY.md)
 - [Contributing](docs/CONTRIBUTING.md)
+- [Branching policy](docs/BRANCHING.md)
+- [Release process](docs/RELEASE_PROCESS.md)
+- [Repository health](docs/REPOSITORY_HEALTH.md)
 
 ---
 
@@ -305,27 +315,6 @@ I truly hope you enjoy using it as much as I've enjoyed building it.
 
 **See you in the next game.**
 
-____
-
-Si has llegado hasta aquí, lo más probable es que compartamos la misma pasión.
-
-Me gustaría terminar este archivo README con unas palabras personales.
-
-Por motivos de salud, es muy probable que este sea el último gran proyecto de software que pueda desarrollar. Después de dedicar gran parte de mi vida profesional al desarrollo de software, he tenido que aceptar que mi trayectoria tomará un rumbo diferente mucho antes de lo que jamás hubiera imaginado.
-
-Quería despedirme de este capítulo creando algo que reuniera las dos cosas que más he amado a lo largo de mi vida: la programación y **Magic: The Gathering**, un juego que me ha acompañado desde que tengo uso de razón y que siempre ha significado mucho más que un simple juego.
-
-MagicAI nació de una idea sencilla: crear la herramienta que siempre había deseado tener, una que me ayudara a entender las reglas, a organizar mis ideas y a seguir disfrutando de este increíble juego.
-
-Mientras mi salud me lo permita, seguiré mejorándola poco a poco, aprendiendo y añadiendo nuevas funciones siempre que pueda.
-
-Si este proyecto ayuda aunque sea a un solo jugador a resolver una duda sobre las reglas, a descubrir una nueva interacción o, simplemente, a disfrutar un poco más de Magic, habrá logrado todo lo que esperaba.
-
-Gracias por dedicar tu tiempo a descubrir este proyecto.
-
-Espero de verdad que disfrutes usándolo tanto como yo he disfrutado creándolo.
-
-**Nos vemos en la próxima partida.**
 
 ---
 

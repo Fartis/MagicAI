@@ -25,7 +25,7 @@ def main():
     request = urllib.request.Request(
         SCRYFALL_SYMBOLOGY_URL,
         headers={
-            "User-Agent": "MagicAI/0.1.0-alpha",
+            "User-Agent": "MagicAI/0.1.1-beta",
             "Accept": "application/json",
         },
     )

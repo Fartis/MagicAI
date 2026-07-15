@@ -50,3 +50,8 @@ A handoff response remains compatible with the Judge evidence fields and may add
   "judge_result": {}
 }
 ```
+
+
+## Release metadata
+
+`GET /meta` and `GET /health` expose the public version, PEP 440 package version, release channel, codename, and canonical Git tag. The current public identity is `v0.1.1-beta` — **Force of Will**.

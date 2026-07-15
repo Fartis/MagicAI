@@ -116,7 +116,8 @@ def test_quickstart_documents_branches_ui_and_ollama_modes() -> None:
     assert "docs/QUICKSTART.md" in readme
     assert "# ❤️ A personal letter" in readme
     assert "See you in the next game." in readme
-    assert "0.1 beta" in readme and "Ponder" in readme
+    assert "v0.1.1-beta" in readme and "Force of Will" in readme
+    assert "v0.2.0-beta" in readme and "Ponder" in readme
     assert "NicolAI Bolas" in readme
 
 

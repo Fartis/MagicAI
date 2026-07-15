@@ -12,6 +12,10 @@ from magicai.versioning import (
     API_CONTRACT_VERSION,
     JUDGE_RESULT_SCHEMA_VERSION,
     get_project_version,
+    get_package_version,
+    RELEASE_CHANNEL,
+    RELEASE_CODENAME,
+    RELEASE_TAG,
 )
 
 
@@ -91,6 +95,10 @@ def build_health_payload(
         "ready": ready,
         "full_service": full_service,
         "project_version": get_project_version(),
+        "package_version": get_package_version(),
+        "release_channel": RELEASE_CHANNEL,
+        "release_codename": RELEASE_CODENAME,
+        "release_tag": RELEASE_TAG,
         "api_contract_version": API_CONTRACT_VERSION,
         "judge_result_schema_version": JUDGE_RESULT_SCHEMA_VERSION,
         "sources": sources.to_dict(),

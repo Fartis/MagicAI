@@ -78,6 +78,10 @@ class TacticianAskResponse(AskResponse):
 class MetaResponse(BaseModel):
     project: str
     project_version: str
+    package_version: str
+    release_channel: str
+    release_codename: str
+    release_tag: str
     api_contract_version: str
     judge_result_schema_version: str
     authority: str
@@ -97,6 +101,10 @@ class HealthResponse(BaseModel):
     ready: bool
     full_service: bool
     project_version: str
+    package_version: str
+    release_channel: str
+    release_codename: str
+    release_tag: str
     api_contract_version: str
     judge_result_schema_version: str
     sources: dict[str, Any]
