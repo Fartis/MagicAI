@@ -11,6 +11,10 @@ class StrategyIntent(str, Enum):
     CARD_COMPARISON = "card_comparison"
     PLAY_RECOMMENDATION = "play_recommendation"
     DECKBUILDING = "deckbuilding"
+    PLAY_SEQUENCE = "play_sequence"
+    COMBO_DISRUPTION = "combo_disruption"
+    COMBO_REQUIREMENTS = "combo_requirements"
+    INTERACTION_HYPOTHESIS = "interaction_hypothesis"
     GENERAL_STRATEGY = "general_strategy"
 
 
@@ -56,6 +60,42 @@ _PLAY_MARKERS = (
     "what should i do",
 )
 
+_SEQUENCE_MARKERS = (
+    "en que orden",
+    "en qué orden",
+    "orden se juega",
+    "orden del combo",
+    "play sequence",
+    "what order",
+)
+
+_DISRUPTION_MARKERS = (
+    "donde se corta",
+    "dónde se corta",
+    "como se corta",
+    "cómo se corta",
+    "interrump",
+    "disrupt",
+    "stop the combo",
+)
+
+_REQUIREMENT_MARKERS = (
+    "que necesito",
+    "qué necesito",
+    "requisitos",
+    "required pieces",
+    "what do i need",
+)
+
+_HYPOTHESIS_MARKERS = (
+    "por lo que",
+    "asi que",
+    "así que",
+    "entonces se",
+    "therefore",
+    "which means",
+)
+
 _DECK_MARKERS = (
     "mi mazo",
     "decklist",
@@ -70,6 +110,14 @@ _DECK_MARKERS = (
 def classify_strategy_intent(question: str) -> StrategyIntent:
     normalized = _normalize(question)
 
+    if re.match(r"^(pero|but)\b", normalized) or any(marker in normalized for marker in _HYPOTHESIS_MARKERS):
+        return StrategyIntent.INTERACTION_HYPOTHESIS
+    if any(marker in normalized for marker in _SEQUENCE_MARKERS):
+        return StrategyIntent.PLAY_SEQUENCE
+    if any(marker in normalized for marker in _DISRUPTION_MARKERS):
+        return StrategyIntent.COMBO_DISRUPTION
+    if any(marker in normalized for marker in _REQUIREMENT_MARKERS):
+        return StrategyIntent.COMBO_REQUIREMENTS
     if any(marker in normalized for marker in _COMBO_MARKERS):
         return StrategyIntent.COMBO_DETECTION
     if any(marker in normalized for marker in _SYNERGY_MARKERS):

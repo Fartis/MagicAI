@@ -62,16 +62,20 @@ The first major release should add mature deck analysis, authorized strategic so
 - Read-only diagnostic REST endpoint.
 - Initial Tactician Oracle refresh through the gateway.
 
-### 12.2b — Conversational strategic orchestration — next
+### 12.2b — Input reasoning and conversational orchestration — complete
 
-- `play_sequence`, `combo_execution_order`, `combo_disruption`, and related intents.
-- Active strategic conversation state.
+- Structured speech-act, intent, and claim analysis.
+- Bounded multi-tool investigation plans.
+- `play_sequence`, `combo_disruption`, `combo_requirements`, and `interaction_hypothesis` intents.
+- Persisted active strategic conversation state.
 - Independent Tactician synthesis instead of Judge-answer relay.
-- Warm, interactive response style.
-- Smart ambiguity handling.
-- Factual claim verification after synthesis.
+- Warm, interactive response style for supported families.
+- Claim verdicts and evidence identifiers.
+- Evidence-verification metadata.
+- Young Wolf, Carrion Feeder, and The Ozolith reasoning regression.
+- Ghave and Ashnod's Altar follow-up sequencing and disruption regression.
 
-### 12.3 — Autonomous investigation planner
+### 12.3 — General autonomous investigation planner — next
 
 - Hypothesis decomposition.
 - Multiple Judge queries per user request.

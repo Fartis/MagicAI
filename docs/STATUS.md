@@ -9,34 +9,35 @@
 
 ## Current development line
 
-Sprint `12.2a` introduces the executable Judge Tool Gateway.
+Sprint `12.2b` introduces structured input reasoning and conversational strategic orchestration.
 
 Completed in this milestone:
 
-- typed read-only tool contracts;
-- executable Oracle, rules, rulings, legality, and conversation-context tools;
-- source provenance and version reporting;
-- bounded shared investigation budgets;
-- in-memory source-aware cache;
-- explicit unavailable responses for planned providers;
-- diagnostic REST endpoint;
-- first Tactician evidence refresh through the gateway;
-- focused source-independent CI coverage.
+- speech-act and strategic-intent analysis;
+- deterministic claim extraction;
+- bounded multi-tool investigation plans;
+- claim verdicts with source identifiers;
+- independent Tactician synthesis instead of Judge-answer relay;
+- conversational correction of user hypotheses;
+- persisted strategic conversation context;
+- play-sequence, disruption, and requirements follow-ups;
+- TacticianResult schema `0.4` and API contract `1.5`;
+- focused input-reasoning and conversation-state regressions.
 
 ## Next development line
 
-Sprint `12.2b` will focus on conversational strategic orchestration:
+Sprint `12.3` will focus on general autonomous investigation planning:
 
-- play-sequence and combo-follow-up intents;
-- active strategic state;
-- independent Tactician synthesis;
-- warmer interactive responses;
-- smart ambiguity handling;
-- factual claim verification after synthesis.
+- broader claim decomposition;
+- iterative evidence-gap detection;
+- evidence sufficiency scoring;
+- alternative and counterexample search;
+- configurable investigation depth;
+- wider strategic families beyond the current deterministic vertical slices.
 
 ## Known limitations
 
-- The Tactician does not yet plan arbitrary multi-query investigations.
+- Multi-query planning is implemented for supported concepts, but is not yet general across arbitrary interactions.
 - Combo reconstruction covers only a narrow generic family.
 - Commander Spellbook is not connected.
 - EDHREC-style statistics remain permission-gated.

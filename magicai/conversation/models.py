@@ -37,6 +37,9 @@ class Conversation:
 
     mode: str = "assistant"
 
+    # Structured strategic state used by the Tactician for natural follow-ups.
+    strategy_context: dict = field(default_factory=dict)
+
     def add_user_message(self, text: str):
 
         self.history.append(

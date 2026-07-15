@@ -72,9 +72,12 @@ The current Tactician milestone adds:
 ```text
 Automatic strategic handoff
 Conversation-card inheritance
-Intent-specific strategy routing
+Structured input and claim analysis
+Bounded multi-tool investigation plans
+Claim verdicts with source identifiers
+Independent conversational synthesis
+Strategic follow-up intents and persisted context
 Generic three-piece Undying loop detection
-Judge capability registry
 Structured combo steps and outcomes
 ```
 

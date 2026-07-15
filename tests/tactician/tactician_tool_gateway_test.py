@@ -37,15 +37,8 @@ class FakeJudge:
 
 class FakeGateway:
     def execute(self, request, *, conversation=None, budget=None):
-        assert request.tool == "oracle_lookup"
-        return JudgeToolResult(
-            tool=request.tool,
-            status=JudgeToolStatus.SUCCESS,
-            authority="official_card_data",
-            provider="local_scryfall_oracle",
-            purpose=request.purpose,
-            arguments=request.arguments,
-            evidence=[
+        if request.tool == "oracle_lookup":
+            evidence = [
                 {
                     "kind": "card",
                     "identifier": "oracle-young-wolf",
@@ -56,7 +49,28 @@ class FakeGateway:
                         "oracle_text": "Undying (When this creature dies, return it with a +1/+1 counter.)",
                     },
                 }
-            ],
+            ]
+            authority = "official_card_data"
+        elif request.tool == "rules_lookup":
+            evidence = [
+                {
+                    "kind": "rule",
+                    "identifier": identifier,
+                    "data": {"number": identifier, "title": f"Rule {identifier}", "rules": []},
+                }
+                for identifier in request.arguments["identifiers"]
+            ]
+            authority = "comprehensive_rules"
+        else:
+            raise AssertionError(f"unexpected tool: {request.tool}")
+        return JudgeToolResult(
+            tool=request.tool,
+            status=JudgeToolStatus.SUCCESS,
+            authority=authority,
+            provider="fake",
+            purpose=request.purpose,
+            arguments=request.arguments,
+            evidence=evidence,
         )
 
 

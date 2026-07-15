@@ -1,11 +1,11 @@
 # API contract
 
-Current API contract version: `1.4`.
+Current API contract version: `1.5`.
 
 ## Stable result families
 
 - Judge results use JudgeResult schema `1.0`.
-- Tactician results use TacticianResult schema `0.3`.
+- Tactician results use TacticianResult schema `0.4`.
 - Judge tool results use JudgeToolResult schema `1.0`.
 
 ## Main endpoints
@@ -52,3 +52,17 @@ A `session_id` may be supplied only when `conversation_context` requires an exis
 - planned and permission-gated capabilities.
 
 Unavailable capabilities return a structured result instead of being guessed.
+
+## Tactician reasoning fields
+
+TacticianResult `0.4` adds:
+
+- `input_analysis`
+- `claim_verdicts`
+- `reasoning_summary`
+- `queries_planned`
+- `queries_completed`
+- `judge_verified`
+- `investigation_plan`
+
+These fields expose a concise, structured audit trail. They are not a hidden chain-of-thought transcript.

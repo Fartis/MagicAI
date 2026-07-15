@@ -31,6 +31,9 @@ python -m tests.validation.answer_validation_test
 python -m tests.tactician.tactician_reviewer_test
 python -m tests.tactician.tactician_strategy_test
 python -m tests.tactician.tactician_conversation_handoff_test
+python -m tests.tactician.tactician_input_reasoning_test
+python -m tests.tactician.tactician_followup_reasoning_test
+python -m tests.conversation.tactician_strategy_context_test
 python -m tests.api.tactician_api_contract_test
 ```
 

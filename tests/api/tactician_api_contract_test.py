@@ -52,6 +52,13 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
         outcomes=["Arbitrarily large mana."],
         inherited_cards=["Young Wolf"],
         judge_queries=[{"sequence": 1, "purpose": "factual_evidence"}],
+        input_analysis={"speech_act": "question", "claims_detected": 1},
+        claim_verdicts=[{"claim_id": "claim-1", "verdict": "supported"}],
+        reasoning_summary=["The loop restores its initial state."],
+        queries_planned=2,
+        queries_completed=2,
+        judge_verified=True,
+        investigation_plan={"queries_planned": 2},
         judge_result={"authority": "judge"},
     )
     payload = response.model_dump()
@@ -61,6 +68,9 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
     assert payload["strategy_intent"] == "combo_detection"
     assert payload["combo_classification"] == "infinite_combo"
     assert payload["inherited_cards"] == ["Young Wolf"]
+    assert payload["input_analysis"]["speech_act"] == "question"
+    assert payload["claim_verdicts"][0]["verdict"] == "supported"
+    assert payload["judge_verified"] is True
 
 
 def main() -> int:

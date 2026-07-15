@@ -135,6 +135,9 @@ def test_strategy_handoff_renders_tactician_result_and_combo_trace() -> None:
     assert '["Intent estratégico", result.strategy_intent || "—"]' in javascript
     assert '["Clasificación de combo", result.combo_classification || "—"]' in javascript
     assert '["Cartas heredadas", (result.inherited_cards || []).join(" · ") || "—"]' in javascript
+    assert '["Input analizado", result.input_analysis?.speech_act || "—"]' in javascript
+    assert '["Afirmaciones evaluadas", String((result.claim_verdicts || []).length)]' in javascript
+    assert '["Verificado por evidencia", result.judge_verified ? "sí" : "no"]' in javascript
     assert 'container.className = "strategy-summary"' in javascript
     assert ".strategy-summary" in stylesheet
 

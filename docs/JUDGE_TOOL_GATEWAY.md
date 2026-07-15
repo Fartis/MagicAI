@@ -95,3 +95,9 @@ Conversation context is never cached.
 ## REST diagnostics
 
 `POST /judge/tools/execute` exposes the same read-only contract for local diagnostics and future UI tooling. Strategic code should use `JudgeToolGateway` rather than opening files or repositories directly.
+
+## Tactician planner use
+
+Sprint 12.2b can group several bounded requests under one investigation budget. The first implemented plans combine Oracle refresh, exact rules lookup, and official rulings lookup when a user hypothesis requires timing or zone-change verification.
+
+The planner records its goals and request list in `investigation_plan`. Missing or unavailable evidence remains explicit and reduces `judge_verified` rather than being silently guessed.

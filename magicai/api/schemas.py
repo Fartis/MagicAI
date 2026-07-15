@@ -70,6 +70,13 @@ class AskResponse(BaseModel):
     judge_queries: list[dict[str, Any]] = Field(default_factory=list)
     judge_tool_calls: list[dict[str, Any]] = Field(default_factory=list)
     tactician_synthesized: bool = False
+    input_analysis: dict[str, Any] = Field(default_factory=dict)
+    claim_verdicts: list[dict[str, Any]] = Field(default_factory=list)
+    reasoning_summary: list[str] = Field(default_factory=list)
+    queries_planned: int = 0
+    queries_completed: int = 0
+    judge_verified: bool = False
+    investigation_plan: dict[str, Any] = Field(default_factory=dict)
     judge_result: dict[str, Any] = Field(default_factory=dict)
 
 

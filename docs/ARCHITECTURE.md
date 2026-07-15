@@ -30,10 +30,12 @@ Request orchestrator
     │       └─ conversation context
     │
     └─ Tactician
-        ├─ strategic intent classification
-        ├─ evidence-gap detection
+        ├─ speech-act and strategic intent analysis
+        ├─ claim extraction and verdicts
+        ├─ bounded investigation planning
         ├─ combo and synergy analysis
         ├─ Judge-tool requests
+        ├─ conversational synthesis
         ├─ Judge challenges
         └─ recommended lines and risks
 ```
@@ -88,3 +90,11 @@ Classification values:
 ## Resilience
 
 The Tactician should continue investigating when evidence is incomplete. The gateway supplies bounded query budgets, explicit capability failures, and source-aware caching. Missing tools must be reported rather than silently guessed.
+
+## Structured input reasoning
+
+The Tactician analyzes the user's message before requesting evidence. It records a compact audit trail containing the speech act, detected claims, planned queries, claim verdicts, and a concise reasoning summary.
+
+This is intentionally structured and testable. It is not a free-form chain-of-thought log.
+
+When the Judge already returns a factual answer, the Tactician still performs its own strategic synthesis rather than relaying that prose unchanged.

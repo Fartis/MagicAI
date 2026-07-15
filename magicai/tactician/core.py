@@ -10,12 +10,15 @@ from magicai.judge_tools import (
     JudgeToolRequest,
     JudgeToolStatus,
 )
-from magicai.tactician.intents import (
-    classify_strategy_intent,
-    looks_like_referential_follow_up,
+from magicai.tactician.claims import (
+    ClaimVerdictStatus,
+    evaluate_claims,
 )
+from magicai.tactician.input_analysis import analyze_user_input
+from magicai.tactician.intents import looks_like_referential_follow_up
 from magicai.tactician.models import TacticianResult
-from magicai.tactician.strategy import analyze_strategy
+from magicai.tactician.planner import plan_investigation
+from magicai.tactician.synthesis import synthesize_strategy
 
 
 class Tactician:
@@ -44,7 +47,7 @@ class Tactician:
         )
 
         _copy_state(judge_conversation, conversation)
-        conversation.active_cards = deepcopy(result.cards)
+        _apply_result_state(conversation, result)
         conversation.add_user_message(question)
         conversation.add_assistant_message(result.answer)
         conversation.mode = "tactician"
@@ -58,66 +61,93 @@ class Tactician:
         prior_cards: list[Any] | None = None,
         conversation=None,
     ) -> TacticianResult:
-        """Build a strategic result from a Judge package.
+        """Investigate the user's input and synthesize a strategic answer.
 
-        The Tactician may request bounded, read-only evidence through the
-        Judge Tool Gateway. It never opens Oracle, rules, rulings, or future
-        strategic providers directly.
+        The Tactician can issue multiple bounded requests through the Judge Tool
+        Gateway. It never opens Oracle, rules, rulings, or strategic providers
+        directly, and it never treats the Judge's prose as a ready-made
+        strategic response.
         """
 
+        input_analysis = analyze_user_input(question)
         judge_payload = judge_result.to_dict()
-        intent = classify_strategy_intent(question)
         merged_cards, inherited_names = _merge_context_cards(
             current=judge_payload.get("cards", []),
             previous=prior_cards or [],
-            inherit=looks_like_referential_follow_up(question),
+            inherit=(
+                looks_like_referential_follow_up(question)
+                or input_analysis.speech_act.value in {"challenge", "follow_up"}
+                or input_analysis.strategy_intent.value in {"play_sequence", "combo_disruption", "combo_requirements"}
+            ),
         )
 
+        budget = JudgeToolBudget(
+            max_calls=8,
+            max_calls_per_tool=3,
+            max_repeated_request=1,
+            max_elapsed_seconds=30.0,
+        )
         tool_calls: list[dict[str, Any]] = []
         if conversation is not None and merged_cards:
-            merged_cards, tool_calls = self._refresh_oracle_evidence(
+            merged_cards, oracle_calls = self._refresh_oracle_evidence(
                 cards=merged_cards,
                 conversation=conversation,
+                budget=budget,
             )
+            tool_calls.extend(oracle_calls)
 
-        judge_payload = {**judge_payload, "cards": merged_cards}
+        plan = plan_investigation(
+            input_analysis,
+            cards=merged_cards,
+            oracle_already_refreshed=bool(tool_calls),
+        )
+        if conversation is not None and plan.requests:
+            for request in plan.requests:
+                result = self.execute_judge_tool(
+                    request,
+                    conversation=conversation,
+                    budget=budget,
+                )
+                tool_calls.append(result.to_dict())
+
+        judge_payload = _merge_tool_evidence(
+            {**judge_payload, "cards": merged_cards},
+            tool_calls,
+        )
+        claim_verdicts = evaluate_claims(
+            input_analysis,
+            cards=merged_cards,
+            tool_calls=tool_calls,
+        )
+
+        synthesis = synthesize_strategy(
+            question=question,
+            judge_payload=judge_payload,
+            input_analysis=input_analysis,
+            claim_verdicts=claim_verdicts,
+        )
+
         judge_status = str(judge_payload.get("status", ""))
-        if judge_status == "strategy_required":
-            analysis = analyze_strategy(
-                question,
-                judge_payload,
-                intent=intent,
-            )
-            answer = analysis.answer
-            status = "answered"
-            origin = "tactician_strategy"
-            confidence = _strategy_confidence(
-                analysis.combo_classification,
-                judge_payload,
-            )
-            synergies = analysis.synergies
-            risks = analysis.risks
-            combo_classification = analysis.combo_classification
-            combo_steps = analysis.combo_steps
-            outcomes = analysis.outcomes
-            tactician_synthesized = True
-        else:
-            answer = str(judge_payload.get("answer", ""))
-            synergies = []
-            risks = []
-            combo_classification = "not_applicable"
-            combo_steps = []
-            outcomes = []
-            status = judge_status or "insufficient_evidence"
-            origin = "tactician_judge_gate"
-            confidence = str(judge_payload.get("confidence", "low"))
-            tactician_synthesized = False
-
-        warnings = list(judge_payload.get("warnings", []))
         if judge_status not in {"strategy_required", "answered"}:
-            warnings.append(
-                "The Judge could not close the factual package, so the Tactician did not add a strategic recommendation."
-            )
+            status = judge_status or "insufficient_evidence"
+            warnings = [
+                *list(judge_payload.get("warnings", [])),
+                "The Judge could not close the factual package; the Strategist's conclusion is limited to the evidence recovered so far.",
+            ]
+        else:
+            status = "answered"
+            warnings = list(judge_payload.get("warnings", []))
+
+        judge_verified = _judge_verified(
+            claim_verdicts=claim_verdicts,
+            combo_classification=synthesis.combo_classification,
+            tool_calls=tool_calls,
+        )
+        confidence = _strategy_confidence(
+            synthesis.combo_classification,
+            judge_payload,
+            judge_verified=judge_verified,
+        )
 
         judge_queries = [
             {
@@ -140,44 +170,51 @@ class Tactician:
                 }
             )
 
-        if origin == "tactician_strategy":
-            authority_trace = ["judge:factual_evidence"]
-            if tool_calls:
-                authority_trace.append("judge:tool_gateway")
-            authority_trace.extend(
-                [
-                    "tactician:strategic_interpretation",
-                    "judge:source_gateway",
-                ]
-            )
-        else:
-            authority_trace = ["judge:factual_answer", "tactician:relay"]
+        authority_trace = ["judge:factual_evidence"]
+        if tool_calls:
+            authority_trace.append("judge:tool_gateway")
+        authority_trace.extend(
+            [
+                "tactician:input_analysis",
+                "tactician:claim_evaluation",
+                "tactician:strategic_synthesis",
+                "judge:evidence_verification" if judge_verified else "judge:evidence_incomplete",
+            ]
+        )
 
-        return TacticianResult(
+        result = TacticianResult(
             question=question,
-            answer=answer,
+            answer=synthesis.answer,
             status=status,
-            origin=origin,
+            origin="tactician_reasoned_strategy",
             confidence=confidence,
-            strategy_intent=intent.value,
+            strategy_intent=input_analysis.strategy_intent.value,
             cards=merged_cards,
             rules=list(judge_payload.get("rules", [])),
             rulings=list(judge_payload.get("rulings", [])),
             retrieval_queries=list(judge_payload.get("retrieval_queries", [])),
             assumptions=list(judge_payload.get("assumptions", [])),
             warnings=warnings,
-            synergies=synergies,
-            risks=risks,
-            combo_classification=combo_classification,
-            combo_steps=combo_steps,
-            outcomes=outcomes,
+            synergies=synthesis.synergies,
+            risks=synthesis.risks,
+            combo_classification=synthesis.combo_classification,
+            combo_steps=synthesis.combo_steps,
+            outcomes=synthesis.outcomes,
             inherited_cards=inherited_names,
             judge_queries=judge_queries,
             judge_tool_calls=tool_calls,
-            tactician_synthesized=tactician_synthesized,
+            tactician_synthesized=True,
             authority_trace=authority_trace,
             judge_result=judge_payload,
+            input_analysis=input_analysis.to_dict(),
+            claim_verdicts=[verdict.to_dict() for verdict in claim_verdicts],
+            reasoning_summary=synthesis.reasoning_summary,
+            queries_planned=len(plan.requests) + (1 if merged_cards else 0),
+            queries_completed=len(tool_calls),
+            judge_verified=judge_verified,
+            investigation_plan=plan.to_dict(),
         )
+        return result
 
     def execute_judge_tool(
         self,
@@ -199,18 +236,13 @@ class Tactician:
         *,
         cards: list[dict[str, Any]],
         conversation,
+        budget: JudgeToolBudget,
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         names = [str(card.get("name", "")).strip() for card in cards]
         names = [name for name in names if name]
         if not names:
             return cards, []
 
-        budget = JudgeToolBudget(
-            max_calls=3,
-            max_calls_per_tool=2,
-            max_repeated_request=1,
-            max_elapsed_seconds=10.0,
-        )
         result = self.execute_judge_tool(
             JudgeToolRequest(
                 tool="oracle_lookup",
@@ -243,17 +275,90 @@ def replace_boundary_answer(conversation, result: TacticianResult) -> None:
         conversation.history[-1].content = result.answer
     else:
         conversation.add_assistant_message(result.answer)
+    _apply_result_state(conversation, result)
+
+
+def _apply_result_state(conversation, result: TacticianResult) -> None:
     conversation.active_cards = deepcopy(result.cards)
     conversation.last_intent = result.strategy_intent
     conversation.mode = "tactician"
+    conversation.strategy_context = {
+        "last_intent": result.strategy_intent,
+        "active_cards": [card.get("name", "") for card in result.cards],
+        "combo_classification": result.combo_classification,
+        "reasoning_summary": list(result.reasoning_summary),
+        "claim_verdicts": deepcopy(result.claim_verdicts),
+        "judge_verified": bool(result.judge_verified),
+    }
 
 
-def _strategy_confidence(classification: str, judge_payload: dict[str, Any]) -> str:
-    if classification == "infinite_combo" and judge_payload.get("confidence") == "high":
+def _strategy_confidence(
+    classification: str,
+    judge_payload: dict[str, Any],
+    *,
+    judge_verified: bool,
+) -> str:
+    if judge_verified and classification in {"infinite_combo", "non_combo"}:
         return "high"
     if classification in {"non_combo", "repeatable_synergy"}:
         return "medium"
+    if judge_payload.get("confidence") == "high" and judge_verified:
+        return "high"
     return "low"
+
+
+def _judge_verified(
+    *,
+    claim_verdicts,
+    combo_classification: str,
+    tool_calls: list[dict[str, Any]],
+) -> bool:
+    unresolved = [
+        verdict
+        for verdict in claim_verdicts
+        if verdict.status is ClaimVerdictStatus.INSUFFICIENT_EVIDENCE
+    ]
+    successful_evidence = any(
+        call.get("status") == "success" and call.get("evidence")
+        for call in tool_calls
+    )
+    if unresolved:
+        return False
+    if claim_verdicts:
+        return successful_evidence
+    return combo_classification in {"infinite_combo", "non_combo", "repeatable_synergy"} and successful_evidence
+
+
+def _merge_tool_evidence(
+    payload: dict[str, Any],
+    tool_calls: list[dict[str, Any]],
+) -> dict[str, Any]:
+    rules = list(payload.get("rules", []))
+    rulings = list(payload.get("rulings", []))
+    rule_keys = {str(rule.get("number", "")) for rule in rules}
+    ruling_keys = {
+        (str(item.get("oracle_id", "")), str(item.get("published_at", "")))
+        for item in rulings
+    }
+
+    for call in tool_calls:
+        for item in call.get("evidence", []):
+            kind = item.get("kind")
+            data = item.get("data", {})
+            if not isinstance(data, dict):
+                continue
+            if kind == "rule":
+                number = str(data.get("number", item.get("identifier", "")))
+                if number and number not in rule_keys:
+                    rules.append({"number": number, "title": str(data.get("title", data.get("text", "")))})
+                    rule_keys.add(number)
+            elif kind == "ruling":
+                key = (str(data.get("oracle_id", "")), str(data.get("published_at", "")))
+                if key not in ruling_keys:
+                    rulings.append(data)
+                    ruling_keys.add(key)
+
+    return {**payload, "rules": rules, "rulings": rulings}
 
 
 def _merge_context_cards(
@@ -346,3 +451,4 @@ def _copy_state(source, target) -> None:
     target.last_intent = source.last_intent
     target.language = source.language
     target.mode = "tactician"
+    target.strategy_context = deepcopy(getattr(source, "strategy_context", {}))

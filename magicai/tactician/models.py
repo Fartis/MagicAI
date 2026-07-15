@@ -77,6 +77,13 @@ class TacticianResult:
     tactician_synthesized: bool = False
     authority_trace: list[str] = field(default_factory=list)
     judge_result: dict[str, Any] = field(default_factory=dict)
+    input_analysis: dict[str, Any] = field(default_factory=dict)
+    claim_verdicts: list[dict[str, Any]] = field(default_factory=list)
+    reasoning_summary: list[str] = field(default_factory=list)
+    queries_planned: int = 0
+    queries_completed: int = 0
+    judge_verified: bool = False
+    investigation_plan: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -112,5 +119,12 @@ class TacticianResult:
             "judge_tool_calls": list(self.judge_tool_calls),
             "tactician_synthesized": bool(self.tactician_synthesized),
             "authority_trace": list(self.authority_trace),
+            "input_analysis": dict(self.input_analysis),
+            "claim_verdicts": list(self.claim_verdicts),
+            "reasoning_summary": list(self.reasoning_summary),
+            "queries_planned": int(self.queries_planned),
+            "queries_completed": int(self.queries_completed),
+            "judge_verified": bool(self.judge_verified),
+            "investigation_plan": dict(self.investigation_plan),
             "judge_result": dict(self.judge_result),
         }

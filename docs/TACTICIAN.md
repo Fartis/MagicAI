@@ -15,7 +15,7 @@ The Tactician analyzes:
 
 It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It requests structured evidence through the Judge Tool Gateway.
 
-## Current milestone: 0.3
+## Current milestone: 0.4
 
 Implemented:
 
@@ -29,7 +29,14 @@ Implemented:
 - executable, typed Judge Tool Gateway;
 - bounded Oracle refresh through the Judge before strategic synthesis;
 - tool-call provenance in `judge_tool_calls` and `judge_queries`;
-- explicit `tactician_synthesized` metadata.
+- explicit `tactician_synthesized` metadata;
+- speech-act, intent, and claim analysis for user input;
+- bounded multi-tool investigation plans;
+- claim verdicts with evidence identifiers;
+- independent conversational synthesis even when the Judge already returned a factual answer;
+- persisted strategic conversation context;
+- `play_sequence`, `combo_disruption`, `combo_requirements`, and `interaction_hypothesis` intents;
+- evidence-verification metadata and concise reasoning summaries.
 
 ## Evidence loop
 
@@ -46,7 +53,7 @@ Tactician forms a hypothesis
   → publish or declare uncertainty
 ```
 
-Milestone 0.3 provides the executable gateway and a first bounded Oracle refresh. Autonomous multi-query planning remains the next milestone.
+Milestone 0.4 provides deterministic claim extraction, bounded multi-tool planning, evidence verdicts, and conversational synthesis. General autonomous planning remains the next milestone.
 
 ## Personality
 

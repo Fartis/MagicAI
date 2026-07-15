@@ -62,18 +62,32 @@ class FakeGateway:
                 "oracle_text": "Sacrifice a creature: Put a +1/+1 counter on Carrion Feeder.",
             },
         }
-        cards = [
-            {"kind": "card", "identifier": name, "data": source_cards[name]}
-            for name in request.arguments.get("card_names", [])
-        ]
+        if request.tool == "oracle_lookup":
+            evidence = [
+                {"kind": "card", "identifier": name, "data": source_cards[name]}
+                for name in request.arguments.get("card_names", [])
+            ]
+            authority = "official_card_data"
+        elif request.tool == "rules_lookup":
+            evidence = [
+                {
+                    "kind": "rule",
+                    "identifier": identifier,
+                    "data": {"number": identifier, "title": f"Rule {identifier}", "rules": []},
+                }
+                for identifier in request.arguments.get("identifiers", [])
+            ]
+            authority = "comprehensive_rules"
+        else:
+            raise AssertionError(f"unexpected tool: {request.tool}")
         return JudgeToolResult(
             tool=request.tool,
             status=JudgeToolStatus.SUCCESS,
-            authority="official_card_data",
-            provider="local_scryfall_oracle",
+            authority=authority,
+            provider="fake",
             purpose=request.purpose,
             arguments=request.arguments,
-            evidence=cards,
+            evidence=evidence,
         )
 
 
@@ -89,9 +103,13 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
     assert payload["authority_trace"] == [
         "judge:factual_evidence",
         "judge:tool_gateway",
-        "tactician:strategic_interpretation",
-        "judge:source_gateway",
+        "tactician:input_analysis",
+        "tactician:claim_evaluation",
+        "tactician:strategic_synthesis",
+        "judge:evidence_verification",
     ]
+    assert payload["tactician_synthesized"] is True
+    assert payload["judge_verified"] is True
     assert payload["judge_tool_calls"][0]["status"] == "success"
     assert "sinergia de sacrificio" in payload["answer"]
     assert "No es un bucle infinito" in payload["answer"]
