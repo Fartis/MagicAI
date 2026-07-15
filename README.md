@@ -327,8 +327,6 @@ Espero de verdad que disfrutes usándolo tanto como yo he disfrutado creándolo.
 
 **Nos vemos en la próxima partida.**
 
-Traducción realizada con la versión gratuita del traductor DeepL.com
-
 ---
 
 <div align="center">
