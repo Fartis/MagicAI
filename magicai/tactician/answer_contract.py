@@ -47,7 +47,20 @@ def build_answer_obligations(analysis: InputAnalysis, *, has_current_interaction
     intent = analysis.strategy_intent
     obligations: list[AnswerObligation] = []
 
-    if intent is StrategyIntent.MECHANIC_EQUIVALENCE:
+    if intent is StrategyIntent.MECHANIC_RESOLUTION:
+        if "sacrifice" in analysis.concepts and "undying" in analysis.concepts:
+            obligations.extend([
+                AnswerObligation("sacrifice_transition", "Explicar que sacrificar mueve la criatura del campo al cementerio." if spanish else "Explain that sacrificing moves the creature from the battlefield to the graveyard."),
+                AnswerObligation("dies_event", "Explicar que ese cambio de zona hace que la criatura muera." if spanish else "Explain that this zone change makes the creature die."),
+                AnswerObligation("undying_condition", "Explicar cuándo se dispara Undying." if spanish else "Explain when Undying triggers."),
+                AnswerObligation("undying_return", "Explicar cómo regresa la criatura por Undying." if spanish else "Explain how the creature returns through Undying."),
+            ])
+        else:
+            obligations.append(AnswerObligation(
+                "direct_user_question",
+                "Resolver directamente el evento preguntado." if spanish else "Resolve the event asked about directly.",
+            ))
+    elif intent is StrategyIntent.MECHANIC_EQUIVALENCE:
         obligations.extend([
             AnswerObligation("define_dies", "Definir qué significa morir." if spanish else "Define what dying means."),
             AnswerObligation("compare_events", "Aclarar si morir y pasar del campo al cementerio son el mismo evento." if spanish else "Clarify whether dying and moving from battlefield to graveyard are the same event."),
@@ -117,6 +130,14 @@ def _check_obligation(
     analysis: InputAnalysis,
     has_current_interaction: bool,
 ) -> bool:
+    if code == "sacrifice_transition":
+        return _has_all(answer, ("campo de batalla", "cementerio")) or _has_all(answer, ("battlefield", "graveyard"))
+    if code == "dies_event":
+        return any(marker in answer for marker in ("muere", "morir", "dies"))
+    if code == "undying_condition":
+        return "undying" in answer and any(marker in answer for marker in ("sin contador", "no tenia", "no tenía", "no +1/+1", "had no +1/+1"))
+    if code == "undying_return":
+        return any(marker in answer for marker in ("vuelve", "regresa", "returns")) and "+1/+1" in answer
     if code == "define_dies":
         return _has_all(answer, ("muere", "cementerio", "campo de batalla")) or _has_all(answer, ("dies", "graveyard", "battlefield"))
     if code == "compare_events":
@@ -144,12 +165,15 @@ def _check_obligation(
     if code == "identify_failed_transition":
         return any(marker in answer for marker in ("no se dispara", "no vuelve", "se rompe", "does not trigger", "does not return", "breaks"))
     if code == "explain_rule":
-        return any(marker in answer for marker in ("regla", "condicion", "condición", "ultimo estado", "último estado", "rule", "condition", "last battlefield state"))
+        return any(marker in answer for marker in ("regla", "condicion", "condición", "ultimo estado", "último estado", "justo antes", "inmediatamente antes", "rule", "condition", "last battlefield state", "immediately before"))
     if code == "list_required_permanents":
         return all(name in answer for name in ("young wolf", "ashnod's altar", "ghave"))
     if code == "list_initial_state":
-        return any(marker in answer for marker in ("sin contador", "without a +1/+1 counter"))
+        return any(marker in answer for marker in ("sin contador", "without a +1/+1 counter", "free of +1/+1 counters"))
     if code == "direct_user_question":
+        focus = set(analysis.answer_focus)
+        if "sacrifice" in focus or "sacrifice" in analysis.concepts:
+            return any(marker in answer for marker in ("sacrific", "graveyard", "cementerio", "muere", "dies"))
         return len(answer.split()) >= 5
     return False
 

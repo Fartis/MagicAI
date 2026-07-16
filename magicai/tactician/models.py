@@ -89,6 +89,12 @@ class TacticianResult:
     answer_obligations: list[dict[str, Any]] = field(default_factory=list)
     answer_contract: dict[str, Any] = field(default_factory=dict)
     answer_complete: bool = False
+    response_mode: str = "tactician_led"
+    response_orchestration: dict[str, Any] = field(default_factory=dict)
+    factual_core: list[dict[str, Any]] = field(default_factory=list)
+    factual_core_coverage: dict[str, Any] = field(default_factory=dict)
+    factual_core_preserved: bool = False
+    strategic_extension_required: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -136,5 +142,11 @@ class TacticianResult:
             "answer_obligations": list(self.answer_obligations),
             "answer_contract": dict(self.answer_contract),
             "answer_complete": bool(self.answer_complete),
+            "response_mode": self.response_mode,
+            "response_orchestration": dict(self.response_orchestration),
+            "factual_core": list(self.factual_core),
+            "factual_core_coverage": dict(self.factual_core_coverage),
+            "factual_core_preserved": bool(self.factual_core_preserved),
+            "strategic_extension_required": bool(self.strategic_extension_required),
             "judge_result": dict(self.judge_result),
         }

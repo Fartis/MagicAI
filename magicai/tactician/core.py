@@ -19,9 +19,19 @@ from magicai.tactician.claims import (
     ClaimVerdictStatus,
     evaluate_claims,
 )
+from magicai.tactician.factual_core import (
+    extract_factual_core,
+    judge_answer_is_directly_usable,
+    preserve_factual_core,
+)
 from magicai.tactician.input_analysis import analyze_user_input
 from magicai.tactician.intents import looks_like_referential_follow_up
 from magicai.tactician.models import TacticianResult
+from magicai.tactician.orchestration import (
+    ResponseMode,
+    choose_response_mode,
+    combo_classification_for_turn,
+)
 from magicai.tactician.planner import plan_investigation
 from magicai.tactician.synthesis import synthesize_strategy
 
@@ -91,6 +101,7 @@ class Tactician:
                     "combo_requirements",
                     "rules_clarification",
                     "mechanic_definition",
+                    "mechanic_resolution",
                     "mechanic_equivalence",
                     "combo_failure_explanation",
                     "interaction_timing",
@@ -137,11 +148,38 @@ class Tactician:
             tool_calls=tool_calls,
         )
 
+        strategy_context = dict(getattr(conversation, "strategy_context", {}) or {})
+        response_decision = choose_response_mode(
+            input_analysis,
+            judge_payload=judge_payload,
+            cards=merged_cards,
+            strategy_context=strategy_context,
+        )
+        factual_core = extract_factual_core(
+            input_analysis,
+            judge_payload=judge_payload,
+            cards=merged_cards,
+            response_mode=response_decision.mode,
+        )
         synthesis = synthesize_strategy(
             question=question,
             judge_payload=judge_payload,
             input_analysis=input_analysis,
             claim_verdicts=claim_verdicts,
+            response_decision=response_decision,
+        )
+        combo_classification = combo_classification_for_turn(
+            analysis=input_analysis,
+            decision=response_decision,
+            synthesized_classification=synthesis.combo_classification,
+            strategy_context=strategy_context,
+        )
+        final_answer, factual_coverage, factual_core_preserved = preserve_factual_core(
+            synthesis.answer,
+            judge_answer=str(judge_payload.get("answer", "")),
+            core=factual_core,
+            response_mode=response_decision.mode,
+            judge_answer_usable=judge_answer_is_directly_usable(judge_payload, input_analysis),
         )
 
         has_current_interaction = len(merged_cards) >= 2
@@ -150,11 +188,12 @@ class Tactician:
             has_current_interaction=has_current_interaction,
         )
         answer_contract = validate_answer_contract(
-            synthesis.answer,
+            final_answer,
             analysis=input_analysis,
             obligations=obligations,
             has_current_interaction=has_current_interaction,
         )
+        answer_complete = answer_contract.complete and factual_coverage.complete
 
         judge_status = str(judge_payload.get("status", ""))
         if judge_status not in {"strategy_required", "answered"}:
@@ -175,12 +214,13 @@ class Tactician:
 
         judge_verified = _judge_verified(
             claim_verdicts=claim_verdicts,
-            combo_classification=synthesis.combo_classification,
+            combo_classification=combo_classification,
             tool_calls=tool_calls,
-            answer_complete=answer_contract.complete,
+            answer_complete=answer_complete,
+            factual_core_preserved=factual_core_preserved,
         )
         confidence = _strategy_confidence(
-            synthesis.combo_classification,
+            combo_classification,
             judge_payload,
             judge_verified=judge_verified,
         )
@@ -214,7 +254,8 @@ class Tactician:
                 "tactician:language_policy",
                 "tactician:input_analysis",
                 "tactician:claim_evaluation",
-                "tactician:strategic_synthesis",
+                f"tactician:response_orchestration:{response_decision.mode.value}",
+                "tactician:factual_core_preservation",
                 "tactician:answer_contract",
                 "judge:evidence_verification" if judge_verified else "judge:evidence_incomplete",
             ]
@@ -222,9 +263,13 @@ class Tactician:
 
         result = TacticianResult(
             question=question,
-            answer=synthesis.answer,
+            answer=final_answer,
             status=status,
-            origin="tactician_reasoned_strategy",
+            origin=(
+                "tactician_judge_led" if response_decision.mode is ResponseMode.JUDGE_LED
+                else "tactician_hybrid" if response_decision.mode is ResponseMode.HYBRID
+                else "tactician_reasoned_strategy"
+            ),
             confidence=confidence,
             strategy_intent=input_analysis.strategy_intent.value,
             cards=merged_cards,
@@ -235,13 +280,16 @@ class Tactician:
             warnings=warnings,
             synergies=synthesis.synergies,
             risks=synthesis.risks,
-            combo_classification=synthesis.combo_classification,
+            combo_classification=combo_classification,
             combo_steps=synthesis.combo_steps,
             outcomes=synthesis.outcomes,
             inherited_cards=inherited_names,
             judge_queries=judge_queries,
             judge_tool_calls=tool_calls,
-            tactician_synthesized=True,
+            tactician_synthesized=(
+                response_decision.mode is not ResponseMode.JUDGE_LED
+                or final_answer.strip() != str(judge_payload.get("answer", "")).strip()
+            ),
             authority_trace=authority_trace,
             judge_result=judge_payload,
             input_analysis=input_analysis.to_dict(),
@@ -254,8 +302,17 @@ class Tactician:
             response_language=input_analysis.language,
             language_policy=dict(input_analysis.language_policy),
             answer_obligations=[item.to_dict() for item in obligations],
-            answer_contract=answer_contract.to_dict(),
-            answer_complete=answer_contract.complete,
+            answer_contract={
+                **answer_contract.to_dict(),
+                "factual_core_complete": factual_coverage.complete,
+            },
+            answer_complete=answer_complete,
+            response_mode=response_decision.mode.value,
+            response_orchestration=response_decision.to_dict(),
+            factual_core=[item.to_dict() for item in factual_core],
+            factual_core_coverage=factual_coverage.to_dict(),
+            factual_core_preserved=factual_core_preserved,
+            strategic_extension_required=response_decision.strategic_extension_required,
         )
         return result
 
@@ -336,6 +393,8 @@ def _apply_result_state(conversation, result: TacticianResult) -> None:
         "response_language": result.response_language,
         "answer_complete": bool(result.answer_complete),
         "answer_obligations": deepcopy(result.answer_obligations),
+        "response_mode": result.response_mode,
+        "factual_core_preserved": bool(result.factual_core_preserved),
     }
 
 
@@ -360,6 +419,7 @@ def _judge_verified(
     combo_classification: str,
     tool_calls: list[dict[str, Any]],
     answer_complete: bool,
+    factual_core_preserved: bool,
 ) -> bool:
     unresolved = [
         verdict
@@ -370,11 +430,16 @@ def _judge_verified(
         call.get("status") == "success" and call.get("evidence")
         for call in tool_calls
     )
-    if unresolved or not answer_complete:
+    if unresolved or not answer_complete or not factual_core_preserved:
         return False
     if claim_verdicts:
         return successful_evidence
-    return combo_classification in {"infinite_combo", "non_combo", "repeatable_synergy"} and successful_evidence
+    return combo_classification in {
+        "infinite_combo",
+        "non_combo",
+        "repeatable_synergy",
+        "not_applicable",
+    } and successful_evidence
 
 
 def _merge_tool_evidence(

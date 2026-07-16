@@ -64,6 +64,12 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
         answer_obligations=[{"code": "direct_user_question", "required": True}],
         answer_contract={"answer_complete": True},
         answer_complete=True,
+        response_mode="tactician_led",
+        response_orchestration={"mode": "tactician_led"},
+        factual_core=[{"code": "combo_loop", "statement": "The loop restores its state."}],
+        factual_core_coverage={"required": 1, "covered": 1, "complete": True},
+        factual_core_preserved=True,
+        strategic_extension_required=True,
         judge_result={"authority": "judge"},
     )
     payload = response.model_dump()
@@ -79,6 +85,9 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
     assert payload["response_language"] == "es"
     assert payload["answer_complete"] is True
     assert payload["answer_obligations"][0]["code"] == "direct_user_question"
+    assert payload["response_mode"] == "tactician_led"
+    assert payload["factual_core_preserved"] is True
+    assert payload["factual_core_coverage"]["complete"] is True
 
 
 def main() -> int:

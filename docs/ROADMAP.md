@@ -84,15 +84,19 @@ The first major release should add mature deck analysis, authorized strategic so
 - Evidence-aware `judge_verified` and confidence derivation.
 - Seed data-driven multi-turn conversation regression.
 
-### 12.2d — Tactician Conversation Gauntlet — next
+### 12.2d — Response orchestration and Tactician Conversation Gauntlet — complete
 
+- `judge_led`, `tactician_led`, and `hybrid` response arbitration.
+- Deterministic factual-core extraction and preservation.
+- Combo classification limited to combo-relevant turns.
 - Reusable multi-turn scenario execution.
 - Structured semantic and negative assertions.
-- Controlled evidence fixtures and optional Ollama mode.
-- Failure classification and JSON/HTML reports.
+- Controlled evidence fixtures and optional local mode.
+- JSON and HTML reports.
 - Manual promotion of reviewed UI feedback exports.
+- 40 scenarios covering 58 turns.
 - Young Wolf, Carrion Feeder, and The Ozolith reasoning regression.
-- Ghave and Ashnod's Altar follow-up sequencing and disruption regression.
+- Ghave and Ashnod's Altar sequencing, requirements, and disruption regression.
 
 ### 12.3 — General autonomous investigation planner — next
 

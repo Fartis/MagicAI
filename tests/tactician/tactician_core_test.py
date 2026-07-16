@@ -106,7 +106,8 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
         "tactician:language_policy",
         "tactician:input_analysis",
         "tactician:claim_evaluation",
-        "tactician:strategic_synthesis",
+        "tactician:response_orchestration:tactician_led",
+        "tactician:factual_core_preservation",
         "tactician:answer_contract",
         "judge:evidence_verification",
     ]

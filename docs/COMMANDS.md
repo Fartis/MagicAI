@@ -140,23 +140,43 @@ curl -s -X POST http://127.0.0.1:8000/judge/tools/execute \
 
 ## Tactician conversational understanding
 
-Run the language and casual-input checks:
+Run the focused orchestration checks:
 
 ```bash
-python -m tests.language.language_policy_test
-python -m tests.conversation.casual_normalization_test
-python -m tests.validation.casual_judge_understanding_test
+python -m tests.tactician.tactician_response_orchestration_test
+python -m tests.tactician.tactician_input_reasoning_test
+python -m tests.tactician.tactician_followup_reasoning_test
 ```
 
-Run the seed multi-turn conversation regression:
+Run the deterministic 40-scenario conversation gauntlet:
+
+```bash
+python -m tests.quality.tactician_conversations.runner \
+  --mode fixture \
+  --cases tests/quality/cases/tactician_conversations \
+  --output-dir quality-results/tactician-conversations
+```
+
+Run the contract and CI regression wrappers:
 
 ```bash
 python -m tests.quality.tactician_conversation_contract_test
 python -m tests.quality.tactician_conversation_regression_test
 ```
 
-The seed scenario is stored in:
+Run the same cases against the local MagicAI installation:
 
-```text
-tests/quality/cases/tactician_conversations/sprint12_2c.json
+```bash
+python -m tests.quality.tactician_conversations.runner \
+  --mode local \
+  --cases tests/quality/cases/tactician_conversations \
+  --output-dir quality-results/tactician-conversations-local
 ```
+
+Promote an exported result into a review-only candidate:
+
+```bash
+python scripts/promote_tactician_feedback.py exported-result.json
+```
+
+Candidates are not added to the active regression corpus automatically.

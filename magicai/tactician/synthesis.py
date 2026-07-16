@@ -4,8 +4,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from magicai.tactician.claims import ClaimVerdict
+from magicai.tactician.factual_core import judge_answer_is_directly_usable
 from magicai.tactician.input_analysis import InputAnalysis, SpeechAct
 from magicai.tactician.intents import StrategyIntent
+from magicai.tactician.orchestration import ResponseDecision, ResponseMode
 from magicai.tactician.strategy import StrategyAnalysis, analyze_strategy
 
 
@@ -26,9 +28,21 @@ def synthesize_strategy(
     judge_payload: dict[str, Any],
     input_analysis: InputAnalysis,
     claim_verdicts: list[ClaimVerdict],
+    response_decision: ResponseDecision | None = None,
 ) -> StrategicSynthesis:
     cards = list(judge_payload.get("cards", []))
     names = {str(card.get("name", "")).casefold() for card in cards}
+    decision = response_decision
+
+    if decision is not None and decision.mode is ResponseMode.JUDGE_LED:
+        judge_led = _synthesize_judge_led(
+            judge_payload=judge_payload,
+            input_analysis=input_analysis,
+            names=names,
+            claim_verdicts=claim_verdicts,
+        )
+        if judge_led is not None:
+            return judge_led
 
     if input_analysis.strategy_intent is StrategyIntent.MECHANIC_EQUIVALENCE:
         return _synthesize_undying_dies_equivalence(input_analysis, names)
@@ -69,6 +83,35 @@ def synthesize_strategy(
         reasoning_summary=_summary_from_verdicts(claim_verdicts),
     )
 
+
+def _synthesize_judge_led(
+    *,
+    judge_payload: dict[str, Any],
+    input_analysis: InputAnalysis,
+    names: set[str],
+    claim_verdicts: list[ClaimVerdict],
+) -> StrategicSynthesis | None:
+    """Keep a validated Judge answer intact on rules-led turns."""
+
+    if judge_answer_is_directly_usable(judge_payload, input_analysis):
+        answer = str(judge_payload.get("answer", "")).strip()
+        if answer:
+            return StrategicSynthesis(
+                answer=answer,
+                combo_classification="not_applicable",
+                synergies=[],
+                risks=[],
+                combo_steps=[],
+                outcomes=[],
+                reasoning_summary=_summary_from_verdicts(claim_verdicts) or [answer],
+            )
+
+    # A known semantic fallback is preferable to relaying a drifted Judge
+    # answer. It is mechanic-based and uses the recovered active context.
+    if input_analysis.strategy_intent is StrategyIntent.MECHANIC_EQUIVALENCE:
+        return _synthesize_undying_dies_equivalence(input_analysis, names)
+
+    return None
 
 def _synthesize_undying_dies_equivalence(
     input_analysis: InputAnalysis,
@@ -296,7 +339,9 @@ def _synthesize_ozolith_interaction(
             "The Ozolith se dispara por separado y, cuando su habilidad se resuelve, pone sobre sí mismo un contador equivalente.",
         ]
         answer = (
-            f"{opening} Por eso, Young Wolf, Carrion Feeder y The Ozolith no forman un bucle infinito por sí solos. "
+            f"{opening} Young Wolf deja el campo todavía con el contador +1/+1, así que Undying ve ese último estado y no se dispara. "
+            "The Ozolith se dispara por separado y pone después contadores equivalentes sobre sí mismo; no retiró previamente el contador del lobo. "
+            "Por eso, Young Wolf, Carrion Feeder y The Ozolith no forman un bucle infinito por sí solos. "
             "Carrion Feeder obtiene su contador y The Ozolith conserva valor para un combate posterior, pero Young Wolf permanece en el cementerio después del segundo sacrificio."
         )
         synergies = ["Carrion Feeder convierte Young Wolf en valor de sacrificio y The Ozolith conserva contadores equivalentes para un combate posterior."]
@@ -311,7 +356,11 @@ def _synthesize_ozolith_interaction(
             "The original counter ceases to exist when Young Wolf changes zones.",
             "The Ozolith triggers separately and later puts a corresponding counter on itself.",
         ]
-        answer = f"{opening} Young Wolf, Carrion Feeder, and The Ozolith do not form an infinite loop by themselves. Carrion Feeder grows and The Ozolith stores future value, but Young Wolf stays in the graveyard after the second sacrifice."
+        answer = (
+            f"{opening} Young Wolf leaves the battlefield with the +1/+1 counter, so Undying sees that last state and does not trigger. "
+            "The Ozolith triggers separately and later puts corresponding counters on itself; it did not remove the Wolf's counter beforehand. "
+            "Young Wolf, Carrion Feeder, and The Ozolith do not form an infinite loop by themselves. Carrion Feeder grows and The Ozolith stores future value, but Young Wolf stays in the graveyard after the second sacrifice."
+        )
         synergies = ["Carrion Feeder converts Young Wolf into sacrifice value while The Ozolith stores corresponding counters for later combat."]
         risks = ["The Ozolith does not remove Young Wolf's counter before Undying checks.", "A separate effect must remove or neutralize the counter while Young Wolf is on the battlefield."]
         outcomes = ["Carrion Feeder receives a +1/+1 counter.", "The Ozolith may receive a corresponding counter.", "Young Wolf does not return if it left with a counter."]

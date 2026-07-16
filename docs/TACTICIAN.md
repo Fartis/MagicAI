@@ -15,33 +15,43 @@ The Tactician analyzes:
 
 It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It requests structured evidence through the Judge Tool Gateway.
 
-## Current milestone: 0.5
+## Current milestone: 0.6
 
 Implemented:
 
 - automatic handoff from `POST /ask`;
 - explicit `POST /tactician/ask`;
-- strategic intent classification;
+- strategic and rules-oriented intent classification;
 - previous-turn card inheritance;
-- structured `strategy_intent`, `combo_classification`, `combo_steps`, and `outcomes`;
-- generic recognition of a three-piece Undying loop;
-- Judge review challenges for contradictory LLM answers;
 - executable, typed Judge Tool Gateway;
-- bounded Oracle refresh through the Judge before strategic synthesis;
-- tool-call provenance in `judge_tool_calls` and `judge_queries`;
-- explicit `tactician_synthesized` metadata;
-- speech-act, intent, and claim analysis for user input;
-- bounded multi-tool investigation plans;
-- claim verdicts with evidence identifiers;
-- independent conversational synthesis even when the Judge already returned a factual answer;
+- bounded Oracle, rules, and rulings requests;
+- speech-act, intent, claim, and question-target analysis;
 - persisted strategic conversation context;
-- `play_sequence`, `combo_disruption`, `combo_requirements`, and `interaction_hypothesis` intents;
-- evidence-verification metadata and concise reasoning summaries;
-- session-aware language policy that ignores English card names as language evidence;
-- shared casual-language normalization for the Judge and Tactician;
-- rules-oriented intents such as `mechanic_equivalence` and `combo_failure_explanation`;
-- semantic answer obligations and `answer_complete` validation;
-- the first data-driven multi-turn Tactician conversation regression.
+- session-aware language policy and casual-input normalization;
+- semantic answer obligations and evidence verification;
+- explicit `judge_led`, `tactician_led`, and `hybrid` response modes;
+- factual-core extraction, preservation, and coverage reporting;
+- protection against generic strategic synthesis replacing a correct deterministic Judge answer;
+- combo classification only when combo analysis is relevant to the current turn;
+- 40 conversational regression scenarios covering 58 turns;
+- fixture and local execution modes for the Tactician Conversation Gauntlet;
+- JSON and HTML gauntlet reports;
+- review-only promotion of exported feedback into candidate scenarios.
+
+## Response ownership
+
+```text
+rules or mechanic resolution
+  → Judge-led response
+
+strategy, sequencing, disruption, or deck decisions
+  → Tactician-led response
+
+rules explanation plus strategic consequence
+  → hybrid response
+```
+
+A Judge-led response may be phrased naturally by the Tactician, but it must preserve every required factual proposition. If coverage is incomplete, the response is rejected or repaired before publication.
 
 ## Evidence loop
 
@@ -58,7 +68,7 @@ Tactician forms a hypothesis
   → publish or declare uncertainty
 ```
 
-Milestone 0.5 adds language consistency, casual-input normalization, rules-oriented follow-ups, and answer-contract validation. The wider conversation gauntlet and general autonomous planner remain later milestones.
+Milestone 0.6 adds response ownership and a reproducible conversation gauntlet. Sprint 12.3 generalizes the investigation loop beyond the current deterministic families.
 
 ## Personality
 

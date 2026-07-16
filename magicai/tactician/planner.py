@@ -56,12 +56,19 @@ def plan_investigation(
             "Relacionar el evento de morir con Undying y excluir entradas al cementerio desde otras zonas." if spanish else "Relate dying to Undying and exclude graveyard entry from other zones.",
         ])
     else:
-        if "sacrifice" in concepts or "dies" in concepts:
+        if "sacrifice" in concepts:
             rules.extend(["701.21a", "700.4"])
             goals.append(
                 "Verificar la transición de sacrificar a morir."
                 if spanish else
                 "Verify the sacrifice-to-dies transition."
+            )
+        elif "dies" in concepts or {"battlefield", "graveyard"}.issubset(concepts):
+            rules.append("700.4")
+            goals.append(
+                "Verificar cuándo un cambio de zona cuenta como morir."
+                if spanish else
+                "Verify when a zone change counts as dying."
             )
         if "undying" in concepts or any("Undying" in str(card.get("oracle_text", "")) for card in cards):
             rules.extend(["702.93a", "603.4"])

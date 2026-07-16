@@ -1,0 +1,455 @@
+{
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "id": "TACT-LANG-001",
+      "title": "Entonces, what happens si sacrifico Young Wolf?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "Entonces, what happens si sacrifico Young Wolf?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-002",
+      "title": "¿Qué pasa si sacrifico Young Wolf y Undying trigger?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué pasa si sacrifico Young Wolf y Undying trigger?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-003",
+      "title": "What happens if Young Wolf dies?",
+      "language": "en",
+      "turns": [
+        {
+          "question": "What happens if Young Wolf dies?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-004",
+      "title": "¿Qué ocurre si Young Wolf pisa cementerio desde el campo de batalla?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué ocurre si Young Wolf pisa cementerio desde el campo de batalla?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-005",
+      "title": "Spanish Ozolith with English keywords",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Carrion Feeder y The Ozolith hacen infinite loop?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-006",
+      "title": "English Ozolith",
+      "language": "en",
+      "turns": [
+        {
+          "question": "Do Young Wolf, Carrion Feeder, and The Ozolith form an infinite loop?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-007",
+      "title": "Spanish Ghave mixed terms",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave hacen infinite combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿Where pueden cortarlo?",
+          "expect": {
+            "strategy_intent": "combo_disruption",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "graveyard_interruption",
+              "ghave_removal_window"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-008",
+      "title": "English Ghave context",
+      "language": "en",
+      "turns": [
+        {
+          "question": "Do Young Wolf, Ashnod's Altar, and Ghave, Guru of Spores form a combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "infinite combo"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "What order should I use?",
+          "expect": {
+            "strategy_intent": "play_sequence",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "ghave_resets_counter",
+              "altar_produces_two",
+              "net_mana_and_token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-009",
+      "title": "Drift-resistant Spanish follow-up",
+      "language": "es",
+      "judge_behavior": "drift",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Carrion Feeder y The Ozolith hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        },
+        {
+          "question": "Entonces Undying es morir, no simplemente llegar desde otra zona al cementerio, ¿no?",
+          "expect": {
+            "strategy_intent": "mechanic_equivalence",
+            "response_mode": "judge_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_concepts": [
+              "same_event",
+              "other_zone_not_dies"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-LANG-010",
+      "title": "Spanish full Ghave continuity",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿En qué orden?",
+          "expect": {
+            "strategy_intent": "play_sequence",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "ghave_resets_counter",
+              "altar_produces_two",
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿Qué necesito?",
+          "expect": {
+            "strategy_intent": "combo_requirements",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "requires_three_pieces",
+              "no_starting_mana"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

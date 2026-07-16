@@ -1,24 +1,32 @@
 from pathlib import Path
 
 from tests.quality.tactician_conversations import load_scenarios
+from tests.quality.tactician_conversations.semantic_assertions import known_concepts
 
 
-CASES = Path(__file__).parent / "cases" / "tactician_conversations" / "sprint12_2c.json"
+CASES = Path(__file__).parent / "cases" / "tactician_conversations"
 
 
 def test_conversation_case_contract_is_loadable() -> None:
     scenarios = load_scenarios(CASES)
-    assert scenarios[0]["id"] == "TACT-CONV-OZOLITH-001"
-    assert len(scenarios[0]["turns"]) == 2
-    for turn in scenarios[0]["turns"]:
-        assert turn["question"].strip()
-        assert isinstance(turn["expect"], dict)
+    assert len(scenarios) == 40
+    assert len({scenario["id"] for scenario in scenarios}) == 40
+    assert sum(len(scenario["turns"]) for scenario in scenarios) == 58
+    allowed_concepts = known_concepts()
+    for scenario in scenarios:
+        assert scenario["language"] in {"es", "en"}
+        for turn in scenario["turns"]:
+            assert turn["question"].strip()
+            expected = turn["expect"]
+            assert isinstance(expected, dict)
+            assert set(expected.get("required_concepts", [])) <= allowed_concepts
+            assert set(expected.get("forbidden_concepts", [])) <= allowed_concepts
 
 
 def main() -> int:
     test_conversation_case_contract_is_loadable()
     print("OK: test_conversation_case_contract_is_loadable")
-    print("Tactician conversation contract tests: 1/1")
+    print("Tactician conversation contract tests: 40 scenarios / 58 turns")
     return 0
 
 

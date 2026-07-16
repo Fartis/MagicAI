@@ -210,7 +210,7 @@ def _detect_concepts(normalized: str) -> list[str]:
         ("counters", ("contador", "counter")),
         ("leaves_battlefield", ("deja el campo", "abandona el campo", "leaves the battlefield")),
         ("graveyard", ("cementerio", "graveyard")),
-        ("battlefield", ("campo de batalla", "battlefield")),
+        ("battlefield", ("campo de batalla", "del campo al cementerio", "desde el campo", "battlefield")),
         ("last_known_information", ("antes de dejar", "justo antes", "last known", "cuando deja")),
         ("ozolith", ("ozolith",)),
         ("combo", ("combo", "bucle", "loop", "infinito", "infinite")),
@@ -228,6 +228,8 @@ def _detect_concepts(normalized: str) -> list[str]:
 def _answer_focus(intent: StrategyIntent, concepts: list[str]) -> list[str]:
     if intent is StrategyIntent.MECHANIC_EQUIVALENCE:
         return ["define_dies", "compare_events", "exclude_other_zone_changes", "apply_current_interaction"]
+    if intent is StrategyIntent.MECHANIC_RESOLUTION:
+        return ["resolve_event", "explain_trigger_condition", "state_result"]
     if intent is StrategyIntent.COMBO_FAILURE_EXPLANATION:
         return ["identify_failed_transition", "explain_rule", "apply_current_interaction"]
     if intent is StrategyIntent.INTERACTION_TIMING:

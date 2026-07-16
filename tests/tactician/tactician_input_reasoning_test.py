@@ -122,6 +122,7 @@ def test_three_card_question_explains_why_ozolith_is_not_a_reset() -> None:
     payload = result.to_dict()
 
     assert payload["combo_classification"] == "non_combo"
+    assert payload["response_mode"] == "tactician_led"
     assert payload["tactician_synthesized"] is True
     assert payload["judge_verified"] is True
     assert payload["queries_completed"] >= 3
@@ -143,7 +144,8 @@ def test_challenge_is_evaluated_instead_of_relaying_judge_answer() -> None:
     )
     payload = result.to_dict()
 
-    assert payload["origin"] == "tactician_reasoned_strategy"
+    assert payload["origin"] == "tactician_hybrid"
+    assert payload["response_mode"] == "hybrid"
     assert payload["tactician_synthesized"] is True
     assert payload["input_analysis"]["speech_act"] == "challenge"
     assert payload["strategy_intent"] == "interaction_hypothesis"

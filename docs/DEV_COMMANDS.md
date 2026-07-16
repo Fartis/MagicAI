@@ -58,3 +58,25 @@ Use bounded parallelism. Start with four workers and reduce the value if the mac
 ## Interpretation
 
 A harness PASS is not factual authority. Review premise validity, semantic contracts, evidence sufficiency, routing origin, and LLM-call counts.
+
+## Tactician conversation campaign
+
+Fixture mode is deterministic and safe for CI:
+
+```bash
+PYTHONPATH=. python -m tests.quality.tactician_conversations.runner \
+  --mode fixture \
+  --cases tests/quality/cases/tactician_conversations \
+  --output-dir quality-results/tactician-conversations
+```
+
+Local mode uses the installed sources and model and should be treated as a manual or scheduled campaign:
+
+```bash
+PYTHONPATH=. python -m tests.quality.tactician_conversations.runner \
+  --mode local \
+  --cases tests/quality/cases/tactician_conversations \
+  --output-dir quality-results/tactician-conversations-local
+```
+
+Review `summary.json` and `report.html`. A failed turn must identify the missing semantic concept, forbidden concept, evidence item, language policy, or response mode.

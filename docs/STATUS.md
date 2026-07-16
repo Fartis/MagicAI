@@ -9,40 +9,42 @@
 
 ## Current development line
 
-Sprint `12.2c` adds conversational understanding, language consistency, and semantic answer validation.
+Sprint `12.2d` adds response orchestration and the first full Tactician Conversation Gauntlet.
 
 Completed in this milestone:
 
-- session-aware Spanish and English language policy;
-- English MTG names and keywords excluded from strong language evidence;
-- shared casual-language normalization for the Judge and Tactician;
-- professional Judge responses after colloquial user input;
-- rules-oriented Tactician intents;
-- open questions separated from factual claims;
-- evidence-aware mechanic-equivalence verdicts;
-- deterministic answer obligations and forbidden-drift checks;
-- corrected `judge_verified` and confidence derivation when evidence is complete;
-- TacticianResult schema `0.5` and API contract `1.6`;
-- first data-driven multi-turn Tactician conversation regression.
+- explicit `judge_led`, `tactician_led`, and `hybrid` response modes;
+- rules and mechanic questions led by the Judge factual core;
+- strategic questions led by the Tactician;
+- mixed rules-and-strategy questions handled through a hybrid path;
+- deterministic factual-core extraction and coverage checks;
+- protection against replacing a correct Judge answer with a generic combo template;
+- combo classification suppressed when the current turn is not asking about a combo;
+- `mechanic_resolution` intent for questions such as sacrificing Young Wolf;
+- session-aware Spanish and English output preserved across all response fields;
+- 40 data-driven conversational scenarios covering 58 turns;
+- controlled Judge and Judge Tool Gateway fixtures for fast CI;
+- semantic, negative, evidence, language, and continuity assertions;
+- JSON and HTML conversation-gauntlet reports;
+- a review-only command for promoting exported UI feedback into candidate cases;
+- TacticianResult schema `0.6` and API contract `1.7`.
 
 ## Next development line
 
-Sprint `12.2d` will build the wider Tactician Conversation Gauntlet:
+Sprint `12.3` will focus on the general autonomous investigation planner:
 
-- reusable multi-turn scenario runner;
-- controlled Judge Tool Gateway fixtures;
-- semantic and negative assertions;
-- optional Ollama execution mode;
-- JSON and HTML failure reports;
-- manual promotion of exported feedback into reviewed regression candidates.
-
-Sprint `12.3` will then focus on general autonomous investigation planning.
+- hypothesis decomposition;
+- iterative evidence requests based on unresolved claims;
+- evidence-sufficiency scoring;
+- alternative and counterexample search;
+- bounded research loops;
+- reusable investigation traces beyond the currently supported interaction families.
 
 ## Known limitations
 
 - Casual-language normalization is conservative and currently covers a bounded vocabulary.
-- Semantic answer contracts are implemented for the first rules-oriented and combo-requirement families.
-- Multi-query planning is not yet general across arbitrary interactions.
+- Factual-core templates are implemented for the first rules and combo families, not arbitrary Magic interactions.
+- Fixture-mode semantic assertions are deterministic; local Ollama mode remains a manual or scheduled evaluation.
 - Combo reconstruction covers only narrow generic families.
 - Commander Spellbook is not connected.
 - EDHREC-style statistics remain permission-gated.

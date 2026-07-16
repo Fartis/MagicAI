@@ -82,6 +82,12 @@ class AskResponse(BaseModel):
     answer_obligations: list[dict[str, Any]] = Field(default_factory=list)
     answer_contract: dict[str, Any] = Field(default_factory=dict)
     answer_complete: bool = False
+    response_mode: str = ""
+    response_orchestration: dict[str, Any] = Field(default_factory=dict)
+    factual_core: list[dict[str, Any]] = Field(default_factory=list)
+    factual_core_coverage: dict[str, Any] = Field(default_factory=dict)
+    factual_core_preserved: bool = False
+    strategic_extension_required: bool = False
     judge_result: dict[str, Any] = Field(default_factory=dict)
 
 

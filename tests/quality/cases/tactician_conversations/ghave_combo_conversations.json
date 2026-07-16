@@ -1,0 +1,488 @@
+{
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "id": "TACT-GHA-001",
+      "title": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-002",
+      "title": "¿Hay un combo infinito entre Young Wolf, Ashnod's Altar y Ghave, Guru of Spores?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Hay un combo infinito entre Young Wolf, Ashnod's Altar y Ghave, Guru of Spores?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-003",
+      "title": "¿Forman un bucle Young Wolf, Ashnod's Altar y Ghave, Guru of Spores?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Forman un bucle Young Wolf, Ashnod's Altar y Ghave, Guru of Spores?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-004",
+      "title": "English Ghave combo",
+      "language": "en",
+      "turns": [
+        {
+          "question": "Do Young Wolf, Ashnod's Altar, and Ghave, Guru of Spores form a combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "infinite combo"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-005",
+      "title": "Sequence follow-up",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿En qué orden se juega?",
+          "expect": {
+            "strategy_intent": "play_sequence",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "ghave_resets_counter",
+              "altar_produces_two",
+              "net_mana_and_token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-006",
+      "title": "Disruption follow-up",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿Dónde pueden cortarlo?",
+          "expect": {
+            "strategy_intent": "combo_disruption",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "graveyard_interruption",
+              "ghave_removal_window"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-007",
+      "title": "Requirements follow-up",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿Qué necesito tener antes de empezar?",
+          "expect": {
+            "strategy_intent": "combo_requirements",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "requires_three_pieces",
+              "no_starting_mana"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-008",
+      "title": "Full Spanish combo conversation",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Ashnod's Altar y Ghave, Guru of Spores hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿En qué orden se juega?",
+          "expect": {
+            "strategy_intent": "play_sequence",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "ghave_resets_counter",
+              "altar_produces_two",
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿Dónde pueden cortarlo?",
+          "expect": {
+            "strategy_intent": "combo_disruption",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "graveyard_interruption",
+              "ghave_removal_window"
+            ]
+          }
+        },
+        {
+          "question": "¿Qué necesito tener antes de empezar?",
+          "expect": {
+            "strategy_intent": "combo_requirements",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "requires_three_pieces",
+              "no_starting_mana"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-009",
+      "title": "Full English combo conversation",
+      "language": "en",
+      "turns": [
+        {
+          "question": "Do Young Wolf, Ashnod's Altar, and Ghave, Guru of Spores form a combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "infinite combo"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "What order should I use?",
+          "expect": {
+            "strategy_intent": "play_sequence",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "ghave_resets_counter",
+              "altar_produces_two",
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "Where can opponents stop it?",
+          "expect": {
+            "strategy_intent": "combo_disruption",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "graveyard_interruption",
+              "ghave_removal_window"
+            ]
+          }
+        },
+        {
+          "question": "What do I need before I start?",
+          "expect": {
+            "strategy_intent": "combo_requirements",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "requires_three_pieces",
+              "no_starting_mana"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-GHA-010",
+      "title": "Mixed terminology Spanish combo",
+      "language": "es",
+      "turns": [
+        {
+          "question": "Entonces, Young Wolf + Ashnod's Altar + Ghave hacen infinite combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_cards": [
+              "Young Wolf",
+              "Ashnod's Altar",
+              "Ghave, Guru of Spores"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_phrases": [
+              "combo infinito"
+            ],
+            "required_concepts": [
+              "net_mana_and_token"
+            ]
+          }
+        },
+        {
+          "question": "¿Qué necesito antes de empezar el loop?",
+          "expect": {
+            "strategy_intent": "combo_requirements",
+            "response_mode": "tactician_led",
+            "combo_classification": "infinite_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "required_concepts": [
+              "requires_three_pieces",
+              "no_starting_mana"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

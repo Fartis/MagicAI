@@ -1,10 +1,10 @@
-# Tactician input reasoning
+# Tactician input reasoning and response orchestration
 
-Sprint 12.2c extends the structured reasoning layer introduced in Sprint 12.2b. The Tactician must understand the user's current question, preserve the conversation language, request the relevant rules evidence, and prove that its final answer satisfies the question it was asked.
+Sprint 12.2d extends the structured reasoning layer with explicit response ownership, factual-core preservation, and a reproducible multi-turn conversation gauntlet.
 
 ## Goal
 
-The Tactician must not treat the Judge's prose as the answer. It analyzes what the player is asserting, asking, correcting, or challenging, then requests the evidence needed to evaluate those claims. A completed response must also satisfy an explicit answer contract.
+The Tactician must answer the current question rather than merely mentioning the active cards or repeating a generic combo classification. It must decide whether the current turn is primarily factual, strategic, or mixed, then preserve the appropriate authority boundary.
 
 ## Pipeline
 
@@ -14,13 +14,59 @@ user wording
   → session language policy
   → speech-act and intent analysis
   → claim and question-target extraction
-  → bounded investigation plan
-  → Judge Tool Gateway calls
+  → bounded Judge Tool Gateway investigation
   → claim verdicts
-  → conversational strategic synthesis
+  → response-mode arbitration
+  → factual-core extraction
+  → Judge-led, Tactician-led, or hybrid synthesis
+  → factual-core coverage validation
   → answer-obligation validation
   → evidence verification metadata
 ```
+
+## Response modes
+
+### `judge_led`
+
+Used for rules and mechanic questions such as:
+
+```text
+What happens if I sacrifice Young Wolf?
+What does dying mean?
+When is the counter condition checked?
+```
+
+The Judge owns the factual core. The Tactician may adapt tone and connect the answer to the conversation, but it may not replace the rules explanation with a generic strategic summary.
+
+### `tactician_led`
+
+Used for strategic questions such as:
+
+```text
+Do these cards form a combo?
+What order should I use?
+Where can opponents interrupt the loop?
+```
+
+The Tactician synthesizes the line from Judge-owned evidence.
+
+### `hybrid`
+
+Used when a rules result must be connected to a strategic conclusion, for example explaining exactly why a proposed combo fails.
+
+## Factual core
+
+On a `judge_led` turn, the factual core is extracted from the Judge's validated answer sentence by sentence. This deliberately avoids adding production fixes for individual cards: the preservation rule applies equally to any direct rules answer. If Tactician wording drops a required Judge proposition, orchestration falls back to the validated Judge answer rather than replacing it with a generic strategic summary.
+
+Card-specific expectations belong in the regression corpus, where they test behavior without becoming application routing rules.
+
+The result exposes:
+
+- `factual_core`;
+- `factual_core_coverage`;
+- `factual_core_preserved`.
+
+A response cannot be marked complete when a required proposition is missing.
 
 ## Language policy
 
@@ -34,7 +80,7 @@ clear current-turn language
   → configured default language
 ```
 
-The selected language applies to the answer and to user-visible strategic metadata such as risks, outcomes, claim explanations, and reasoning summaries.
+The selected language applies to the answer and all user-visible strategic metadata.
 
 ## Casual-language normalization
 
@@ -48,85 +94,55 @@ Examples:
 "se puede cortar" → "can be responded to or interrupted"
 ```
 
-The Judge still answers in a stable, professional register. The Tactician may remain warmer and more conversational.
+The Judge answers in a stable professional register. The Tactician may remain warmer and more conversational.
 
-## Input analysis
+## Conversation Gauntlet
 
-The analyzer records:
-
-- response language and language-policy decision;
-- user register;
-- canonical retrieval question;
-- speech act such as question, hypothesis, challenge, or follow-up;
-- strategic or rules-oriented intent;
-- question target and answer focus;
-- causal markers;
-- detected concepts;
-- structured claims.
-
-The result is auditable metadata, not a hidden chain-of-thought transcript.
-
-## Rules-oriented intents
-
-Sprint 12.2c adds:
-
-- `rules_clarification`
-- `mechanic_definition`
-- `mechanic_equivalence`
-- `combo_failure_explanation`
-- `interaction_timing`
-
-The Tactician owns the conversation, but factual rules claims remain Judge-owned and must be recovered through the Judge Tool Gateway.
-
-## Claim verdicts
-
-Each extracted claim can be classified as:
-
-- `supported`
-- `contradicted`
-- `partially_supported`
-- `insufficient_evidence`
-- `strategic_opinion`
-
-A verdict records a concise explanation and the source identifiers that support it. Open questions are not automatically converted into factual claims.
-
-## Answer obligations
-
-Each response receives a small semantic contract. For an Undying terminology question, the required obligations include:
-
-- define `dies`;
-- explain that dying and moving from the battlefield to a graveyard are the same event;
-- exclude graveyard entry from other zones;
-- apply the definition to Undying;
-- apply it to the active interaction when relevant.
-
-The response is marked `answer_complete` only when all required checks pass and forbidden drift is absent.
-
-## Current deterministic interaction family
-
-The primary regression covers:
-
-- Young Wolf;
-- Carrion Feeder;
-- The Ozolith;
-- Undying;
-- counters across zone changes;
-- leaves-the-battlefield timing;
-- last known information;
-- casual follow-up wording about dying and entering a graveyard.
-
-The Tactician explains that The Ozolith does not remove Young Wolf's +1/+1 counter before Undying checks the creature's last battlefield state.
-
-## Conversation regression seed
-
-The first multi-turn scenario is stored under:
+The initial corpus is stored under:
 
 ```text
-tests/quality/cases/tactician_conversations/sprint12_2c.json
+tests/quality/cases/tactician_conversations/
 ```
 
-It verifies language, intent, required rules, semantic requirements, forbidden drift, answer completeness, and evidence verification. This is the seed for the wider Tactician Conversation Gauntlet planned for Sprint 12.2d.
+It contains 40 scenarios and 58 turns across:
+
+- direct mechanic resolutions;
+- casual and mixed-language wording;
+- incorrect interaction hypotheses;
+- Young Wolf, Carrion Feeder, and The Ozolith;
+- Young Wolf, Ashnod's Altar, and Ghave;
+- sequencing, requirements, and disruption follow-ups;
+- drift resistance when the Judge prose is not relevant.
+
+Fixture mode is fast and deterministic:
+
+```bash
+python -m tests.quality.tactician_conversations.runner \
+  --mode fixture \
+  --cases tests/quality/cases/tactician_conversations
+```
+
+Local mode uses the installed MagicAI sources and model:
+
+```bash
+python -m tests.quality.tactician_conversations.runner \
+  --mode local \
+  --cases tests/quality/cases/tactician_conversations \
+  --output-dir quality-results/tactician-conversations-local
+```
+
+Both modes generate `summary.json` and `report.html`.
+
+## Feedback promotion
+
+An exported UI result can be converted into a reviewable candidate:
+
+```bash
+python scripts/promote_tactician_feedback.py exported-result.json
+```
+
+The command never modifies the active regression corpus automatically. A human must add semantic and negative expectations before promotion.
 
 ## Limits
 
-This milestone is not a universal natural-language theorem prover. Normalization, claim extraction, semantic checks, and verdict generation remain deterministic and intentionally bounded. Sprint 12.2d will broaden multi-turn scenario execution and reporting; Sprint 12.3 will generalize autonomous investigation planning.
+This milestone is not a universal natural-language theorem prover. Factual-core extraction and semantic checks remain deterministic and intentionally bounded. Sprint 12.3 will generalize autonomous investigation planning and evidence sufficiency across broader interactions.

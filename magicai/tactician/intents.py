@@ -19,6 +19,7 @@ class StrategyIntent(str, Enum):
     INTERACTION_HYPOTHESIS = "interaction_hypothesis"
     RULES_CLARIFICATION = "rules_clarification"
     MECHANIC_DEFINITION = "mechanic_definition"
+    MECHANIC_RESOLUTION = "mechanic_resolution"
     MECHANIC_EQUIVALENCE = "mechanic_equivalence"
     COMBO_FAILURE_EXPLANATION = "combo_failure_explanation"
     INTERACTION_TIMING = "interaction_timing"
@@ -42,7 +43,7 @@ _SEQUENCE_MARKERS = (
     "en que orden", "en qué orden", "orden se juega", "orden del combo", "play sequence", "what order",
 )
 _DISRUPTION_MARKERS = (
-    "donde se corta", "dónde se corta", "como se corta", "cómo se corta", "cortar", "cortarlo", "interrump", "disrupt", "stop the combo",
+    "donde se corta", "dónde se corta", "como se corta", "cómo se corta", "cortar", "cortarlo", "interrump", "disrupt", "stop the combo", "stop it", "where can opponents stop",
 )
 _REQUIREMENT_MARKERS = (
     "que necesito", "qué necesito", "requisitos", "required pieces", "what do i need",
@@ -62,8 +63,16 @@ _TIMING_MARKERS = (
     "when does", "at what point", "timing",
 )
 _EQUIVALENCE_MARKERS = (
-    "es cuando muere", "no cuando", "es lo mismo", "mismo evento", "equivale", "significa lo mismo",
+    "es cuando muere", "es morir", "no cuando", "no simplemente", "es lo mismo", "mismo evento", "equivale", "significa lo mismo",
     "same event", "is the same as", "rather than",
+)
+_RESOLUTION_MARKERS = (
+    "que ocurre si", "qué ocurre si", "que pasa si", "qué pasa si", "que pasa cuando", "qué pasa cuando",
+    "what happens if", "what happens when", "what happens",
+)
+_RULE_ACTION_MARKERS = (
+    "sacrific", "muere", "morir", "dies", "cementerio", "graveyard", "entra", "enter",
+    "sale del campo", "leaves the battlefield", "exilia", "exile", "se dispara", "trigger",
 )
 _DEFINITION_MARKERS = (
     "que es", "qué es", "define", "como funciona", "cómo funciona", "what is", "define", "how does",
@@ -79,6 +88,10 @@ def classify_strategy_intent(question: str) -> StrategyIntent:
 
     if _looks_like_mechanic_equivalence(normalized):
         return StrategyIntent.MECHANIC_EQUIVALENCE
+    if any(marker in normalized for marker in _RESOLUTION_MARKERS) and any(
+        marker in normalized for marker in _RULE_ACTION_MARKERS
+    ):
+        return StrategyIntent.MECHANIC_RESOLUTION
     if any(marker in normalized for marker in _FAILURE_MARKERS):
         return StrategyIntent.COMBO_FAILURE_EXPLANATION
     if any(marker in normalized for marker in _TIMING_MARKERS):

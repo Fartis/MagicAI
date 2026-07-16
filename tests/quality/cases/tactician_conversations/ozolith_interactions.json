@@ -1,0 +1,387 @@
+{
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "id": "TACT-OZO-001",
+      "title": "¿Young Wolf, Carrion Feeder y The Ozolith hacen combo?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Carrion Feeder y The Ozolith hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-002",
+      "title": "¿Cómo funciona Young Wolf con Carrion Feeder y The Ozolith? ¿Es infinito?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Cómo funciona Young Wolf con Carrion Feeder y The Ozolith? ¿Es infinito?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-003",
+      "title": "¿Hay un bucle con Young Wolf, Carrion Feeder y The Ozolith?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Hay un bucle con Young Wolf, Carrion Feeder y The Ozolith?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-004",
+      "title": "English Ozolith combo",
+      "language": "en",
+      "turns": [
+        {
+          "question": "Do Young Wolf, Carrion Feeder, and The Ozolith form a combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-005",
+      "title": "Incorrect counter transfer premise",
+      "language": "es",
+      "turns": [
+        {
+          "question": "Pero The Ozolith se lleva el contador antes, por lo que Undying se dispara otra vez.",
+          "expect": {
+            "strategy_intent": "interaction_hypothesis",
+            "response_mode": "hybrid",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_concepts": [
+              "undying_blocked_by_counter",
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-006",
+      "title": "Why the loop fails",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Por qué no funciona el combo de Young Wolf, Carrion Feeder y The Ozolith?",
+          "expect": {
+            "strategy_intent": "combo_failure_explanation",
+            "response_mode": "hybrid",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_concepts": [
+              "undying_blocked_by_counter"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-007",
+      "title": "Exact failure timing",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿En qué momento falla Young Wolf con Carrion Feeder y The Ozolith?",
+          "expect": {
+            "strategy_intent": "interaction_timing",
+            "response_mode": "hybrid",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_concepts": [
+              "undying_blocked_by_counter"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-008",
+      "title": "Casual equivalence follow-up",
+      "language": "es",
+      "judge_behavior": "drift",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Carrion Feeder y The Ozolith hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        },
+        {
+          "question": "Entonces, ¿Undying es cuando muere la criatura, no cuando pisa cementerio?",
+          "expect": {
+            "strategy_intent": "mechanic_equivalence",
+            "response_mode": "judge_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_concepts": [
+              "same_event",
+              "other_zone_not_dies",
+              "undying_blocked_by_counter"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-009",
+      "title": "Failure follow-up after combo",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Carrion Feeder y The Ozolith hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        },
+        {
+          "question": "¿Y por qué no funciona el bucle?",
+          "expect": {
+            "strategy_intent": "combo_failure_explanation",
+            "response_mode": "hybrid",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_concepts": [
+              "undying_blocked_by_counter"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-OZO-010",
+      "title": "Timing follow-up after combo",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Young Wolf, Carrion Feeder y The Ozolith hacen combo?",
+          "expect": {
+            "strategy_intent": "combo_detection",
+            "response_mode": "tactician_led",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_cards": [
+              "Young Wolf",
+              "Carrion Feeder",
+              "The Ozolith"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup",
+              "rulings_lookup"
+            ],
+            "required_concepts": [
+              "ozolith_does_not_reset",
+              "non_infinite_loop"
+            ],
+            "forbidden_phrases": [
+              "jugador pierde el juego"
+            ]
+          }
+        },
+        {
+          "question": "¿Y en qué momento exacto se rompe?",
+          "expect": {
+            "strategy_intent": "interaction_timing",
+            "response_mode": "hybrid",
+            "combo_classification": "non_combo",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "required_concepts": [
+              "undying_blocked_by_counter"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
