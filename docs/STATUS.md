@@ -9,37 +9,41 @@
 
 ## Current development line
 
-Sprint `12.2b` introduces structured input reasoning and conversational strategic orchestration.
+Sprint `12.2c` adds conversational understanding, language consistency, and semantic answer validation.
 
 Completed in this milestone:
 
-- speech-act and strategic-intent analysis;
-- deterministic claim extraction;
-- bounded multi-tool investigation plans;
-- claim verdicts with source identifiers;
-- independent Tactician synthesis instead of Judge-answer relay;
-- conversational correction of user hypotheses;
-- persisted strategic conversation context;
-- play-sequence, disruption, and requirements follow-ups;
-- TacticianResult schema `0.4` and API contract `1.5`;
-- focused input-reasoning and conversation-state regressions.
+- session-aware Spanish and English language policy;
+- English MTG names and keywords excluded from strong language evidence;
+- shared casual-language normalization for the Judge and Tactician;
+- professional Judge responses after colloquial user input;
+- rules-oriented Tactician intents;
+- open questions separated from factual claims;
+- evidence-aware mechanic-equivalence verdicts;
+- deterministic answer obligations and forbidden-drift checks;
+- corrected `judge_verified` and confidence derivation when evidence is complete;
+- TacticianResult schema `0.5` and API contract `1.6`;
+- first data-driven multi-turn Tactician conversation regression.
 
 ## Next development line
 
-Sprint `12.3` will focus on general autonomous investigation planning:
+Sprint `12.2d` will build the wider Tactician Conversation Gauntlet:
 
-- broader claim decomposition;
-- iterative evidence-gap detection;
-- evidence sufficiency scoring;
-- alternative and counterexample search;
-- configurable investigation depth;
-- wider strategic families beyond the current deterministic vertical slices.
+- reusable multi-turn scenario runner;
+- controlled Judge Tool Gateway fixtures;
+- semantic and negative assertions;
+- optional Ollama execution mode;
+- JSON and HTML failure reports;
+- manual promotion of exported feedback into reviewed regression candidates.
+
+Sprint `12.3` will then focus on general autonomous investigation planning.
 
 ## Known limitations
 
-- Multi-query planning is implemented for supported concepts, but is not yet general across arbitrary interactions.
-- Combo reconstruction covers only a narrow generic family.
+- Casual-language normalization is conservative and currently covers a bounded vocabulary.
+- Semantic answer contracts are implemented for the first rules-oriented and combo-requirement families.
+- Multi-query planning is not yet general across arbitrary interactions.
+- Combo reconstruction covers only narrow generic families.
 - Commander Spellbook is not connected.
 - EDHREC-style statistics remain permission-gated.
 - A full deck analyzer and collection provider are not yet implemented.
-- Some Judge fallbacks may still require stronger second-pass validation.

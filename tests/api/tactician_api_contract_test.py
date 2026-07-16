@@ -59,6 +59,11 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
         queries_completed=2,
         judge_verified=True,
         investigation_plan={"queries_planned": 2},
+        response_language="es",
+        language_policy={"response_language": "es", "language_locked": True},
+        answer_obligations=[{"code": "direct_user_question", "required": True}],
+        answer_contract={"answer_complete": True},
+        answer_complete=True,
         judge_result={"authority": "judge"},
     )
     payload = response.model_dump()
@@ -71,6 +76,9 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
     assert payload["input_analysis"]["speech_act"] == "question"
     assert payload["claim_verdicts"][0]["verdict"] == "supported"
     assert payload["judge_verified"] is True
+    assert payload["response_language"] == "es"
+    assert payload["answer_complete"] is True
+    assert payload["answer_obligations"][0]["code"] == "direct_user_question"
 
 
 def main() -> int:

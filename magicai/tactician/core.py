@@ -10,6 +10,11 @@ from magicai.judge_tools import (
     JudgeToolRequest,
     JudgeToolStatus,
 )
+from magicai.language.localization import localize_messages
+from magicai.tactician.answer_contract import (
+    build_answer_obligations,
+    validate_answer_contract,
+)
 from magicai.tactician.claims import (
     ClaimVerdictStatus,
     evaluate_claims,
@@ -69,7 +74,10 @@ class Tactician:
         strategic response.
         """
 
-        input_analysis = analyze_user_input(question)
+        input_analysis = analyze_user_input(
+            question,
+            session_language=getattr(conversation, "language", None),
+        )
         judge_payload = judge_result.to_dict()
         merged_cards, inherited_names = _merge_context_cards(
             current=judge_payload.get("cards", []),
@@ -77,7 +85,16 @@ class Tactician:
             inherit=(
                 looks_like_referential_follow_up(question)
                 or input_analysis.speech_act.value in {"challenge", "follow_up"}
-                or input_analysis.strategy_intent.value in {"play_sequence", "combo_disruption", "combo_requirements"}
+                or input_analysis.strategy_intent.value in {
+                    "play_sequence",
+                    "combo_disruption",
+                    "combo_requirements",
+                    "rules_clarification",
+                    "mechanic_definition",
+                    "mechanic_equivalence",
+                    "combo_failure_explanation",
+                    "interaction_timing",
+                }
             ),
         )
 
@@ -127,21 +144,40 @@ class Tactician:
             claim_verdicts=claim_verdicts,
         )
 
+        has_current_interaction = len(merged_cards) >= 2
+        obligations = build_answer_obligations(
+            input_analysis,
+            has_current_interaction=has_current_interaction,
+        )
+        answer_contract = validate_answer_contract(
+            synthesis.answer,
+            analysis=input_analysis,
+            obligations=obligations,
+            has_current_interaction=has_current_interaction,
+        )
+
         judge_status = str(judge_payload.get("status", ""))
         if judge_status not in {"strategy_required", "answered"}:
             status = judge_status or "insufficient_evidence"
-            warnings = [
-                *list(judge_payload.get("warnings", [])),
-                "The Judge could not close the factual package; the Strategist's conclusion is limited to the evidence recovered so far.",
-            ]
+            warnings = localize_messages(
+                [
+                    *list(judge_payload.get("warnings", [])),
+                    "The Judge could not close the factual package; the Strategist's conclusion is limited to the evidence recovered so far.",
+                ],
+                input_analysis.language,
+            )
         else:
             status = "answered"
-            warnings = list(judge_payload.get("warnings", []))
+            warnings = localize_messages(
+                list(judge_payload.get("warnings", [])),
+                input_analysis.language,
+            )
 
         judge_verified = _judge_verified(
             claim_verdicts=claim_verdicts,
             combo_classification=synthesis.combo_classification,
             tool_calls=tool_calls,
+            answer_complete=answer_contract.complete,
         )
         confidence = _strategy_confidence(
             synthesis.combo_classification,
@@ -175,9 +211,11 @@ class Tactician:
             authority_trace.append("judge:tool_gateway")
         authority_trace.extend(
             [
+                "tactician:language_policy",
                 "tactician:input_analysis",
                 "tactician:claim_evaluation",
                 "tactician:strategic_synthesis",
+                "tactician:answer_contract",
                 "judge:evidence_verification" if judge_verified else "judge:evidence_incomplete",
             ]
         )
@@ -213,6 +251,11 @@ class Tactician:
             queries_completed=len(tool_calls),
             judge_verified=judge_verified,
             investigation_plan=plan.to_dict(),
+            response_language=input_analysis.language,
+            language_policy=dict(input_analysis.language_policy),
+            answer_obligations=[item.to_dict() for item in obligations],
+            answer_contract=answer_contract.to_dict(),
+            answer_complete=answer_contract.complete,
         )
         return result
 
@@ -282,6 +325,7 @@ def _apply_result_state(conversation, result: TacticianResult) -> None:
     conversation.active_cards = deepcopy(result.cards)
     conversation.last_intent = result.strategy_intent
     conversation.mode = "tactician"
+    conversation.language = result.response_language
     conversation.strategy_context = {
         "last_intent": result.strategy_intent,
         "active_cards": [card.get("name", "") for card in result.cards],
@@ -289,6 +333,9 @@ def _apply_result_state(conversation, result: TacticianResult) -> None:
         "reasoning_summary": list(result.reasoning_summary),
         "claim_verdicts": deepcopy(result.claim_verdicts),
         "judge_verified": bool(result.judge_verified),
+        "response_language": result.response_language,
+        "answer_complete": bool(result.answer_complete),
+        "answer_obligations": deepcopy(result.answer_obligations),
     }
 
 
@@ -312,6 +359,7 @@ def _judge_verified(
     claim_verdicts,
     combo_classification: str,
     tool_calls: list[dict[str, Any]],
+    answer_complete: bool,
 ) -> bool:
     unresolved = [
         verdict
@@ -322,7 +370,7 @@ def _judge_verified(
         call.get("status") == "success" and call.get("evidence")
         for call in tool_calls
     )
-    if unresolved:
+    if unresolved or not answer_complete:
         return False
     if claim_verdicts:
         return successful_evidence

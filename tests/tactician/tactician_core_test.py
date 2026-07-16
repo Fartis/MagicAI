@@ -103,13 +103,17 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
     assert payload["authority_trace"] == [
         "judge:factual_evidence",
         "judge:tool_gateway",
+        "tactician:language_policy",
         "tactician:input_analysis",
         "tactician:claim_evaluation",
         "tactician:strategic_synthesis",
+        "tactician:answer_contract",
         "judge:evidence_verification",
     ]
     assert payload["tactician_synthesized"] is True
     assert payload["judge_verified"] is True
+    assert payload["answer_complete"] is True
+    assert payload["response_language"] == "es"
     assert payload["judge_tool_calls"][0]["status"] == "success"
     assert "sinergia de sacrificio" in payload["answer"]
     assert "No es un bucle infinito" in payload["answer"]

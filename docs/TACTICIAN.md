@@ -15,7 +15,7 @@ The Tactician analyzes:
 
 It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It requests structured evidence through the Judge Tool Gateway.
 
-## Current milestone: 0.4
+## Current milestone: 0.5
 
 Implemented:
 
@@ -36,7 +36,12 @@ Implemented:
 - independent conversational synthesis even when the Judge already returned a factual answer;
 - persisted strategic conversation context;
 - `play_sequence`, `combo_disruption`, `combo_requirements`, and `interaction_hypothesis` intents;
-- evidence-verification metadata and concise reasoning summaries.
+- evidence-verification metadata and concise reasoning summaries;
+- session-aware language policy that ignores English card names as language evidence;
+- shared casual-language normalization for the Judge and Tactician;
+- rules-oriented intents such as `mechanic_equivalence` and `combo_failure_explanation`;
+- semantic answer obligations and `answer_complete` validation;
+- the first data-driven multi-turn Tactician conversation regression.
 
 ## Evidence loop
 
@@ -53,7 +58,7 @@ Tactician forms a hypothesis
   → publish or declare uncertainty
 ```
 
-Milestone 0.4 provides deterministic claim extraction, bounded multi-tool planning, evidence verdicts, and conversational synthesis. General autonomous planning remains the next milestone.
+Milestone 0.5 adds language consistency, casual-input normalization, rules-oriented follow-ups, and answer-contract validation. The wider conversation gauntlet and general autonomous planner remain later milestones.
 
 ## Personality
 

@@ -137,3 +137,26 @@ curl -s -X POST http://127.0.0.1:8000/judge/tools/execute \
     "purpose": "verify_undying_sacrifice"
   }' | python -m json.tool
 ```
+
+## Tactician conversational understanding
+
+Run the language and casual-input checks:
+
+```bash
+python -m tests.language.language_policy_test
+python -m tests.conversation.casual_normalization_test
+python -m tests.validation.casual_judge_understanding_test
+```
+
+Run the seed multi-turn conversation regression:
+
+```bash
+python -m tests.quality.tactician_conversation_contract_test
+python -m tests.quality.tactician_conversation_regression_test
+```
+
+The seed scenario is stored in:
+
+```text
+tests/quality/cases/tactician_conversations/sprint12_2c.json
+```

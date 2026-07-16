@@ -2,8 +2,8 @@ from __future__ import annotations
 
 JUDGE_RESULT_SCHEMA_VERSION = "1.0"
 JUDGE_TOOL_RESULT_SCHEMA_VERSION = "1.0"
-API_CONTRACT_VERSION = "1.5"
-TACTICIAN_RESULT_SCHEMA_VERSION = "0.4"
+API_CONTRACT_VERSION = "1.6"
+TACTICIAN_RESULT_SCHEMA_VERSION = "0.5"
 
 # Packaging metadata must follow PEP 440. Public release names remain SemVer-like.
 PACKAGE_FALLBACK_VERSION = "0.1.1b0"

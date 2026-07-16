@@ -103,6 +103,19 @@ def render_rule_answer(knowledge: str) -> str | None:
                 "de batalla bajo el control de su propietario con un contador +1/+1."
             )
 
+    if _is_undying_dies_equivalence_question(q) and _has_rules(
+        knowledge,
+        ["undying", "dies"],
+    ):
+        return (
+            "En Magic, una criatura muere exactamente cuando es puesta en un "
+            "cementerio desde el campo de batalla; no son dos eventos distintos. "
+            "Undying se dispara por ese mismo movimiento y comprueba si el "
+            "permanente tenía contadores +1/+1 justo antes de abandonar el campo. "
+            "Si una carta entra al cementerio desde otra zona, como la mano o la "
+            "biblioteca, no ha muerto y Undying no se dispara por ese evento."
+        )
+
     if _is_undying_existing_counter_question(q) and _has_rules(
         knowledge,
         ["undying"],
@@ -1337,6 +1350,27 @@ def _is_may_trigger_choice(question: str) -> bool:
         )
     )
 
+
+
+def _is_undying_dies_equivalence_question(question: str) -> bool:
+    if "undying" not in question:
+        return False
+    mentions_dies = any(marker in question for marker in ("muere", "morir", "dies"))
+    mentions_graveyard = any(marker in question for marker in ("cementerio", "graveyard"))
+    asks_relation = any(
+        marker in question
+        for marker in (
+            "es cuando",
+            "no cuando",
+            "es lo mismo",
+            "mismo evento",
+            "equivale",
+            "same event",
+            "same as",
+            "rather than",
+        )
+    )
+    return mentions_dies and mentions_graveyard and asks_relation
 
 
 def _is_undying_existing_counter_question(question: str) -> bool:

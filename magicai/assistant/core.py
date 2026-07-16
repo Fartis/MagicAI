@@ -136,6 +136,7 @@ def _update_conversation_state(conversation, context) -> None:
     conversation.active_rules = _rule_identifiers(context.rules)
     conversation.active_rule_queries = list(context.rule_queries)
     conversation.last_intent = context.intent
+    conversation.language = context.language
 
 
 def _rule_identifiers(rules: list) -> list[str]:

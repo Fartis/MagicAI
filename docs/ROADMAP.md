@@ -72,6 +72,25 @@ The first major release should add mature deck analysis, authorized strategic so
 - Warm, interactive response style for supported families.
 - Claim verdicts and evidence identifiers.
 - Evidence-verification metadata.
+
+### 12.2c — Conversational understanding and answer validation — complete
+
+- Session-aware language policy.
+- Shared casual-language normalization for Judge and Tactician.
+- Professional Judge output regardless of user register.
+- Rules-oriented Tactician intents.
+- Question targets separated from factual claims.
+- Semantic answer obligations and forbidden-drift checks.
+- Evidence-aware `judge_verified` and confidence derivation.
+- Seed data-driven multi-turn conversation regression.
+
+### 12.2d — Tactician Conversation Gauntlet — next
+
+- Reusable multi-turn scenario execution.
+- Structured semantic and negative assertions.
+- Controlled evidence fixtures and optional Ollama mode.
+- Failure classification and JSON/HTML reports.
+- Manual promotion of reviewed UI feedback exports.
 - Young Wolf, Carrion Feeder, and The Ozolith reasoning regression.
 - Ghave and Ashnod's Altar follow-up sequencing and disruption regression.
 

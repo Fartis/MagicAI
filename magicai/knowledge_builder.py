@@ -4,8 +4,15 @@ def build_knowledge(context):
 
     parts.append("QUESTION")
     parts.append("")
-    parts.append(context.question)
+    parts.append(context.canonical_question or context.question)
     parts.append("")
+
+    if getattr(context, "canonical_question", "") and context.canonical_question != context.question:
+        parts.append("=" * 60)
+        parts.append("ORIGINAL USER WORDING")
+        parts.append("")
+        parts.append(context.question)
+        parts.append("")
 
     if context.cards:
 

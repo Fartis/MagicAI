@@ -5,6 +5,7 @@ from typing import Any
 
 from magicai.judge_tools import JudgeToolRequest
 from magicai.tactician.input_analysis import InputAnalysis
+from magicai.tactician.intents import StrategyIntent
 
 
 @dataclass(slots=True)
@@ -29,53 +30,112 @@ def plan_investigation(
     requests: list[JudgeToolRequest] = []
     goals: list[str] = []
     names = [str(card.get("name", "")).strip() for card in cards if card.get("name")]
+    spanish = analysis.language == "es"
 
     if names and not oracle_already_refreshed:
-        requests.append(
-            JudgeToolRequest(
-                tool="oracle_lookup",
-                arguments={"card_names": names},
-                purpose="verify_input_cards",
-                result_limit=min(max(len(names), 1), 20),
-            )
+        requests.append(JudgeToolRequest(
+            tool="oracle_lookup",
+            arguments={"card_names": names},
+            purpose="verify_input_cards",
+            result_limit=min(max(len(names), 1), 20),
+        ))
+        goals.append(
+            "Verificar el texto Oracle actual de cada carta implicada."
+            if spanish else
+            "Verify the current Oracle text for every referenced card."
         )
-        goals.append("Verify the current Oracle text for every referenced card.")
 
     rules: list[str] = []
     concepts = set(analysis.concepts)
-    if "sacrifice" in concepts or "dies" in concepts:
-        rules.extend(["701.21a", "700.4"])
-        goals.append("Verify the sacrifice-to-dies transition.")
-    if "undying" in concepts or any("Undying" in str(card.get("oracle_text", "")) for card in cards):
-        rules.extend(["702.93a", "603.4"])
-        goals.append("Verify the Undying trigger condition.")
+    intent = analysis.strategy_intent
+
+    if intent is StrategyIntent.MECHANIC_EQUIVALENCE:
+        rules.extend(["700.4", "702.93a", "603.4"])
+        goals.extend([
+            "Definir reglamentariamente qué significa que una criatura muera." if spanish else "Define the rules meaning of a creature dying.",
+            "Relacionar el evento de morir con Undying y excluir entradas al cementerio desde otras zonas." if spanish else "Relate dying to Undying and exclude graveyard entry from other zones.",
+        ])
+    else:
+        if "sacrifice" in concepts or "dies" in concepts:
+            rules.extend(["701.21a", "700.4"])
+            goals.append(
+                "Verificar la transición de sacrificar a morir."
+                if spanish else
+                "Verify the sacrifice-to-dies transition."
+            )
+        if "undying" in concepts or any("Undying" in str(card.get("oracle_text", "")) for card in cards):
+            rules.extend(["702.93a", "603.4"])
+            goals.append(
+                "Verificar la condición de disparo de Undying."
+                if spanish else
+                "Verify the Undying trigger condition."
+            )
+
+    if intent in {StrategyIntent.INTERACTION_TIMING, StrategyIntent.COMBO_FAILURE_EXPLANATION}:
+        rules.extend(["603.4", "603.6c", "603.10a", "400.7"])
+        goals.append(
+            "Identificar el momento exacto en que se comprueba el estado anterior del permanente."
+            if spanish else
+            "Identify the exact point at which the permanent's previous state is checked."
+        )
+
     if {"counters", "ozolith", "leaves_battlefield", "last_known_information"} & concepts:
         rules.extend(["122.2", "400.7", "603.6c", "603.10a"])
-        goals.append("Verify counter persistence and leaves-the-battlefield timing.")
+        goals.append(
+            "Verificar la persistencia de contadores y el momento de las habilidades de salida del campo."
+            if spanish else
+            "Verify counter persistence and leaves-the-battlefield timing."
+        )
 
     rules = _deduplicate(rules)
     if rules:
-        requests.append(
-            JudgeToolRequest(
-                tool="rules_lookup",
-                arguments={"identifiers": rules},
-                purpose="verify_claim_timing_and_state",
-                result_limit=min(len(rules), 20),
-            )
+        requests.append(JudgeToolRequest(
+            tool="rules_lookup",
+            arguments={"identifiers": rules},
+            purpose="verify_claim_timing_and_state",
+            result_limit=min(len(rules), 20),
+        ))
+
+    # Rulings are useful when The Ozolith itself is part of the current claim,
+    # but not for a generic definition question that merely inherits the card.
+    needs_ozolith_ruling = (
+        any(name.casefold() == "the ozolith" for name in names)
+        and (
+            "ozolith" in concepts
+            or intent in {
+                StrategyIntent.INTERACTION_HYPOTHESIS,
+                StrategyIntent.COMBO_FAILURE_EXPLANATION,
+                StrategyIntent.INTERACTION_TIMING,
+                StrategyIntent.COMBO_DETECTION,
+            }
+        )
+    )
+    if needs_ozolith_ruling:
+        requests.append(JudgeToolRequest(
+            tool="rulings_lookup",
+            arguments={"card_names": ["The Ozolith"]},
+            purpose="check_ozolith_rulings",
+            result_limit=8,
+        ))
+        goals.append(
+            "Comprobar las aclaraciones oficiales de The Ozolith."
+            if spanish else
+            "Check official rulings for The Ozolith."
         )
 
-    if any(name.casefold() == "the ozolith" for name in names):
-        requests.append(
-            JudgeToolRequest(
-                tool="rulings_lookup",
-                arguments={"card_names": ["The Ozolith"]},
-                purpose="check_ozolith_rulings",
-                result_limit=8,
-            )
-        )
-        goals.append("Check official rulings for The Ozolith when available.")
+    return InvestigationPlan(requests=requested_unique(requests), goals=_deduplicate(goals))
 
-    return InvestigationPlan(requests=requests, goals=_deduplicate(goals))
+
+def requested_unique(requests: list[JudgeToolRequest]) -> list[JudgeToolRequest]:
+    result: list[JudgeToolRequest] = []
+    seen: set[tuple[str, str]] = set()
+    for request in requests:
+        key = (request.tool, repr(sorted(request.arguments.items())))
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(request)
+    return result
 
 
 def _deduplicate(items: list[str]) -> list[str]:

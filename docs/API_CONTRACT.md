@@ -1,11 +1,11 @@
 # API contract
 
-Current API contract version: `1.5`.
+Current API contract version: `1.6`.
 
 ## Stable result families
 
 - Judge results use JudgeResult schema `1.0`.
-- Tactician results use TacticianResult schema `0.4`.
+- Tactician results use TacticianResult schema `0.5`.
 - Judge tool results use JudgeToolResult schema `1.0`.
 
 ## Main endpoints
@@ -55,7 +55,7 @@ Unavailable capabilities return a structured result instead of being guessed.
 
 ## Tactician reasoning fields
 
-TacticianResult `0.4` adds:
+TacticianResult `0.5` includes:
 
 - `input_analysis`
 - `claim_verdicts`
@@ -64,5 +64,10 @@ TacticianResult `0.4` adds:
 - `queries_completed`
 - `judge_verified`
 - `investigation_plan`
+- `response_language`
+- `language_policy`
+- `answer_obligations`
+- `answer_contract`
+- `answer_complete`
 
-These fields expose a concise, structured audit trail. They are not a hidden chain-of-thought transcript.
+These fields expose a concise, structured audit trail. They are not a hidden chain-of-thought transcript. `answer_complete` means the generated answer satisfied its deterministic semantic obligations; `judge_verified` additionally requires supporting Judge-owned evidence.

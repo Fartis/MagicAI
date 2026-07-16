@@ -77,6 +77,11 @@ class AskResponse(BaseModel):
     queries_completed: int = 0
     judge_verified: bool = False
     investigation_plan: dict[str, Any] = Field(default_factory=dict)
+    response_language: str = ""
+    language_policy: dict[str, Any] = Field(default_factory=dict)
+    answer_obligations: list[dict[str, Any]] = Field(default_factory=list)
+    answer_contract: dict[str, Any] = Field(default_factory=dict)
+    answer_complete: bool = False
     judge_result: dict[str, Any] = Field(default_factory=dict)
 
 

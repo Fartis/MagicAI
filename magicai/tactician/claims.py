@@ -48,76 +48,112 @@ def evaluate_claims(
     has_ozolith = "the ozolith" in oracle_by_name
     has_undying = any("undying" in oracle.casefold() for oracle in oracle_by_name.values())
 
-    verdicts: list[ClaimVerdict] = []
-    for claim in analysis.claims:
-        verdicts.append(
-            _evaluate_claim(
-                claim,
-                has_ozolith=has_ozolith,
-                has_undying=has_undying,
-                evidence_ids=evidence_ids,
-            )
+    return [
+        _evaluate_claim(
+            claim,
+            language=analysis.language,
+            has_ozolith=has_ozolith,
+            has_undying=has_undying,
+            evidence_ids=evidence_ids,
         )
-    return verdicts
+        for claim in analysis.claims
+    ]
 
 
 def _evaluate_claim(
     claim: InputClaim,
     *,
+    language: str,
     has_ozolith: bool,
     has_undying: bool,
     evidence_ids: set[str],
 ) -> ClaimVerdict:
     concepts = set(claim.concepts)
+    spanish = language == "es"
+
+    if claim.kind is ClaimKind.MECHANIC_EQUIVALENCE:
+        required = {"700.4", "702.93a"}
+        if required.issubset(evidence_ids):
+            explanation = (
+                "La idea es parcialmente correcta, pero 'morir' y ser puesta en un cementerio desde el campo de batalla no son eventos distintos: son el mismo evento reglamentario. Undying no se dispara por entrar al cementerio desde cualquier otra zona."
+                if spanish else
+                "The idea is partially correct, but dying and being put into a graveyard from the battlefield are not separate events: they are the same rules event. Undying does not trigger for entering a graveyard from another zone."
+            )
+            return ClaimVerdict(
+                claim.claim_id,
+                claim.text,
+                ClaimVerdictStatus.PARTIALLY_SUPPORTED,
+                explanation,
+                ("700.4", "702.93a"),
+            )
 
     if claim.kind is ClaimKind.STATE_TRANSITION and "sacrifice" in concepts:
+        explanation = (
+            "Sacrificar un permanente lo mueve del campo de batalla al cementerio de su propietario; si es una criatura, muere."
+            if spanish else
+            "Sacrificing a permanent moves it from the battlefield to its owner's graveyard; a creature moved this way dies."
+        )
         return ClaimVerdict(
-            claim_id=claim.claim_id,
-            claim=claim.text,
-            status=ClaimVerdictStatus.SUPPORTED,
-            explanation="Sacrificing a permanent moves it from the battlefield to its owner's graveyard; a creature moved this way dies.",
-            evidence=_prefer_evidence(evidence_ids, "701.21a", "700.4"),
+            claim.claim_id,
+            claim.text,
+            ClaimVerdictStatus.SUPPORTED,
+            explanation,
+            _prefer_evidence(evidence_ids, "701.21a", "700.4"),
         )
 
     if claim.kind is ClaimKind.TIMING_HYPOTHESIS and has_ozolith and "counters" in concepts:
+        explanation = (
+            "The Ozolith no retira ni transfiere el contador original antes del cambio de zona. El contador deja de existir cuando el objeto cambia de zona y la habilidad disparada de The Ozolith pone después contadores equivalentes sobre el artefacto."
+            if spanish else
+            "The Ozolith does not remove or transfer the original counter before the zone change. The counter ceases to exist when the object changes zones, and The Ozolith's triggered ability puts corresponding counters on itself later."
+        )
         return ClaimVerdict(
-            claim_id=claim.claim_id,
-            claim=claim.text,
-            status=ClaimVerdictStatus.CONTRADICTED,
-            explanation=(
-                "The Ozolith does not remove or transfer the original counter before the zone change. "
-                "The counter ceases to exist when the object changes zones, and The Ozolith's triggered ability puts corresponding counters on itself later."
-            ),
-            evidence=_prefer_evidence(evidence_ids, "122.2", "400.7", "603.6c", "603.10a"),
+            claim.claim_id,
+            claim.text,
+            ClaimVerdictStatus.CONTRADICTED,
+            explanation,
+            _prefer_evidence(evidence_ids, "122.2", "400.7", "603.6c", "603.10a"),
         )
 
     if claim.kind is ClaimKind.DERIVED_CONCLUSION and has_undying:
+        explanation = (
+            "Undying usa el último estado de la criatura en el campo de batalla. Si Young Wolf tenía un contador +1/+1 inmediatamente antes de salir, la condición no se cumple y Undying no se dispara."
+            if spanish else
+            "Undying uses the creature's last battlefield state. If Young Wolf had a +1/+1 counter immediately before it left, the condition is false and Undying does not trigger."
+        )
         return ClaimVerdict(
-            claim_id=claim.claim_id,
-            claim=claim.text,
-            status=ClaimVerdictStatus.CONTRADICTED,
-            explanation=(
-                "Undying uses the creature's last battlefield state for the leaves-the-battlefield trigger. "
-                "If Young Wolf had a +1/+1 counter immediately before it left, the intervening-if condition is false and Undying does not trigger."
-            ),
-            evidence=_prefer_evidence(evidence_ids, "702.93a", "603.4", "603.10a"),
+            claim.claim_id,
+            claim.text,
+            ClaimVerdictStatus.CONTRADICTED,
+            explanation,
+            _prefer_evidence(evidence_ids, "702.93a", "603.4", "603.10a"),
         )
 
     if claim.kind is ClaimKind.STRATEGIC:
+        explanation = (
+            "La clasificación del combo debe derivarse de las transiciones de estado verificadas y del resultado neto."
+            if spanish else
+            "Whether the pieces form a combo must be derived from the verified state transitions and net result."
+        )
         return ClaimVerdict(
-            claim_id=claim.claim_id,
-            claim=claim.text,
-            status=ClaimVerdictStatus.STRATEGIC_OPINION,
-            explanation="Whether the pieces form a combo must be derived from the verified state transitions and net result.",
-            evidence=(),
+            claim.claim_id,
+            claim.text,
+            ClaimVerdictStatus.STRATEGIC_OPINION,
+            explanation,
+            (),
         )
 
+    explanation = (
+        "La evidencia disponible todavía no permite confirmar ni refutar esta afirmación."
+        if spanish else
+        "The current evidence package does not prove or disprove this claim yet."
+    )
     return ClaimVerdict(
-        claim_id=claim.claim_id,
-        claim=claim.text,
-        status=ClaimVerdictStatus.INSUFFICIENT_EVIDENCE,
-        explanation="The current evidence package does not prove or disprove this claim yet.",
-        evidence=(),
+        claim.claim_id,
+        claim.text,
+        ClaimVerdictStatus.INSUFFICIENT_EVIDENCE,
+        explanation,
+        (),
     )
 
 
