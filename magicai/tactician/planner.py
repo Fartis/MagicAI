@@ -5,6 +5,7 @@ from typing import Any
 
 from magicai.judge_tools import JudgeToolRequest
 from magicai.tactician.input_analysis import InputAnalysis
+from magicai.tactician.investigation import InvestigationHypothesis, build_hypotheses
 from magicai.tactician.intents import StrategyIntent
 
 
@@ -12,12 +13,14 @@ from magicai.tactician.intents import StrategyIntent
 class InvestigationPlan:
     requests: list[JudgeToolRequest] = field(default_factory=list)
     goals: list[str] = field(default_factory=list)
+    hypotheses: list[InvestigationHypothesis] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
         return {
             "queries_planned": len(self.requests),
             "goals": list(self.goals),
             "requests": [request.to_dict() for request in self.requests],
+            "hypotheses": [hypothesis.to_dict() for hypothesis in self.hypotheses],
         }
 
 
@@ -56,7 +59,21 @@ def plan_investigation(
             "Relacionar el evento de morir con Undying y excluir entradas al cementerio desde otras zonas." if spanish else "Relate dying to Undying and exclude graveyard entry from other zones.",
         ])
     else:
-        if "sacrifice" in concepts:
+        derive_card_mechanics = intent in {
+            StrategyIntent.COMBO_DETECTION,
+            StrategyIntent.SYNERGY_ANALYSIS,
+            StrategyIntent.INTERACTION_HYPOTHESIS,
+            StrategyIntent.COMBO_FAILURE_EXPLANATION,
+            StrategyIntent.INTERACTION_TIMING,
+            StrategyIntent.PLAY_SEQUENCE,
+            StrategyIntent.COMBO_DISRUPTION,
+            StrategyIntent.COMBO_REQUIREMENTS,
+        }
+        has_sacrifice_text = any(
+            "sacrifice" in str(card.get("oracle_text", "")).casefold()
+            for card in cards
+        )
+        if "sacrifice" in concepts or (derive_card_mechanics and has_sacrifice_text):
             rules.extend(["701.21a", "700.4"])
             goals.append(
                 "Verificar la transición de sacrificar a morir."
@@ -77,6 +94,37 @@ def plan_investigation(
                 if spanish else
                 "Verify the Undying trigger condition."
             )
+
+    land_layer_concepts = {
+        "land_types",
+        "basic_lands",
+        "nonbasic_lands",
+        "mana_abilities",
+    } & concepts
+    ordering_concepts = {"layers", "dependency", "timestamp"} & concepts
+    if land_layer_concepts and ordering_concepts:
+        rules.extend([
+            "305.6",
+            "305.7",
+            "305.8",
+            "611.3",
+            "613.1d",
+            "613.7",
+            "613.8a",
+            "613.8b",
+        ])
+        goals.extend([
+            (
+                "Distinguir entre fijar un tipo de tierra y añadir tipos en la capa 4."
+                if spanish else
+                "Distinguish setting a land type from adding land types in layer 4."
+            ),
+            (
+                "Aplicar dependencias antes de marcas de tiempo y derivar las habilidades de maná resultantes."
+                if spanish else
+                "Apply dependencies before timestamps and derive the resulting mana abilities."
+            ),
+        ])
 
     if intent in {StrategyIntent.INTERACTION_TIMING, StrategyIntent.COMBO_FAILURE_EXPLANATION}:
         rules.extend(["603.4", "603.6c", "603.10a", "400.7"])
@@ -130,7 +178,12 @@ def plan_investigation(
             "Check official rulings for The Ozolith."
         )
 
-    return InvestigationPlan(requests=requested_unique(requests), goals=_deduplicate(goals))
+    hypotheses = build_hypotheses(analysis, cards=cards)
+    return InvestigationPlan(
+        requests=requested_unique(requests),
+        goals=_deduplicate(goals),
+        hypotheses=hypotheses,
+    )
 
 
 def requested_unique(requests: list[JudgeToolRequest]) -> list[JudgeToolRequest]:

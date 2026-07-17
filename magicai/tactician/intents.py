@@ -80,6 +80,10 @@ _DEFINITION_MARKERS = (
 _RULES_CLARIFICATION_MARKERS = (
     "regla", "rules", "se dispara", "se activa", "trigger", "cementerio", "graveyard", "muere", "dies",
     "prioridad", "priority", "pila", "stack",
+    "capa", "capas", "layer", "layers", "dependencia", "dependency",
+    "timestamp", "marca de tiempo", "tipo de tierra", "tipos de tierra",
+    "land type", "land types", "habilidad de mana", "habilidades de mana",
+    "mana ability", "mana abilities",
 )
 
 

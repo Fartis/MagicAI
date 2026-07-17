@@ -9,36 +9,40 @@
 
 ## Current development line
 
-Sprint `12.2d` adds response orchestration and the first full Tactician Conversation Gauntlet.
+Sprint `12.3a2` closes the land-type investigation line with metadata consistency and renderer generalization.
 
 Completed in this milestone:
 
-- explicit `judge_led`, `tactician_led`, and `hybrid` response modes;
-- rules and mechanic questions led by the Judge factual core;
-- strategic questions led by the Tactician;
-- mixed rules-and-strategy questions handled through a hybrid path;
-- deterministic factual-core extraction and coverage checks;
-- protection against replacing a correct Judge answer with a generic combo template;
-- combo classification suppressed when the current turn is not asking about a combo;
-- `mechanic_resolution` intent for questions such as sacrificing Young Wolf;
-- session-aware Spanish and English output preserved across all response fields;
-- 40 data-driven conversational scenarios covering 58 turns;
-- controlled Judge and Judge Tool Gateway fixtures for fast CI;
-- semantic, negative, evidence, language, and continuity assertions;
-- JSON and HTML conversation-gauntlet reports;
-- a review-only command for promoting exported UI feedback into candidate cases;
-- TacticianResult schema `0.6` and API contract `1.7`.
+- structured hypothesis decomposition from user claims, strategic intent, concepts, and active cards;
+- explicit required-evidence tokens for Oracle cards and Comprehensive Rules sections;
+- deterministic sufficiency scores for each hypothesis and the overall investigation;
+- reactive fallback searches when exact Oracle or rules lookups leave evidence unresolved;
+- alternative-search and counterexample-search phases selected from the user's speech act;
+- enforcement of total-call, per-tool, repeated-request, and elapsed-time budgets;
+- full reusable `investigation_trace` output with request phases, score changes, errors, cache state, and budget snapshots;
+- Oracle evidence refresh folded into the same auditable planner loop;
+- casual Spanish validation markers such as `verdad` and `cierto` recognized as requests to challenge a premise;
+- pytest restricted to the active `tests/` tree so historical `backups/` do not collide during collection;
+- TacticianResult schema `0.7` and API contract `1.8`;
+- rules questions involving land types, mana abilities, layers, dependencies, and timestamps are classified as Judge-led;
+- a reserved Comprehensive Rules package pins 305.6, 305.7, 305.8, 611.3, 613.1d, 613.7, 613.8a, and 613.8b;
+- a generic deterministic renderer resolves a nonbasic-land type setter against additive basic-land-type effects;
+- dependency is evaluated before timestamp when applying the setter removes the source ability of a nonbasic land;
+- answer obligations now cover each requested land category, resulting mana colors, and reversed entry order;
+- an `insufficient_evidence` Judge result cannot be reported as `judge_verified` or `answer_complete`;
+- deterministic answers and their Tactician metadata now agree on completeness, confidence, and evidence verification;
+- answer-contract checks recognize singular/plural basic land types and general mana outcomes rather than one exact phrase;
+- the Oracle-pattern renderer accepts both `a` and `an` before a basic land type and is regression-tested with fictional card names and different land types.
 
 ## Next development line
 
-Sprint `12.3` will focus on the general autonomous investigation planner:
+Sprint `12.3b` will generalize adaptive research policies:
 
-- hypothesis decomposition;
-- iterative evidence requests based on unresolved claims;
-- evidence-sufficiency scoring;
-- alternative and counterexample search;
-- bounded research loops;
-- reusable investigation traces beyond the currently supported interaction families.
+- multi-step follow-up policies beyond one fallback per hypothesis;
+- contradiction-aware evidence comparison;
+- dynamic hypothesis expansion from newly recovered evidence;
+- query prioritization by expected information gain and remaining budget;
+- broader regression cases outside the current deterministic interaction families.
 
 ## Known limitations
 

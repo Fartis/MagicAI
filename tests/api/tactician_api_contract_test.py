@@ -59,6 +59,11 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
         queries_completed=2,
         judge_verified=True,
         investigation_plan={"queries_planned": 2},
+        investigation_trace={
+            "sufficient": True,
+            "sufficiency_score": 1.0,
+            "stopped_reason": "evidence_sufficient",
+        },
         response_language="es",
         language_policy={"response_language": "es", "language_locked": True},
         answer_obligations=[{"code": "direct_user_question", "required": True}],
@@ -82,6 +87,7 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
     assert payload["input_analysis"]["speech_act"] == "question"
     assert payload["claim_verdicts"][0]["verdict"] == "supported"
     assert payload["judge_verified"] is True
+    assert payload["investigation_trace"]["sufficiency_score"] == 1.0
     assert payload["response_language"] == "es"
     assert payload["answer_complete"] is True
     assert payload["answer_obligations"][0]["code"] == "direct_user_question"

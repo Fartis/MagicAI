@@ -68,7 +68,7 @@ Tactician forms a hypothesis
   → publish or declare uncertainty
 ```
 
-Milestone 0.6 adds response ownership and a reproducible conversation gauntlet. Sprint 12.3 generalizes the investigation loop beyond the current deterministic families.
+Milestone 0.7 adds explicit hypotheses, sufficiency scoring, reactive fallback searches, bounded execution, and a reusable investigation trace. Sprint 12.3b will generalize the loop beyond the current deterministic families.
 
 ## Personality
 

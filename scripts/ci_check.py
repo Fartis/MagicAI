@@ -22,6 +22,8 @@ TEST_MODULES = (
     "tests.judge_tools.local_tools_test",
     "tests.api.judge_tool_api_test",
     "tests.tactician.tactician_tool_gateway_test",
+    "tests.tactician.tactician_autonomous_investigation_test",
+    "tests.tactician.tactician_land_type_investigation_regression_test",
     "tests.tactician.tactician_input_reasoning_test",
     "tests.tactician.tactician_response_orchestration_test",
     "tests.tactician.tactician_followup_reasoning_test",
@@ -44,6 +46,7 @@ TEST_MODULES = (
     "tests.quality.tactician_feedback_promotion_test",
     "tests.validation.oracle_derived_undying_test",
     "tests.validation.rule_renderer_test",
+    "tests.validation.rule_renderer_land_type_layers_test",
     "tests.ui.ui_assets_test",
     "tests.ui.ui_usability_test",
 )

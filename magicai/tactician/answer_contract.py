@@ -72,6 +72,37 @@ def build_answer_obligations(analysis: InputAnalysis, *, has_current_interaction
                 "apply_current_interaction",
                 "Aplicar la regla a la interacción activa." if spanish else "Apply the rule to the active interaction.",
             ))
+    elif (
+        intent is StrategyIntent.RULES_CLARIFICATION
+        and {"land_types", "basic_lands", "nonbasic_lands", "mana_abilities"} & set(analysis.concepts)
+        and {"layers", "dependency", "timestamp"} & set(analysis.concepts)
+    ):
+        obligations.extend([
+            AnswerObligation(
+                "land_type_layer",
+                "Explicar que los efectos se aplican en la capa 4." if spanish else "Explain that the effects apply in layer 4.",
+            ),
+            AnswerObligation(
+                "dependency_before_timestamp",
+                "Explicar cuándo la dependencia prevalece sobre la marca de tiempo." if spanish else "Explain when dependency overrides timestamp.",
+            ),
+            AnswerObligation(
+                "basic_land_result",
+                "Resolver las tierras básicas del jugador." if spanish else "Resolve the player's basic lands.",
+            ),
+            AnswerObligation(
+                "controlled_nonbasic_result",
+                "Resolver las tierras no básicas del jugador." if spanish else "Resolve the player's nonbasic lands.",
+            ),
+            AnswerObligation(
+                "opponent_nonbasic_result",
+                "Resolver las tierras no básicas del oponente." if spanish else "Resolve the opponent's nonbasic lands.",
+            ),
+            AnswerObligation(
+                "timestamp_order_comparison",
+                "Comparar el resultado cuando cambia el orden de entrada." if spanish else "Compare the result when the entry order changes.",
+            ),
+        ])
     elif intent is StrategyIntent.COMBO_FAILURE_EXPLANATION:
         obligations.extend([
             AnswerObligation("identify_failed_transition", "Identificar el paso exacto que impide el bucle." if spanish else "Identify the exact transition that stops the loop."),
@@ -162,6 +193,56 @@ def _check_obligation(
             marker in answer
             for marker in ("ozolith", "young wolf", "carrion feeder", "ghave", "ashnod")
         )
+    if code == "land_type_layer":
+        # This obligation is only created for a land-type interaction, so the
+        # response only needs to identify the correct layer. Requiring one
+        # exact wording such as "tipo de tierra" made valid deterministic
+        # answers fail their own contract.
+        return any(marker in answer for marker in ("capa 4", "layer 4"))
+    if code == "dependency_before_timestamp":
+        has_dependency = any(marker in answer for marker in ("dependencia", "dependency"))
+        has_timestamp = any(marker in answer for marker in ("timestamp", "marca de tiempo"))
+        has_priority = any(marker in answer for marker in ("prevalece", "anula", "antes que", "override", "overrides"))
+        return has_dependency and has_timestamp and has_priority
+    if code == "basic_land_result":
+        has_scope = any(marker in answer for marker in ("tierras basicas", "tierras básicas", "basic lands"))
+        has_result = any(marker in answer for marker in ("cinco colores", "wubrg", "{w}", "todos los tipos basicos", "todos los tipos básicos", "every basic land type", "all five"))
+        return has_scope and has_result
+    if code == "controlled_nonbasic_result":
+        has_scope = any(marker in answer for marker in (
+            "tus tierras no basicas",
+            "your nonbasic lands",
+        ))
+        return has_scope and _has_land_or_mana_result(answer)
+    if code == "opponent_nonbasic_result":
+        has_scope = any(marker in answer for marker in (
+            "tierras no basicas del oponente",
+            "opponent's nonbasic lands",
+            "opponent nonbasic lands",
+        ))
+        return has_scope and _has_land_or_mana_result(answer)
+    if code == "timestamp_order_comparison":
+        has_order = any(marker in answer for marker in (
+            "hubiera entrado antes",
+            "entrara antes",
+            "entra antes",
+            "orden alternativo",
+            "orden se invierte",
+            "if it entered before",
+            "entered before",
+            "if the order is reversed",
+            "alternative order",
+        ))
+        has_consequence = any(marker in answer for marker in (
+            "terminarian",
+            "terminaria",
+            "podrian producir",
+            "podria producir",
+            "would end",
+            "could produce",
+            "can produce",
+        ))
+        return has_order and has_consequence and _has_land_or_mana_result(answer)
     if code == "identify_failed_transition":
         return any(marker in answer for marker in ("no se dispara", "no vuelve", "se rompe", "does not trigger", "does not return", "breaks"))
     if code == "explain_rule":
@@ -176,6 +257,59 @@ def _check_obligation(
             return any(marker in answer for marker in ("sacrific", "graveyard", "cementerio", "muere", "dies"))
         return len(answer.split()) >= 5
     return False
+
+
+def _has_land_or_mana_result(answer: str) -> bool:
+    """Recognize a concrete land-type or mana outcome without card names.
+
+    These are game vocabulary markers, not interaction-specific phrases. The
+    contract therefore works for any Oracle cards matching the same rules
+    family and for singular or plural basic-land type wording.
+    """
+
+    land_types = (
+        "llanura",
+        "llanuras",
+        "isla",
+        "islas",
+        "pantano",
+        "pantanos",
+        "montana",
+        "montanas",
+        "bosque",
+        "bosques",
+        "plain",
+        "plains",
+        "island",
+        "islands",
+        "swamp",
+        "swamps",
+        "mountain",
+        "mountains",
+        "forest",
+        "forests",
+    )
+    mana_results = (
+        "cinco colores",
+        "all five",
+        "w, u, b, r o g",
+        "w, u, b, r, or g",
+        "mana blanco",
+        "mana azul",
+        "mana negro",
+        "mana rojo",
+        "mana verde",
+        "white mana",
+        "blue mana",
+        "black mana",
+        "red mana",
+        "green mana",
+        "producir w",
+        "produce w",
+    )
+    return any(marker in answer for marker in land_types) and any(
+        marker in answer for marker in mana_results
+    )
 
 
 def _wrong_language(answer: str, *, expected: str) -> bool:

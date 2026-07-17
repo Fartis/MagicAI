@@ -8,7 +8,6 @@ from magicai.judge_tools import (
     JudgeToolBudget,
     JudgeToolGateway,
     JudgeToolRequest,
-    JudgeToolStatus,
 )
 from magicai.language.localization import localize_messages
 from magicai.tactician.answer_contract import (
@@ -25,6 +24,7 @@ from magicai.tactician.factual_core import (
     preserve_factual_core,
 )
 from magicai.tactician.input_analysis import analyze_user_input
+from magicai.tactician.investigation import InvestigationOutcome, run_investigation
 from magicai.tactician.intents import looks_like_referential_follow_up
 from magicai.tactician.models import TacticianResult
 from magicai.tactician.orchestration import (
@@ -115,28 +115,29 @@ class Tactician:
             max_repeated_request=1,
             max_elapsed_seconds=30.0,
         )
-        tool_calls: list[dict[str, Any]] = []
-        if conversation is not None and merged_cards:
-            merged_cards, oracle_calls = self._refresh_oracle_evidence(
-                cards=merged_cards,
-                conversation=conversation,
-                budget=budget,
-            )
-            tool_calls.extend(oracle_calls)
-
         plan = plan_investigation(
             input_analysis,
             cards=merged_cards,
-            oracle_already_refreshed=bool(tool_calls),
+            oracle_already_refreshed=False,
         )
-        if conversation is not None and plan.requests:
-            for request in plan.requests:
-                result = self.execute_judge_tool(
-                    request,
-                    conversation=conversation,
-                    budget=budget,
-                )
-                tool_calls.append(result.to_dict())
+        plan_payload = plan.to_dict()
+        if conversation is not None:
+            investigation = run_investigation(
+                analysis=input_analysis,
+                requests=plan.requests,
+                hypotheses=plan.hypotheses,
+                execute=self.execute_judge_tool,
+                conversation=conversation,
+                budget=budget,
+            )
+        else:
+            investigation = InvestigationOutcome(
+                hypotheses=plan.hypotheses,
+                stopped_reason="tools_not_executed",
+                initial_queries=len(plan.requests),
+            )
+        tool_calls = investigation.tool_calls
+        merged_cards = _merge_cards_from_tool_calls(merged_cards, tool_calls)
 
         judge_payload = _merge_tool_evidence(
             {**judge_payload, "cards": merged_cards},
@@ -193,7 +194,20 @@ class Tactician:
             obligations=obligations,
             has_current_interaction=has_current_interaction,
         )
-        answer_complete = answer_contract.complete and factual_coverage.complete
+        semantic_fallback_available = (
+            investigation.sufficient
+            and bool(synthesis.reasoning_summary)
+        )
+        factual_basis_available = (
+            response_decision.mode is not ResponseMode.JUDGE_LED
+            or bool(factual_core)
+            or semantic_fallback_available
+        )
+        answer_complete = (
+            answer_contract.complete
+            and factual_coverage.complete
+            and factual_basis_available
+        )
 
         judge_status = str(judge_payload.get("status", ""))
         if judge_status not in {"strategy_required", "answered"}:
@@ -218,6 +232,8 @@ class Tactician:
             tool_calls=tool_calls,
             answer_complete=answer_complete,
             factual_core_preserved=factual_core_preserved,
+            investigation_sufficient=investigation.sufficient,
+            judge_status=judge_status,
         )
         confidence = _strategy_confidence(
             combo_classification,
@@ -254,6 +270,7 @@ class Tactician:
                 "tactician:language_policy",
                 "tactician:input_analysis",
                 "tactician:claim_evaluation",
+                "tactician:autonomous_investigation",
                 f"tactician:response_orchestration:{response_decision.mode.value}",
                 "tactician:factual_core_preservation",
                 "tactician:answer_contract",
@@ -295,10 +312,11 @@ class Tactician:
             input_analysis=input_analysis.to_dict(),
             claim_verdicts=[verdict.to_dict() for verdict in claim_verdicts],
             reasoning_summary=synthesis.reasoning_summary,
-            queries_planned=len(plan.requests) + (1 if merged_cards else 0),
+            queries_planned=investigation.initial_queries + investigation.follow_up_queries,
             queries_completed=len(tool_calls),
             judge_verified=judge_verified,
-            investigation_plan=plan.to_dict(),
+            investigation_plan=plan_payload,
+            investigation_trace=investigation.to_dict(),
             response_language=input_analysis.language,
             language_policy=dict(input_analysis.language_policy),
             answer_obligations=[item.to_dict() for item in obligations],
@@ -330,43 +348,6 @@ class Tactician:
             conversation=conversation,
             budget=budget,
         )
-
-    def _refresh_oracle_evidence(
-        self,
-        *,
-        cards: list[dict[str, Any]],
-        conversation,
-        budget: JudgeToolBudget,
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        names = [str(card.get("name", "")).strip() for card in cards]
-        names = [name for name in names if name]
-        if not names:
-            return cards, []
-
-        result = self.execute_judge_tool(
-            JudgeToolRequest(
-                tool="oracle_lookup",
-                arguments={"card_names": names},
-                purpose="refresh_strategic_oracle_evidence",
-                result_limit=max(1, min(len(names), 20)),
-            ),
-            conversation=conversation,
-            budget=budget,
-        )
-        payload = result.to_dict()
-        if result.status is not JudgeToolStatus.SUCCESS:
-            return cards, [payload]
-
-        refreshed = [
-            dict(item.get("data", {}))
-            for item in result.evidence
-            if item.get("kind") == "card" and item.get("data")
-        ]
-        if not refreshed:
-            return cards, [payload]
-
-        return _merge_refreshed_cards(cards, refreshed), [payload]
-
 
 def replace_boundary_answer(conversation, result: TacticianResult) -> None:
     """Replace the Judge boundary message after an automatic handoff."""
@@ -420,6 +401,8 @@ def _judge_verified(
     tool_calls: list[dict[str, Any]],
     answer_complete: bool,
     factual_core_preserved: bool,
+    investigation_sufficient: bool,
+    judge_status: str,
 ) -> bool:
     unresolved = [
         verdict
@@ -430,7 +413,13 @@ def _judge_verified(
         call.get("status") == "success" and call.get("evidence")
         for call in tool_calls
     )
-    if unresolved or not answer_complete or not factual_core_preserved:
+    if (
+        unresolved
+        or judge_status not in {"answered", "strategy_required", "false_premise"}
+        or not answer_complete
+        or not factual_core_preserved
+        or not investigation_sufficient
+    ):
         return False
     if claim_verdicts:
         return successful_evidence
@@ -472,6 +461,23 @@ def _merge_tool_evidence(
                     ruling_keys.add(key)
 
     return {**payload, "rules": rules, "rulings": rulings}
+
+
+def _merge_cards_from_tool_calls(
+    original: list[dict[str, Any]],
+    tool_calls: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    refreshed: list[dict[str, Any]] = []
+    for call in tool_calls:
+        for item in call.get("evidence", []):
+            if item.get("kind") != "card":
+                continue
+            data = item.get("data", {})
+            if isinstance(data, dict) and data.get("name"):
+                refreshed.append(dict(data))
+    if not refreshed:
+        return original
+    return _merge_refreshed_cards(original, refreshed)
 
 
 def _merge_context_cards(

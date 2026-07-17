@@ -106,6 +106,7 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
         "tactician:language_policy",
         "tactician:input_analysis",
         "tactician:claim_evaluation",
+        "tactician:autonomous_investigation",
         "tactician:response_orchestration:tactician_led",
         "tactician:factual_core_preservation",
         "tactician:answer_contract",
@@ -116,6 +117,8 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
     assert payload["answer_complete"] is True
     assert payload["response_language"] == "es"
     assert payload["judge_tool_calls"][0]["status"] == "success"
+    assert payload["investigation_trace"]["sufficient"] is True
+    assert payload["investigation_trace"]["sufficiency_score"] == 1.0
     assert "sinergia de sacrificio" in payload["answer"]
     assert "No es un bucle infinito" in payload["answer"]
     assert conversation.mode == "tactician"

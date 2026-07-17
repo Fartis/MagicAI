@@ -84,6 +84,7 @@ class TacticianResult:
     queries_completed: int = 0
     judge_verified: bool = False
     investigation_plan: dict[str, Any] = field(default_factory=dict)
+    investigation_trace: dict[str, Any] = field(default_factory=dict)
     response_language: str = "es"
     language_policy: dict[str, Any] = field(default_factory=dict)
     answer_obligations: list[dict[str, Any]] = field(default_factory=list)
@@ -137,6 +138,7 @@ class TacticianResult:
             "queries_completed": int(self.queries_completed),
             "judge_verified": bool(self.judge_verified),
             "investigation_plan": dict(self.investigation_plan),
+            "investigation_trace": dict(self.investigation_trace),
             "response_language": self.response_language,
             "language_policy": dict(self.language_policy),
             "answer_obligations": list(self.answer_obligations),

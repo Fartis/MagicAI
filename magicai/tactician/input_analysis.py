@@ -83,7 +83,7 @@ _CAUSAL_MARKERS = (
 )
 _VALIDATION_MARKERS = (
     "hace combo", "es correcto", "tengo razon", "tengo razón", "funciona asi", "funciona así",
-    "seria asi", "sería así", "is that correct", "does that work",
+    "seria asi", "sería así", "verdad", "cierto", "is that correct", "does that work",
 )
 
 
@@ -218,6 +218,14 @@ def _detect_concepts(normalized: str) -> list[str]:
         ("disruption", ("cortar", "interrump", "disrupt", "stop")),
         ("definition", ("que es", "como funciona", "define", "what is", "how does")),
         ("equivalence", ("es lo mismo", "equivale", "no cuando", "mismo evento", "same event")),
+        ("continuous_effects", ("efecto continuo", "efectos continuos", "continuous effect", "continuous effects")),
+        ("layers", ("capa", "capas", "layer", "layers")),
+        ("dependency", ("dependencia", "dependency")),
+        ("timestamp", ("timestamp", "marca de tiempo", "orden de entrada", "antes que", "despues que", "después que")),
+        ("land_types", ("tipo de tierra", "tipos de tierra", "land type", "land types")),
+        ("basic_lands", ("tierra basica", "tierra básica", "tierras basicas", "tierras básicas", "basic land", "basic lands")),
+        ("nonbasic_lands", ("tierra no basica", "tierra no básica", "tierras no basicas", "tierras no básicas", "nonbasic land", "nonbasic lands")),
+        ("mana_abilities", ("habilidad de mana", "habilidad de maná", "habilidades de mana", "habilidades de maná", "mana ability", "mana abilities", "pueden producir")),
     )
     for concept, markers in mappings:
         if any(marker in normalized for marker in markers):

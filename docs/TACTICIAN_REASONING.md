@@ -1,6 +1,6 @@
 # Tactician input reasoning and response orchestration
 
-Sprint 12.2d extends the structured reasoning layer with explicit response ownership, factual-core preservation, and a reproducible multi-turn conversation gauntlet.
+Sprint 12.3a extends the structured reasoning layer with explicit hypotheses, evidence-sufficiency scoring, bounded reactive searches, response ownership, and factual-core preservation.
 
 ## Goal
 
@@ -14,7 +14,9 @@ user wording
   → session language policy
   → speech-act and intent analysis
   → claim and question-target extraction
+  → hypothesis decomposition and evidence requirements
   → bounded Judge Tool Gateway investigation
+  → sufficiency scoring and reactive fallback search
   → claim verdicts
   → response-mode arbitration
   → factual-core extraction
@@ -143,6 +145,37 @@ python scripts/promote_tactician_feedback.py exported-result.json
 
 The command never modifies the active regression corpus automatically. A human must add semantic and negative expectations before promotion.
 
+## Autonomous investigation trace
+
+Sprint 12.3a exposes a structured, non-chain-of-thought audit record. Each hypothesis lists its required evidence, resolved and missing evidence, sufficiency score, and whether a fallback search was attempted. Each step records its phase, request, affected hypotheses, score change, result status, and budget state.
+
+The trace is intended for diagnostics, regression tests, and UI inspection. It does not expose private model reasoning.
+
 ## Limits
 
-This milestone is not a universal natural-language theorem prover. Factual-core extraction and semantic checks remain deterministic and intentionally bounded. Sprint 12.3 will generalize autonomous investigation planning and evidence sufficiency across broader interactions.
+This milestone is not a universal natural-language theorem prover. Hypothesis templates and follow-up policies remain deterministic and intentionally bounded. Sprint 12.3b will add contradiction-aware comparison, dynamic hypothesis expansion, and broader interaction families.
+
+
+## Land-type layer regression
+
+The manual Blood Moon, Urborg, and Dryad test exposed a false-positive
+sufficiency state: Oracle verification alone was scored as complete even though
+the user explicitly asked for layer, dependency, timestamp, land-type, and mana
+conclusions. Sprint 12.3a1 corrects this by deriving those concepts from the
+question and attaching the complete rules package to the answer-basis
+hypothesis.
+
+Investigation sufficiency and Judge verification are deliberately separate.
+A complete set of lookup results does not make an incomplete Judge answer
+verified. `judge_verified` now also requires a non-insufficient Judge status,
+and Judge-led answers need either a preserved factual core or a recognized
+source-grounded semantic fallback.
+
+## Deterministic answer metadata
+
+Sprint 12.3a2 aligns the public metadata with the actual Judge result. When a
+source-grounded deterministic answer satisfies every obligation and the planned
+evidence is complete, the Tactician reports the answer as complete and verified,
+propagates high confidence, and records `judge:evidence_verification`. An
+insufficient Judge result continues to fail closed even if the lookup plan itself
+found every requested source.

@@ -98,14 +98,45 @@ The first major release should add mature deck analysis, authorized strategic so
 - Young Wolf, Carrion Feeder, and The Ozolith reasoning regression.
 - Ghave and Ashnod's Altar sequencing, requirements, and disruption regression.
 
-### 12.3 — General autonomous investigation planner — next
+### 12.3 — General autonomous investigation planner — in progress
 
-- Hypothesis decomposition.
-- Multiple Judge queries per user request.
-- Evidence sufficiency scoring.
-- Alternative and counterexample search.
-- Bounded time and query budgets.
-- Full investigation trace.
+#### 12.3a — Hypothesis and evidence loop — complete
+
+- Structured hypothesis decomposition from claims, intents, concepts, and active cards.
+- Explicit evidence requirements per hypothesis.
+- Per-hypothesis and overall evidence-sufficiency scoring.
+- Reactive `rules_search` and `oracle_search` fallback for unresolved evidence.
+- Alternative or counterexample search selected from the user's speech act.
+- Bounded time, total-query, per-tool, and repeated-request budgets.
+- Full reusable investigation trace with phases, score changes, errors, cache state, and budget snapshots.
+- TacticianResult schema `0.7` and API contract `1.8`.
+
+#### 12.3a1 — Land-type layer investigation hardening — complete
+
+- Rules-first classification for questions about layers, dependencies, timestamps, land types, and mana abilities.
+- Reserved eight-rule evidence package for basic/nonbasic land type interactions.
+- Generic deterministic renderer for subtype-setting and subtype-adding static effects.
+- Dependency handling when a nonbasic land source loses its printed static ability.
+- Timestamp comparison for independent layer-4 effects.
+- Contract coverage for controlled basics, controlled nonbasics, opposing nonbasics, mana colors, and reversed entry order.
+- `judge_verified` can no longer be true when the underlying Judge result is `insufficient_evidence`.
+- Regression derived from the Blood Moon / Urborg / Dryad manual test without a card-name-specific exception.
+
+#### 12.3a2 — Deterministic metadata consistency — complete
+
+- Answer-contract checks align with the generic renderer vocabulary instead of exact sentence fragments.
+- Singular and plural basic land types and concrete mana outcomes are recognized in Spanish and English.
+- Successful deterministic Judge answers now propagate `answer_complete`, `judge_verified`, high confidence, and the evidence-verification authority trace consistently.
+- Oracle pattern matching supports grammatically correct `a` / `an` basic-land-type text.
+- A fictional-card regression proves that the renderer is driven by Oracle shapes and rules evidence rather than exact card names.
+
+#### 12.3b — Generalized adaptive research policies — next
+
+- Multi-step follow-up policies beyond one fallback per hypothesis.
+- Contradiction-aware evidence comparison.
+- Dynamic hypothesis expansion from newly recovered evidence.
+- Query prioritization by expected information gain and remaining budget.
+- Broader regression cases outside the current sacrifice, Undying, counters, and timing families.
 
 ### 12.4 — Formal combo verifier
 

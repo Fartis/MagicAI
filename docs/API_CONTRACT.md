@@ -1,11 +1,11 @@
 # API contract
 
-Current API contract version: `1.7`.
+Current API contract version: `1.8`.
 
 ## Stable result families
 
 - Judge results use JudgeResult schema `1.0`.
-- Tactician results use TacticianResult schema `0.6`.
+- Tactician results use TacticianResult schema `0.7`.
 - Judge tool results use JudgeToolResult schema `1.0`.
 
 ## Main endpoints
@@ -55,7 +55,7 @@ Unavailable capabilities return a structured result instead of being guessed.
 
 ## Tactician reasoning fields
 
-TacticianResult `0.6` includes:
+TacticianResult `0.7` includes:
 
 - `input_analysis`
 - `claim_verdicts`
@@ -64,6 +64,7 @@ TacticianResult `0.6` includes:
 - `queries_completed`
 - `judge_verified`
 - `investigation_plan`
+- `investigation_trace`
 - `response_language`
 - `language_policy`
 - `answer_obligations`
@@ -78,4 +79,4 @@ TacticianResult `0.6` includes:
 
 `response_mode` is one of `judge_led`, `tactician_led`, or `hybrid`. A Judge-led response preserves the factual answer core; a Tactician-led response performs strategic synthesis; a hybrid response combines a Judge-owned rules explanation with a Tactician-owned strategic conclusion.
 
-These fields expose a concise, structured audit trail. They are not a hidden chain-of-thought transcript. `answer_complete` means the generated answer satisfied its deterministic semantic obligations; `judge_verified` additionally requires supporting Judge-owned evidence.
+`investigation_trace` contains hypothesis requirements, sufficiency scores, bounded request phases, and stop reasons. These fields expose a concise, structured audit trail. They are not a hidden chain-of-thought transcript. `answer_complete` means the generated answer satisfied its deterministic semantic obligations; `judge_verified` additionally requires supporting Judge-owned evidence.

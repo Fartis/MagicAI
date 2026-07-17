@@ -450,17 +450,25 @@ def _rule_number_queries(question: str) -> list[str]:
     # necesitan capas antes que reglas incidentales de lanzamiento o Commander.
     if _is_characteristic_continuous_effect_question(q):
 
+        basic_land_interaction = _mentions_basic_land_type_interaction(q)
         add(
             "611.3",
             "613.1d",
             "613.1f",
-            "613.4b",
             "613.6",
             "613.8",
         )
 
-        if _mentions_basic_land_type_interaction(q):
-            add("305.7")
+        add("613.4b")
+        if basic_land_interaction:
+            add(
+                "305.6",
+                "305.7",
+                "305.8",
+                "613.7",
+                "613.8a",
+                "613.8b",
+            )
 
     if _mentions_mana_value(q):
         add("202.3")
@@ -875,8 +883,15 @@ def _specialized_queries(question: str) -> list[str]:
         )
 
         if _mentions_basic_land_type_interaction(q):
-            queries.append(
-                "basic land type loses abilities generated from rules text 305.7"
+            queries.extend(
+                [
+                    "basic land types intrinsic mana abilities 305.6",
+                    "basic land type loses abilities generated from rules text 305.7",
+                    "basic supertype versus basic land type 305.8",
+                    "timestamp order continuous effects 613.7",
+                    "dependency changes existence of effect 613.8a",
+                    "dependent effect waits until other effect applied 613.8b",
+                ]
             )
 
     if _contains_any(
@@ -1401,6 +1416,21 @@ def _mentions_basic_land_type_interaction(question: str) -> bool:
             "basic land type",
             "tipo de tierra básica",
             "tipo de tierra basica",
+            "tipos de tierra",
+            "tipo de tierra",
+            "tierra no básica",
+            "tierra no basica",
+            "tierras no básicas",
+            "tierras no basicas",
+            "land type",
+            "land types",
+            "nonbasic land",
+            "nonbasic lands",
+            "habilidad de maná",
+            "habilidad de mana",
+            "habilidades de maná",
+            "habilidades de mana",
+            "pueden producir",
             "plains",
             "island",
             "swamp",
