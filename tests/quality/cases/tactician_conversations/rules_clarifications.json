@@ -1,0 +1,390 @@
+{
+  "schema_version": "1.0",
+  "scenarios": [
+    {
+      "id": "TACT-RULE-001",
+      "title": "¿Qué ocurre si sacrifico Young Wolf?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué ocurre si sacrifico Young Wolf?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-002",
+      "title": "¿Qué pasa si sacrifico Young Wolf?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué pasa si sacrifico Young Wolf?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-003",
+      "title": "¿Qué pasa cuando sacrifico Young Wolf?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué pasa cuando sacrifico Young Wolf?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-004",
+      "title": "¿Qué ocurre si Young Wolf muere?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué ocurre si Young Wolf muere?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-005",
+      "title": "¿Qué pasa si Young Wolf va al cementerio desde el campo de batalla?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué pasa si Young Wolf va al cementerio desde el campo de batalla?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-006",
+      "title": "Entonces, what happens si sacrifico Young Wolf?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "Entonces, what happens si sacrifico Young Wolf?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-007",
+      "title": "¿Qué ocurre si sacrifico a Young Wolf con un contador +1/+1?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué ocurre si sacrifico a Young Wolf con un contador +1/+1?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_blocked_by_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-008",
+      "title": "¿Qué pasa cuando mando a Young Wolf del campo al cementerio?",
+      "language": "es",
+      "turns": [
+        {
+          "question": "¿Qué pasa cuando mando a Young Wolf del campo al cementerio?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "es",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-009",
+      "title": "What happens if I sacrifice Young Wolf?",
+      "language": "en",
+      "turns": [
+        {
+          "question": "What happens if I sacrifice Young Wolf?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "701.21a",
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "TACT-RULE-010",
+      "title": "What happens when Young Wolf dies?",
+      "language": "en",
+      "turns": [
+        {
+          "question": "What happens when Young Wolf dies?",
+          "expect": {
+            "strategy_intent": "mechanic_resolution",
+            "response_mode": "judge_led",
+            "combo_classification": "not_applicable",
+            "response_language": "en",
+            "judge_verified": true,
+            "answer_complete": true,
+            "factual_core_preserved": true,
+            "minimum_factual_core_coverage": 1.0,
+            "required_rules": [
+              "700.4",
+              "702.93a"
+            ],
+            "required_tools": [
+              "oracle_lookup",
+              "rules_lookup"
+            ],
+            "required_concepts": [
+              "battlefield_to_graveyard",
+              "dies",
+              "undying_without_counter",
+              "returns_with_counter"
+            ],
+            "forbidden_phrases": [
+              "bucle infinito",
+              "no hay evidencia suficiente"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

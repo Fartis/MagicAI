@@ -59,7 +59,11 @@ _RULE_MARKERS = {
     "pt_modify_layer": ["613.4c"],
     "layer_continuity": ["613.6"],
     "dependency": ["613.8"],
+    "timestamp": ["613.7"],
+    "dependency_definition": ["613.8a", "613.8b"],
+    "basic_land_mana": ["305.6"],
     "basic_land_type": ["305.7"],
+    "basic_land_supertype": ["305.8"],
     "zone_change": ["400.7"],
     "persist": ["702.79", "702.79a"],
     "undying": ["702.93", "702.93a"],
@@ -103,6 +107,19 @@ def render_rule_answer(knowledge: str) -> str | None:
                 "de batalla bajo el control de su propietario con un contador +1/+1."
             )
 
+    if _is_undying_dies_equivalence_question(q) and _has_rules(
+        knowledge,
+        ["undying", "dies"],
+    ):
+        return (
+            "En Magic, una criatura muere exactamente cuando es puesta en un "
+            "cementerio desde el campo de batalla; no son dos eventos distintos. "
+            "Undying se dispara por ese mismo movimiento y comprueba si el "
+            "permanente tenía contadores +1/+1 justo antes de abandonar el campo. "
+            "Si una carta entra al cementerio desde otra zona, como la mano o la "
+            "biblioteca, no ha muerto y Undying no se dispara por ese evento."
+        )
+
     if _is_undying_existing_counter_question(q) and _has_rules(
         knowledge,
         ["undying"],
@@ -137,6 +154,14 @@ def render_rule_answer(knowledge: str) -> str | None:
             "cada mulligan que haya contado para ti; en multijugador y Brawl, el "
             "primero es gratuito."
         )
+
+    land_type_answer = _render_basic_land_type_layer_interaction(
+        knowledge,
+        q,
+    )
+
+    if land_type_answer is not None:
+        return land_type_answer
 
     layered_answer = _render_layered_static_source_comparison(
         knowledge,
@@ -659,6 +684,311 @@ def render_rule_answer(knowledge: str) -> str | None:
         )
 
     return None
+
+
+
+def _render_basic_land_type_layer_interaction(
+    knowledge: str,
+    question: str,
+) -> str | None:
+    """Resolve generic layer-4 interactions between land-type setters/adders.
+
+    The renderer recognizes Oracle patterns rather than card names:
+    - a global effect that sets nonbasic lands to one basic land type;
+    - a controller-scoped effect that adds every basic land type;
+    - a static ability on a nonbasic land that adds one basic land type.
+
+    It then applies rules 305.6-305.8, timestamp order, and dependency.
+    """
+
+    if not _looks_like_basic_land_type_layer_question(question):
+        return None
+
+    if not _has_rules(
+        knowledge,
+        [
+            "continuous_static",
+            "type_layer",
+            "timestamp",
+            "dependency_definition",
+            "basic_land_mana",
+            "basic_land_type",
+            "basic_land_supertype",
+        ],
+    ):
+        return None
+
+    entries = _extract_card_entries(knowledge)
+    setter = _find_nonbasic_land_type_setter(entries)
+    controller_adder = _find_controller_all_basic_type_adder(entries)
+    global_adder = _find_global_basic_type_adder(entries)
+
+    if not setter or not controller_adder or not global_adder:
+        return None
+
+    setter_name, setter_type = setter
+    controller_name = controller_adder[0]
+    global_name, global_type = global_adder
+
+    # A source whose own type line is a nonbasic land is affected by the
+    # setter. Applying the setter therefore removes the source's printed
+    # static ability and changes the existence of the additive effect.
+    global_entry_text = next(
+        (entry_text for name, entry_text in entries if name == global_name),
+        "",
+    )
+    if not _is_nonbasic_land_entry(global_entry_text):
+        return None
+
+    setter_before_controller = _name_appears_before(
+        question,
+        setter_name,
+        controller_name,
+    )
+
+    setter_type_es = _basic_type_name(setter_type, language="es")
+    setter_color_es = _basic_type_color(setter_type, language="es")
+    global_type_es = _basic_type_name(global_type, language="es")
+
+    if _looks_spanish(question):
+        if setter_before_controller:
+            controlled_nonbasic = (
+                f"{setter_name} se aplica primero y las convierte en {setter_type_es}, "
+                f"eliminando sus tipos anteriores y las habilidades impresas. Después "
+                f"{controller_name} añade los cinco tipos básicos. Terminan siendo "
+                "Llanura, Isla, Pantano, Montaña y Bosque, con las cinco habilidades "
+                "intrínsecas de maná; pueden producir W, U, B, R o G. Las habilidades "
+                "impresas que eliminó el primer efecto no regresan."
+            )
+        else:
+            controlled_nonbasic = (
+                f"{controller_name} añade primero los cinco tipos básicos, pero "
+                f"{setter_name} se aplica después y fija el tipo en {setter_type_es}. "
+                f"Terminan siendo solo {setter_type_es}, pierden las habilidades "
+                f"impresas y solo pueden producir {setter_color_es}."
+            )
+
+        reversed_result = (
+            f"Si {controller_name} hubiera entrado antes que {setter_name}, el orden "
+            f"entre esos dos efectos independientes se invertiría: {controller_name} "
+            f"añadiría primero los cinco tipos y {setter_name} los sustituiría después "
+            f"por {setter_type_es}. Tus tierras no básicas terminarían siendo solo "
+            f"{setter_type_es} y solo producirían {setter_color_es}."
+            if setter_before_controller else
+            f"Si {controller_name} entrara después que {setter_name}, añadiría los "
+            f"cinco tipos básicos tras el efecto que las fija como {setter_type_es}; "
+            "tus tierras no básicas podrían producir los cinco colores."
+        )
+
+        return (
+            "Los tres efectos se aplican en la capa 4, pero no se ordenan todos "
+            "únicamente por timestamp.\n\n"
+            f"**Dependencia.** El efecto de {global_name} depende del de {setter_name}. "
+            f"Al aplicar {setter_name}, {global_name} —que es una tierra no básica— "
+            f"pasa a ser {setter_type_es}; la regla 305.7 elimina su habilidad impresa. "
+            "Eso cambia la existencia del otro efecto, así que la dependencia prevalece "
+            "sobre la marca de tiempo: el efecto que fija el tipo se aplica primero y "
+            f"{global_name} no llega a convertir las tierras en {global_type_es}. Su "
+            "orden de entrada no cambia esta conclusión.\n\n"
+            f"**{controller_name} frente a {setter_name}.** Entre estos dos no hay "
+            "dependencia: añadir tipos básicos no añade el supertipo «básica», por lo "
+            "que las tierras no básicas siguen dentro del alcance del efecto que fija "
+            "su tipo. Aquí sí decide el timestamp.\n\n"
+            "1. **Tus tierras básicas:** el efecto sobre tierras no básicas no las "
+            f"afecta. {controller_name} les añade todos los tipos básicos además de "
+            "los que ya tengan. Conservan el supertipo básica y pueden producir los "
+            "cinco colores: W, U, B, R o G.\n"
+            f"2. **Tus tierras no básicas:** {controlled_nonbasic}\n"
+            f"3. **Las tierras no básicas del oponente:** {controller_name} no las "
+            f"afecta y {global_name} está desactivada por dependencia. Terminan siendo "
+            f"solo {setter_type_es}, pierden sus habilidades impresas y solo pueden "
+            f"producir {setter_color_es}.\n\n"
+            f"**Orden alternativo:** {reversed_result}\n\n"
+            f"Por tanto, «{setter_name} siempre gana» solo es correcto respecto al "
+            f"efecto de {global_name}; no lo es frente al efecto de {controller_name}. "
+            "Y tampoco es cierto que todo se resuelva únicamente por timestamp: primero "
+            "se aplican las dependencias y el timestamp ordena los efectos independientes."
+        )
+
+    setter_type_en = _basic_type_name(setter_type, language="en")
+    setter_color_en = _basic_type_color(setter_type, language="en")
+    global_type_en = _basic_type_name(global_type, language="en")
+    if setter_before_controller:
+        controlled_nonbasic = (
+            f"{setter_name} applies first and sets them to {setter_type_en}, removing "
+            f"their old land types and printed abilities. {controller_name} then adds "
+            "all five basic land types. They can produce W, U, B, R, or G, but the "
+            "printed abilities removed by the setter do not return."
+        )
+    else:
+        controlled_nonbasic = (
+            f"{controller_name} adds all five basic land types first, then {setter_name} "
+            f"sets them to {setter_type_en}. They end as {setter_type_en} only, lose "
+            f"their printed abilities, and can produce only {setter_color_en}."
+        )
+
+    return (
+        "All three effects apply in layer 4, but they are not all ordered only "
+        "by timestamp.\n\n"
+        f"**Dependency.** {global_name}'s effect depends on {setter_name}'s effect. "
+        f"Applying {setter_name} turns the nonbasic land source into {setter_type_en} "
+        "and rule 305.7 removes its printed static ability. Dependency therefore "
+        "overrides timestamp, so the global additive effect does not apply, regardless "
+        "of their entry order.\n\n"
+        f"**{controller_name} versus {setter_name}.** These effects are independent. "
+        "Adding basic land types does not add the basic supertype, so nonbasic lands "
+        "remain nonbasic. Timestamp orders these two effects.\n\n"
+        f"1. **Your basic lands:** {controller_name} gives them every basic land type, "
+        "so they can produce W, U, B, R, or G.\n"
+        f"2. **Your nonbasic lands:** {controlled_nonbasic}\n"
+        f"3. **The opponent's nonbasic lands:** they are {setter_type_en} only, lose "
+        f"their printed abilities, and can produce only {setter_color_en}.\n\n"
+        f"If {controller_name} entered before {setter_name}, your nonbasic lands would "
+        f"end as {setter_type_en} only and produce only {setter_color_en}. "
+        f"The claim that {setter_name} always wins is true only against {global_name}; "
+        "the claim that everything is timestamp-only is false because dependency is "
+        "applied first."
+    )
+
+
+def _looks_like_basic_land_type_layer_question(question: str) -> bool:
+    has_land_scope = any(
+        marker in question
+        for marker in (
+            "tipo de tierra",
+            "tipos de tierra",
+            "tierras basicas",
+            "tierras no basicas",
+            "land type",
+            "land types",
+            "basic lands",
+            "nonbasic lands",
+        )
+    )
+    has_ordering = any(
+        marker in question
+        for marker in (
+            "capa",
+            "layer",
+            "dependencia",
+            "dependency",
+            "timestamp",
+            "marca de tiempo",
+        )
+    )
+    has_mana = any(
+        marker in question
+        for marker in (
+            "habilidades de mana",
+            "habilidad de mana",
+            "pueden producir",
+            "mana abilities",
+            "can produce",
+        )
+    )
+    return has_land_scope and has_ordering and has_mana
+
+
+def _find_nonbasic_land_type_setter(
+    entries: list[tuple[str, str]],
+) -> tuple[str, str] | None:
+    pattern = re.compile(
+        r"\bnonbasic lands are (plains|islands|swamps|mountains|forests)\b"
+    )
+    for name, entry_text in entries:
+        match = pattern.search(_normalize(entry_text))
+        if match:
+            return name, _singular_basic_type(match.group(1))
+    return None
+
+
+def _find_controller_all_basic_type_adder(
+    entries: list[tuple[str, str]],
+) -> tuple[str, str] | None:
+    for entry in entries:
+        normalized = _normalize(entry[1])
+        if (
+            "lands you control are every basic land type" in normalized
+            and "in addition to their other types" in normalized
+        ):
+            return entry
+    return None
+
+
+def _find_global_basic_type_adder(
+    entries: list[tuple[str, str]],
+) -> tuple[str, str] | None:
+    pattern = re.compile(
+        r"\beach land is (?:a|an) (plains|island|swamp|mountain|forest) "
+        r"in addition to its other land types\b"
+    )
+    for name, entry_text in entries:
+        match = pattern.search(_normalize(entry_text))
+        if match:
+            return name, _singular_basic_type(match.group(1))
+    return None
+
+
+def _is_nonbasic_land_entry(entry_text: str) -> bool:
+    type_line = _normalize(entry_text.splitlines()[0] if entry_text else "")
+    return "land" in type_line and "basic land" not in type_line
+
+
+def _name_appears_before(question: str, first: str, second: str) -> bool:
+    first_index = question.find(_normalize(first))
+    second_index = question.find(_normalize(second))
+    if first_index < 0 or second_index < 0:
+        return True
+    return first_index < second_index
+
+
+def _singular_basic_type(value: str) -> str:
+    return {
+        "plains": "plains",
+        "islands": "island",
+        "swamps": "swamp",
+        "mountains": "mountain",
+        "forests": "forest",
+    }.get(value, value)
+
+
+def _basic_type_name(value: str, *, language: str) -> str:
+    names = {
+        "plains": ("Llanura", "Plains"),
+        "island": ("Isla", "Island"),
+        "swamp": ("Pantano", "Swamp"),
+        "mountain": ("Montaña", "Mountain"),
+        "forest": ("Bosque", "Forest"),
+    }
+    spanish, english = names.get(value, (value.title(), value.title()))
+    return spanish if language == "es" else english
+
+
+def _basic_type_color(value: str, *, language: str) -> str:
+    colors = {
+        "plains": ("maná blanco (W)", "white mana (W)"),
+        "island": ("maná azul (U)", "blue mana (U)"),
+        "swamp": ("maná negro (B)", "black mana (B)"),
+        "mountain": ("maná rojo (R)", "red mana (R)"),
+        "forest": ("maná verde (G)", "green mana (G)"),
+    }
+    spanish, english = colors.get(value, (value, value))
+    return spanish if language == "es" else english
+
+
+def _looks_spanish(question: str) -> bool:
+    return any(
+        marker in question
+        for marker in (
+            "tierras",
+            "oponente",
+            "capa",
+            "dependencia",
+            "pueden producir",
+            "habria",
+            "habría",
+        )
+    )
 
 
 def _render_layered_static_source_comparison(
@@ -1337,6 +1667,27 @@ def _is_may_trigger_choice(question: str) -> bool:
         )
     )
 
+
+
+def _is_undying_dies_equivalence_question(question: str) -> bool:
+    if "undying" not in question:
+        return False
+    mentions_dies = any(marker in question for marker in ("muere", "morir", "dies"))
+    mentions_graveyard = any(marker in question for marker in ("cementerio", "graveyard"))
+    asks_relation = any(
+        marker in question
+        for marker in (
+            "es cuando",
+            "no cuando",
+            "es lo mismo",
+            "mismo evento",
+            "equivale",
+            "same event",
+            "same as",
+            "rather than",
+        )
+    )
+    return mentions_dies and mentions_graveyard and asks_relation
 
 
 def _is_undying_existing_counter_question(question: str) -> bool:

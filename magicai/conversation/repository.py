@@ -275,6 +275,7 @@ def _conversation_to_dict(conversation: Conversation) -> dict[str, Any]:
         "last_intent": str(conversation.last_intent or ""),
         "language": str(conversation.language or "es"),
         "mode": str(conversation.mode or "assistant"),
+        "strategy_context": _json_safe(conversation.strategy_context),
     }
 
 
@@ -306,6 +307,7 @@ def _conversation_from_dict(value: dict[str, Any]) -> Conversation:
         last_intent=str(value.get("last_intent") or ""),
         language=str(value.get("language") or "es"),
         mode=str(value.get("mode") or "assistant"),
+        strategy_context=(value.get("strategy_context") if isinstance(value.get("strategy_context"), dict) else {}),
     )
 
 

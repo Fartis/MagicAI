@@ -10,6 +10,12 @@ class AssistantContext:
 
     language: str = "es"
 
+    canonical_question: str = ""
+
+    input_register: str = "standard"
+
+    normalization: dict = field(default_factory=dict)
+
     cards: list = field(default_factory=list)
 
     keywords: list[str] = field(default_factory=list)

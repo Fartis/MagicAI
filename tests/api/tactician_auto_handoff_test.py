@@ -108,7 +108,7 @@ def test_ask_automatically_hands_strategy_to_tactician() -> None:
 
         assert response.authority == "tactician"
         assert response.status == "answered"
-        assert response.origin == "tactician_strategy"
+        assert response.origin == "tactician_reasoned_strategy"
         assert response.strategy_intent == "combo_detection"
         assert response.combo_classification == "infinite_combo"
         assert response.inherited_cards == ["Young Wolf"]

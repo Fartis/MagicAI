@@ -22,3 +22,7 @@ namespaces = true
 
 [tool.setuptools.package-data]
 magicai = ["ui/static/*.html", "ui/static/*.css", "ui/static/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["backups"]

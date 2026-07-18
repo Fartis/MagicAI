@@ -73,8 +73,29 @@ class TacticianResult:
     outcomes: list[str] = field(default_factory=list)
     inherited_cards: list[str] = field(default_factory=list)
     judge_queries: list[dict[str, Any]] = field(default_factory=list)
+    judge_tool_calls: list[dict[str, Any]] = field(default_factory=list)
+    tactician_synthesized: bool = False
     authority_trace: list[str] = field(default_factory=list)
     judge_result: dict[str, Any] = field(default_factory=dict)
+    input_analysis: dict[str, Any] = field(default_factory=dict)
+    claim_verdicts: list[dict[str, Any]] = field(default_factory=list)
+    reasoning_summary: list[str] = field(default_factory=list)
+    queries_planned: int = 0
+    queries_completed: int = 0
+    judge_verified: bool = False
+    investigation_plan: dict[str, Any] = field(default_factory=dict)
+    investigation_trace: dict[str, Any] = field(default_factory=dict)
+    response_language: str = "es"
+    language_policy: dict[str, Any] = field(default_factory=dict)
+    answer_obligations: list[dict[str, Any]] = field(default_factory=list)
+    answer_contract: dict[str, Any] = field(default_factory=dict)
+    answer_complete: bool = False
+    response_mode: str = "tactician_led"
+    response_orchestration: dict[str, Any] = field(default_factory=dict)
+    factual_core: list[dict[str, Any]] = field(default_factory=list)
+    factual_core_coverage: dict[str, Any] = field(default_factory=dict)
+    factual_core_preserved: bool = False
+    strategic_extension_required: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -107,6 +128,27 @@ class TacticianResult:
             "outcomes": list(self.outcomes),
             "inherited_cards": list(self.inherited_cards),
             "judge_queries": list(self.judge_queries),
+            "judge_tool_calls": list(self.judge_tool_calls),
+            "tactician_synthesized": bool(self.tactician_synthesized),
             "authority_trace": list(self.authority_trace),
+            "input_analysis": dict(self.input_analysis),
+            "claim_verdicts": list(self.claim_verdicts),
+            "reasoning_summary": list(self.reasoning_summary),
+            "queries_planned": int(self.queries_planned),
+            "queries_completed": int(self.queries_completed),
+            "judge_verified": bool(self.judge_verified),
+            "investigation_plan": dict(self.investigation_plan),
+            "investigation_trace": dict(self.investigation_trace),
+            "response_language": self.response_language,
+            "language_policy": dict(self.language_policy),
+            "answer_obligations": list(self.answer_obligations),
+            "answer_contract": dict(self.answer_contract),
+            "answer_complete": bool(self.answer_complete),
+            "response_mode": self.response_mode,
+            "response_orchestration": dict(self.response_orchestration),
+            "factual_core": list(self.factual_core),
+            "factual_core_coverage": dict(self.factual_core_coverage),
+            "factual_core_preserved": bool(self.factual_core_preserved),
+            "strategic_extension_required": bool(self.strategic_extension_required),
             "judge_result": dict(self.judge_result),
         }

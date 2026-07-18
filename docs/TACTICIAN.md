@@ -13,23 +13,45 @@ The Tactician analyzes:
 - risks, interaction points, and alternatives;
 - format, bracket, budget, collection, and local-metagame constraints.
 
-It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It asks the Judge-owned source gateway for structured evidence.
+It does not open Oracle, rules, rulings, Commander Spellbook, EDHREC, or user collection files directly. It requests structured evidence through the Judge Tool Gateway.
 
-## Current milestone: 0.2
+## Current milestone: 0.6
 
 Implemented:
 
 - automatic handoff from `POST /ask`;
 - explicit `POST /tactician/ask`;
-- strategic intent classification;
+- strategic and rules-oriented intent classification;
 - previous-turn card inheritance;
-- structured `strategy_intent`, `combo_classification`, `combo_steps`, and `outcomes`;
-- generic recognition of a three-piece loop consisting of:
-  - a creature with Undying;
-  - a sacrifice outlet that generates mana;
-  - an ability that removes the +1/+1 counter and creates a token;
-- Judge review challenges for contradictory LLM answers;
-- Judge capability registry.
+- executable, typed Judge Tool Gateway;
+- bounded Oracle, rules, and rulings requests;
+- speech-act, intent, claim, and question-target analysis;
+- persisted strategic conversation context;
+- session-aware language policy and casual-input normalization;
+- semantic answer obligations and evidence verification;
+- explicit `judge_led`, `tactician_led`, and `hybrid` response modes;
+- factual-core extraction, preservation, and coverage reporting;
+- protection against generic strategic synthesis replacing a correct deterministic Judge answer;
+- combo classification only when combo analysis is relevant to the current turn;
+- 40 conversational regression scenarios covering 58 turns;
+- fixture and local execution modes for the Tactician Conversation Gauntlet;
+- JSON and HTML gauntlet reports;
+- review-only promotion of exported feedback into candidate scenarios.
+
+## Response ownership
+
+```text
+rules or mechanic resolution
+  → Judge-led response
+
+strategy, sequencing, disruption, or deck decisions
+  → Tactician-led response
+
+rules explanation plus strategic consequence
+  → hybrid response
+```
+
+A Judge-led response may be phrased naturally by the Tactician, but it must preserve every required factual proposition. If coverage is incomplete, the response is rejected or repaired before publication.
 
 ## Evidence loop
 
@@ -37,16 +59,28 @@ Target design:
 
 ```text
 Tactician forms a hypothesis
-  → asks the Judge for evidence
+  → requests one or more Judge tools
   → checks gaps and contradictions
-  → asks follow-up questions
+  → requests narrower evidence
   → constructs a line
-  → Judge validates every factual claim
+  → Judge validates factual claims
   → Critic attempts to break the result
   → publish or declare uncertainty
 ```
 
-The current implementation records a first `judge_queries` trace. Multi-query planning is the next milestone.
+Milestone 0.7 adds explicit hypotheses, sufficiency scoring, reactive fallback searches, bounded execution, and a reusable investigation trace. Sprint 12.3b will generalize the loop beyond the current deterministic families.
+
+## Personality
+
+The Judge should remain formal and concise. The Tactician should be warmer, conversational, and proactive while preserving the same factual boundary.
+
+It should:
+
+- explain why a line is attractive;
+- mention risks and interaction windows;
+- infer likely follow-up meaning from active strategic context;
+- ask a question only when missing information materially changes the recommendation;
+- never invent card text or rules to sound helpful.
 
 ## Constraints
 

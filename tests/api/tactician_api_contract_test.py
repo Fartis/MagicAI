@@ -52,6 +52,29 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
         outcomes=["Arbitrarily large mana."],
         inherited_cards=["Young Wolf"],
         judge_queries=[{"sequence": 1, "purpose": "factual_evidence"}],
+        input_analysis={"speech_act": "question", "claims_detected": 1},
+        claim_verdicts=[{"claim_id": "claim-1", "verdict": "supported"}],
+        reasoning_summary=["The loop restores its initial state."],
+        queries_planned=2,
+        queries_completed=2,
+        judge_verified=True,
+        investigation_plan={"queries_planned": 2},
+        investigation_trace={
+            "sufficient": True,
+            "sufficiency_score": 1.0,
+            "stopped_reason": "evidence_sufficient",
+        },
+        response_language="es",
+        language_policy={"response_language": "es", "language_locked": True},
+        answer_obligations=[{"code": "direct_user_question", "required": True}],
+        answer_contract={"answer_complete": True},
+        answer_complete=True,
+        response_mode="tactician_led",
+        response_orchestration={"mode": "tactician_led"},
+        factual_core=[{"code": "combo_loop", "statement": "The loop restores its state."}],
+        factual_core_coverage={"required": 1, "covered": 1, "complete": True},
+        factual_core_preserved=True,
+        strategic_extension_required=True,
         judge_result={"authority": "judge"},
     )
     payload = response.model_dump()
@@ -61,6 +84,16 @@ def test_tactician_response_remains_judge_evidence_compatible() -> None:
     assert payload["strategy_intent"] == "combo_detection"
     assert payload["combo_classification"] == "infinite_combo"
     assert payload["inherited_cards"] == ["Young Wolf"]
+    assert payload["input_analysis"]["speech_act"] == "question"
+    assert payload["claim_verdicts"][0]["verdict"] == "supported"
+    assert payload["judge_verified"] is True
+    assert payload["investigation_trace"]["sufficiency_score"] == 1.0
+    assert payload["response_language"] == "es"
+    assert payload["answer_complete"] is True
+    assert payload["answer_obligations"][0]["code"] == "direct_user_question"
+    assert payload["response_mode"] == "tactician_led"
+    assert payload["factual_core_preserved"] is True
+    assert payload["factual_core_coverage"]["complete"] is True
 
 
 def main() -> int:

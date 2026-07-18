@@ -72,9 +72,16 @@ The current Tactician milestone adds:
 ```text
 Automatic strategic handoff
 Conversation-card inheritance
-Intent-specific strategy routing
+Structured input and claim analysis
+Session-aware language policy
+Shared casual-language normalization
+Bounded multi-tool investigation plans
+Claim verdicts with source identifiers
+Semantic answer obligations and completeness checks
+Independent conversational synthesis
+Strategic follow-up intents and persisted context
+Data-driven multi-turn conversation regression seed
 Generic three-piece Undying loop detection
-Judge capability registry
 Structured combo steps and outcomes
 ```
 

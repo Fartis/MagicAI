@@ -33,6 +33,9 @@ const ORIGIN_LABELS = {
   premise_guard: "Control de premisa",
   strategy_boundary: "Frontera estratégica",
   tactician_strategy: "Análisis estratégico",
+  tactician_reasoned_strategy: "Síntesis estratégica razonada",
+  tactician_judge_led: "Respuesta liderada por el Juez",
+  tactician_hybrid: "Respuesta híbrida Juez–Estratega",
   tactician_judge_gate: "Respuesta factual del Juez",
   tactician_repair: "Reparación revisada",
   llm_validated: "LLM validado",
@@ -623,6 +626,9 @@ function renderEvidence(result) {
   if (result.combo_classification) {
     row.appendChild(createPill(`Combo: ${result.combo_classification}`));
   }
+  if (result.response_mode) {
+    row.appendChild(createPill(`Modo: ${result.response_mode}`));
+  }
   summary.appendChild(row);
 
   if ((result.combo_steps || []).length || (result.outcomes || []).length) {
@@ -846,10 +852,26 @@ function renderTechnicalDetails(result) {
     ["Confianza", result.confidence],
     ["Intent", result.intent || "—"],
     ["Intent estratégico", result.strategy_intent || "—"],
+    ["Modo de respuesta", result.response_mode || "—"],
     ["Clasificación de combo", result.combo_classification || "—"],
     ["Cartas heredadas", (result.inherited_cards || []).join(" · ") || "—"],
     ["Resultados", (result.outcomes || []).join(" · ") || "—"],
     ["Consultas al Juez", (result.judge_queries || []).map(item => `${item.sequence}: ${item.purpose}`).join(" · ") || "—"],
+    ["Herramientas del Juez", (result.judge_tool_calls || []).map(item => `${item.tool}: ${item.status}${item.cache_hit ? " (caché)" : ""}`).join(" · ") || "—"],
+    ["Síntesis del Estratega", result.tactician_synthesized ? "sí" : "no"],
+    ["Input analizado", result.input_analysis?.speech_act || "—"],
+    ["Idioma de respuesta", result.response_language || result.input_analysis?.language || "—"],
+    ["Registro del usuario", result.input_analysis?.register || "—"],
+    ["Respuesta completa", result.answer_complete ? "sí" : "no"],
+    ["Núcleo factual preservado", result.factual_core_preserved ? "sí" : "no"],
+    ["Cobertura factual", result.factual_core_coverage?.required == null ? "—" : `${result.factual_core_coverage.covered || 0}/${result.factual_core_coverage.required || 0}`],
+    ["Extensión estratégica requerida", result.strategic_extension_required ? "sí" : "no"],
+    ["Obligaciones de respuesta", (result.answer_obligations || []).map(item => item.code).join(" · ") || "—"],
+    ["Afirmaciones evaluadas", String((result.claim_verdicts || []).length)],
+    ["Consultas planificadas", String(result.queries_planned ?? 0)],
+    ["Consultas completadas", String(result.queries_completed ?? 0)],
+    ["Verificado por evidencia", result.judge_verified ? "sí" : "no"],
+    ["Resumen de razonamiento", (result.reasoning_summary || []).join(" · ") || "—"],
     ["Intentos de validación", String(result.validation_attempts ?? 0)],
     ["Revisado por", (result.reviewed_by || []).join(" · ") || "—"],
     ["Trazado de autoridad", (result.authority_trace || []).join(" → ") || "—"],

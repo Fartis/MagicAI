@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
 from magicai.conversation.models import Conversation
+from magicai.judge_tools.models import JudgeToolResult, JudgeToolStatus
 from magicai.tactician.core import Tactician
 
 
@@ -45,9 +46,54 @@ class FakeJudge:
         )
 
 
+class FakeGateway:
+    def execute(self, request, *, conversation=None, budget=None):
+        source_cards = {
+            "Young Wolf": {
+                "name": "Young Wolf",
+                "mana_cost": "{G}",
+                "type_line": "Creature — Wolf",
+                "oracle_text": "Undying (When this creature dies, return it with a +1/+1 counter.)",
+            },
+            "Carrion Feeder": {
+                "name": "Carrion Feeder",
+                "mana_cost": "{B}",
+                "type_line": "Creature — Zombie",
+                "oracle_text": "Sacrifice a creature: Put a +1/+1 counter on Carrion Feeder.",
+            },
+        }
+        if request.tool == "oracle_lookup":
+            evidence = [
+                {"kind": "card", "identifier": name, "data": source_cards[name]}
+                for name in request.arguments.get("card_names", [])
+            ]
+            authority = "official_card_data"
+        elif request.tool == "rules_lookup":
+            evidence = [
+                {
+                    "kind": "rule",
+                    "identifier": identifier,
+                    "data": {"number": identifier, "title": f"Rule {identifier}", "rules": []},
+                }
+                for identifier in request.arguments.get("identifiers", [])
+            ]
+            authority = "comprehensive_rules"
+        else:
+            raise AssertionError(f"unexpected tool: {request.tool}")
+        return JudgeToolResult(
+            tool=request.tool,
+            status=JudgeToolStatus.SUCCESS,
+            authority=authority,
+            provider="fake",
+            purpose=request.purpose,
+            arguments=request.arguments,
+            evidence=evidence,
+        )
+
+
 def test_tactician_consumes_judge_package_without_direct_sources() -> None:
     conversation = Conversation()
-    result = Tactician(judge=FakeJudge()).ask_result(
+    result = Tactician(judge=FakeJudge(), tool_gateway=FakeGateway()).ask_result(
         conversation,
         "¿Young Wolf y Carrion Feeder son un combo?",
     )
@@ -56,9 +102,23 @@ def test_tactician_consumes_judge_package_without_direct_sources() -> None:
     assert payload["judge_result"]["authority"] == "judge"
     assert payload["authority_trace"] == [
         "judge:factual_evidence",
-        "tactician:strategic_interpretation",
-        "judge:source_gateway",
+        "judge:tool_gateway",
+        "tactician:language_policy",
+        "tactician:input_analysis",
+        "tactician:claim_evaluation",
+        "tactician:autonomous_investigation",
+        "tactician:response_orchestration:tactician_led",
+        "tactician:factual_core_preservation",
+        "tactician:answer_contract",
+        "judge:evidence_verification",
     ]
+    assert payload["tactician_synthesized"] is True
+    assert payload["judge_verified"] is True
+    assert payload["answer_complete"] is True
+    assert payload["response_language"] == "es"
+    assert payload["judge_tool_calls"][0]["status"] == "success"
+    assert payload["investigation_trace"]["sufficient"] is True
+    assert payload["investigation_trace"]["sufficiency_score"] == 1.0
     assert "sinergia de sacrificio" in payload["answer"]
     assert "No es un bucle infinito" in payload["answer"]
     assert conversation.mode == "tactician"

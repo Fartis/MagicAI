@@ -2,6 +2,8 @@ import re
 import unicodedata
 
 from magicai.context import AssistantContext
+from magicai.conversation.normalization import normalize_user_question
+from magicai.language.policy import resolve_language_policy
 
 from magicai.extractors.cards import extract_cards
 from magicai.extractors.keywords import extract_keywords
@@ -83,25 +85,42 @@ _PROCEDURAL_FOLLOW_UP_MARKERS = (
 
 def build_context(conversation, question: str):
 
-    intent = parse_intent(question)
+    language_policy = resolve_language_policy(
+        question,
+        session_language=getattr(conversation, "language", "es"),
+    )
+    normalized_question = normalize_user_question(
+        question,
+        session_language=language_policy.response_language,
+    )
+    canonical_question = normalized_question.canonical or question
+    intent = parse_intent(canonical_question)
+    language = language_policy.response_language
 
-    language = "es"
-
-    explicit_cards = extract_cards(question)
-    explicit_keywords = extract_keywords(question)
-    explicit_rules = extract_rules(question)
+    explicit_cards = _merge_unique(
+        extract_cards(question),
+        extract_cards(canonical_question),
+    )
+    explicit_keywords = _merge_unique(
+        extract_keywords(question),
+        extract_keywords(canonical_question),
+    )
+    explicit_rules = _merge_unique(
+        extract_rules(question),
+        extract_rules(canonical_question),
+    )
 
     follow_up = _looks_like_follow_up(
-        question,
+        canonical_question,
         has_history=len(conversation.history) > 1,
     )
-    comparison = _looks_like_comparison(question)
+    comparison = _looks_like_comparison(canonical_question)
 
     # A word can be both a card name and a keyword. In an established rules
     # conversation, the keyword interpretation wins unless the user explicitly
     # asks for the card or its Oracle text.
     explicit_cards = _prefer_mechanics_in_rule_context(
-        question=question,
+        question=canonical_question,
         cards=explicit_cards,
         keywords=explicit_keywords,
         active_keywords=conversation.active_keywords,
@@ -110,7 +129,7 @@ def build_context(conversation, question: str):
     )
 
     cards = _resolve_cards(
-        question=question,
+        question=canonical_question,
         explicit_cards=explicit_cards,
         active_cards=conversation.active_cards,
         follow_up=follow_up,
@@ -118,8 +137,8 @@ def build_context(conversation, question: str):
         rule_topic=bool(
             explicit_keywords
             or explicit_rules
-            or looks_like_general_rule_question(question)
-            or _looks_like_procedural_rule_topic(question)
+            or looks_like_general_rule_question(canonical_question)
+            or _looks_like_procedural_rule_topic(canonical_question)
         ),
     )
 
@@ -128,20 +147,20 @@ def build_context(conversation, question: str):
         active_keywords=conversation.active_keywords,
         follow_up=follow_up,
         comparison=comparison,
-        question=question,
+        question=canonical_question,
     )
 
     rules = _resolve_rules(
         explicit_rules=explicit_rules,
         active_rules=conversation.active_rules,
         follow_up=follow_up,
-        question=question,
+        question=canonical_question,
     )
 
-    action_terms = extract_action_search_terms(question)
+    action_terms = extract_action_search_terms(canonical_question)
 
     direct_rule_queries = build_rule_queries(
-        question=question,
+        question=canonical_question,
         keywords=keywords,
         action_terms=action_terms,
     )
@@ -149,11 +168,11 @@ def build_context(conversation, question: str):
     # A referential request to explain a numbered rule should keep that exact
     # rule as the sole retrieval anchor. Generic words such as "ejemplo" or
     # "explicarla" otherwise retrieve unrelated rules and dilute the source.
-    if rules and not explicit_rules and _looks_like_rule_follow_up(question):
+    if rules and not explicit_rules and _looks_like_rule_follow_up(canonical_question):
         direct_rule_queries = []
 
     rule_queries, inherited_rule_queries = _resolve_rule_queries(
-        question=question,
+        question=canonical_question,
         direct_queries=direct_rule_queries,
         active_queries=conversation.active_rule_queries,
         explicit_cards=explicit_cards,
@@ -170,6 +189,12 @@ def build_context(conversation, question: str):
 
         language=language,
 
+        canonical_question=canonical_question,
+
+        input_register=normalized_question.register,
+
+        normalization=normalized_question.to_dict(),
+
         cards=cards,
 
         keywords=keywords,
@@ -179,7 +204,7 @@ def build_context(conversation, question: str):
         rule_queries=rule_queries,
 
         facts=build_reasoning(
-            question,
+            canonical_question,
             language=language,
         ),
 
@@ -328,7 +353,7 @@ def _prefer_mechanics_in_rule_context(
         or follow_up
         or comparison
         or direct_mechanic_question
-        or looks_like_general_rule_question(question)
+        or looks_like_general_rule_question(canonical_question)
     ):
         return cards
 
