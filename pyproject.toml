@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "AGPL-3.0-or-later"
 dependencies = [
-    "fastapi>=0.139.0,<0.140.0",
+    "fastapi>=0.139.2,<0.140.0",
     "pydantic>=2.13.4,<3.0.0",
     "requests>=2.34.2,<3.0.0",
     "uvicorn>=0.50.2,<0.52.0",
